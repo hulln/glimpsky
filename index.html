@@ -192,31 +192,6 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        .date-presets {
-            display: flex;
-            gap: 6px;
-            margin-top: 8px;
-        }
-
-        .date-preset-btn {
-            padding: 4px 10px;
-            background: white;
-            color: #64748b;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            flex: 0 0 auto;
-        }
-
-        .date-preset-btn:hover {
-            background: #f8fafc;
-            border-color: #94a3b8;
-            color: #0f172a;
-        }
-
         .search-input {
             padding: 8px 12px;
             border: 1px solid #cbd5e1;
@@ -498,15 +473,6 @@
 
         .info-modal-body a:hover {
             text-decoration: underline;
-        }
-
-        .info-modal-body code {
-            background: #f1f5f9;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            color: #0f172a;
         }
 
         .info-modal-footer {
@@ -938,11 +904,6 @@
                             <input type="date" id="dateFrom" placeholder="From">
                             <input type="date" id="dateTo" placeholder="To">
                         </div>
-                        <div class="date-presets">
-                            <button type="button" class="date-preset-btn" data-days="7">Last 7 days</button>
-                            <button type="button" class="date-preset-btn" data-days="30">Last 30 days</button>
-                            <button type="button" class="date-preset-btn" data-days="365">This year</button>
-                        </div>
                     </div>
 
                     <div class="filter-section" style="margin-top: 12px;">
@@ -952,7 +913,6 @@
 
                     <div class="advanced-buttons">
                         <button class="btn-primary" id="applyFiltersBtn" style="display: none;">Apply Filters</button>
-                        <button class="btn-outline" id="exportBtn" style="display: none;">Export Results</button>
                     </div>
                     <div class="warning-text show" style="margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
                         <span style="flex: 1;">Filtering requires loading all content first. Use "Load All" for faster filtering.</span>
@@ -1005,11 +965,6 @@
             <div class="info-modal-body">
                 <p>This Bluesky Profile Viewer allows you to explore public posts, likes, followers, and other information from any Bluesky account. All data is retrieved from publicly available Bluesky APIs and PDS (Personal Data Server) endpoints.</p>
                 
-                <p><strong>Keyboard Shortcuts:</strong></p>
-                <p>• Press <code>/</code> to focus the search input<br>
-                • Press <code>Ctrl/Cmd + K</code> to toggle between posts and likes<br>
-                • Press <code>Esc</code> to close modals</p>
-                
                 <p><strong>Inspirations:</strong></p>
                 <p>• <a href="https://github.com/ClearskyApp06/clearskyservices" target="_blank" rel="noopener noreferrer">Clearsky</a> - for blocking analytics and advanced features<br>
                 • <a href="https://github.com/luizzeroxis/bluesky-likes/" target="_blank" rel="noopener noreferrer">Bluesky Likes by luizzeroxis</a> - for viewing likes of others</p>
@@ -1036,57 +991,6 @@
         let isLoading = false;
         let allPosts = [];
         let allPostsLoaded = false;
-
-        // Load from URL parameters or localStorage
-        function initializeFromState() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlHandle = urlParams.get('handle');
-            const urlMode = urlParams.get('mode');
-            
-            if (urlHandle) {
-                // URL parameters take priority
-                elements.handleInput.value = urlHandle;
-                const mode = (urlMode === 'likes') ? 'likes' : 'posts';
-                loadContent(mode);
-            } else {
-                // Try to load from localStorage
-                const savedHandle = localStorage.getItem('bluesky_last_handle');
-                const savedMode = localStorage.getItem('bluesky_last_mode') || 'posts';
-                
-                if (savedHandle) {
-                    elements.handleInput.value = savedHandle;
-                    // Don't auto-load, just populate the field
-                }
-            }
-        }
-
-        // Update URL and localStorage when profile is loaded
-        function updateState(handle, mode) {
-            // Update URL without reload
-            const url = new URL(window.location);
-            url.searchParams.set('handle', handle);
-            url.searchParams.set('mode', mode);
-            window.history.pushState({}, '', url);
-            
-            // Save to localStorage
-            localStorage.setItem('bluesky_last_handle', handle);
-            localStorage.setItem('bluesky_last_mode', mode);
-        }
-
-        // Handle browser back/forward
-        window.addEventListener('popstate', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlHandle = urlParams.get('handle');
-            const urlMode = urlParams.get('mode') || 'posts';
-            
-            if (urlHandle) {
-                elements.handleInput.value = urlHandle;
-                loadContent(urlMode);
-            }
-        });
-
-        // Initialize on page load
-        initializeFromState();
 
         const elements = {
             handleInput: document.getElementById('handle'),
@@ -1116,7 +1020,6 @@
             searchText: document.getElementById('searchText'),
             loadAllBtn: document.getElementById('loadAllBtn'),
             applyFiltersBtn: document.getElementById('applyFiltersBtn'),
-            exportBtn: document.getElementById('exportBtn'),
             advancedFiltersToggle: document.getElementById('advancedFiltersToggle'),
             advancedFiltersContent: document.getElementById('advancedFiltersContent')
         };
@@ -1156,27 +1059,9 @@
 
         elements.applyFiltersBtn.addEventListener('click', applyFilters);
 
-        // Export button
-        elements.exportBtn.addEventListener('click', exportResults);
-
-        // Advanced filters toggle
         elements.advancedFiltersToggle.addEventListener('click', () => {
             elements.advancedFiltersToggle.classList.toggle('expanded');
             elements.advancedFiltersContent.classList.toggle('expanded');
-        });
-
-        // Date preset buttons
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('date-preset-btn')) {
-                const days = parseInt(e.target.dataset.days);
-                const today = new Date();
-                const pastDate = new Date();
-                pastDate.setDate(today.getDate() - days);
-                
-                elements.dateTo.value = today.toISOString().split('T')[0];
-                elements.dateFrom.value = pastDate.toISOString().split('T')[0];
-                elements.applyFiltersBtn.style.display = 'block';
-            }
         });
 
         elements.infoBtn.addEventListener('click', () => {
@@ -1197,7 +1082,6 @@
         });
 
         elements.mainTitle.addEventListener('click', () => {
-            // Reset to initial state
             elements.handleInput.value = '';
             elements.profileCard.style.display = 'none';
             elements.contentSection.style.display = 'none';
@@ -1217,12 +1101,8 @@
             elements.dateTo.value = '';
             elements.searchText.value = '';
             elements.applyFiltersBtn.style.display = 'none';
-            elements.exportBtn.style.display = 'none';
             elements.advancedFiltersContent.classList.remove('expanded');
             elements.advancedFiltersToggle.classList.remove('expanded');
-            
-            // Clear URL parameters
-            window.history.pushState({}, '', window.location.pathname);
         });
 
         function showError(message) {
@@ -1632,27 +1512,6 @@
                     elements.infoModal.setAttribute('aria-hidden', 'true');
                 }
             }
-            
-            // Focus handle input with / key (like search)
-            if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
-                // Don't trigger if already in an input
-                if (document.activeElement.tagName === 'INPUT' || 
-                    document.activeElement.tagName === 'TEXTAREA') {
-                    return;
-                }
-                e.preventDefault();
-                elements.handleInput.focus();
-                elements.handleInput.select();
-            }
-            
-            // Ctrl/Cmd + K to toggle between posts and likes
-            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                e.preventDefault();
-                if (currentDid) {
-                    const newMode = currentMode === 'posts' ? 'likes' : 'posts';
-                    loadContent(newMode);
-                }
-            }
         });
 
         async function loadAllPosts() {
@@ -1690,9 +1549,6 @@
                 
                 statusDiv.className = 'success-message';
                 statusDiv.textContent = `Successfully loaded all ${allPosts.length} ${contentType}`;
-                
-                // Show export button
-                elements.exportBtn.style.display = 'inline-flex';
                 
                 setTimeout(() => {
                     statusDiv.remove();
@@ -1774,53 +1630,6 @@
                 
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
-        }
-
-        function exportResults() {
-            if (!allPostsLoaded || allPosts.length === 0) {
-                showError('Please load all content before exporting');
-                return;
-            }
-
-            // Prepare export data
-            const exportData = allPosts.map(item => {
-                const post = item.post;
-                return {
-                    author: post.author.handle,
-                    authorName: post.author.displayName || post.author.handle,
-                    text: post.record.text || '',
-                    createdAt: post.record.createdAt,
-                    likeTimestamp: item.likeTimestamp || null,
-                    url: `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`,
-                    likes: post.likeCount || 0,
-                    reposts: post.repostCount || 0,
-                    replies: post.replyCount || 0
-                };
-            });
-
-            // Create JSON blob
-            const jsonBlob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-            const jsonUrl = URL.createObjectURL(jsonBlob);
-            
-            // Download JSON
-            const jsonLink = document.createElement('a');
-            jsonLink.href = jsonUrl;
-            jsonLink.download = `bluesky-${currentHandle}-${currentMode}-${new Date().toISOString().split('T')[0]}.json`;
-            jsonLink.click();
-            
-            // Clean up
-            URL.revokeObjectURL(jsonUrl);
-            
-            // Show success message
-            const successDiv = document.createElement('div');
-            successDiv.className = 'success-message';
-            successDiv.textContent = `Exported ${exportData.length} ${currentMode} as JSON`;
-            successDiv.style.marginBottom = '16px';
-            elements.content.insertBefore(successDiv, elements.content.firstChild);
-            
-            setTimeout(() => {
-                successDiv.remove();
-            }, 3000);
         }
 
         async function applyFilters() {
@@ -1938,9 +1747,6 @@
                 }
 
                 elements.contentSection.style.display = 'block';
-                
-                // Update URL and localStorage
-                updateState(handle, mode);
             } catch (error) {
                 showError(error.message);
                 elements.profileCard.style.display = 'none';
