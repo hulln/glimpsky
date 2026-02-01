@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluesky Profile Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 32px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            color: #0f172a;
+            margin-bottom: 8px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #475569;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #3b82f6;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-size: 14px;
+            color: #475569;
+            font-weight: 400;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 11px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #0f172a;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #1e293b;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .profile-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: start;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e2e8f0;
+        }
+
+        .profile-info h2 {
+            color: #0f172a;
+            margin-bottom: 4px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .handle {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .description {
+            color: #475569;
+            line-height: 1.5;
+            margin-top: 12px;
+            font-size: 14px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 32px;
+            padding-top: 16px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .stat {
+            display: flex;
+            gap: 6px;
+            align-items: baseline;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .section-header {
+            background: white;
+            padding: 16px 24px;
+            border-radius: 8px 8px 0 0;
+            border: 1px solid #e2e8f0;
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        #content {
+            background: white;
+            border-left: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .load-more-container {
+            background: white;
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .load-more {
+            padding: 10px 24px;
+            background: white;
+            color: #3b82f6;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .load-more:hover:not(:disabled) {
+            background: #f8fafc;
+            border-color: #3b82f6;
+        }
+
+        .post {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+
+        .post:hover {
+            background: #f8fafc;
+        }
+
+        .post:last-child {
+            border-bottom: none;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .post-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .post-author {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .post-name {
+            font-weight: 600;
+            color: #0f172a;
+            font-size: 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .post-handle {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .post-time {
+            color: #94a3b8;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .post-text {
+            color: #334155;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 15px;
+        }
+
+        .post-text a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        .post-text a:hover {
+            text-decoration: underline;
+        }
+
+        .post-image {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .post-engagement {
+            display: flex;
+            gap: 16px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .engagement-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .repost-indicator {
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .spinner {
+            border: 2px solid #f1f5f9;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fef2f2;
+            color: #991b1b;
+            padding: 14px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #fecaca;
+            font-size: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 20px 16px;
+            }
+
+            .header {
+                padding: 24px;
+            }
+
+            .filter-options {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .stats {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .post {
+                padding: 16px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Bluesky Profile Viewer</h1>
+            <p class="subtitle">View posts and likes from any Bluesky profile</p>
+            
+            <div class="input-group">
+                <label for="handle">Bluesky Handle or DID</label>
+                <input 
+                    type="text" 
+                    id="handle" 
+                    placeholder="e.g., user.bsky.social or oblachek.eu"
+                    value="">
+            </div>
+
+            <div class="filter-options">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="hideReposts" checked>
+                    <label for="hideReposts">Hide reposts</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="hideReplies">
+                    <label for="hideReplies">Hide replies</label>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" id="loadPostsBtn">View Posts</button>
+                <button class="btn-secondary" id="loadLikesBtn">View Likes</button>
+            </div>
+        </div>
+
+        <div id="error"></div>
+        
+        <div class="profile-card" id="profileCard"></div>
+
+        <div class="content-section" id="contentSection">
+            <div class="section-header">
+                <h3 class="section-title" id="sectionTitle">Posts</h3>
+            </div>
+            <div id="content"></div>
+            <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+                <button class="load-more" id="loadMoreBtn">Load More</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_PUBLIC = 'https://public.api.bsky.app/xrpc';
+        
+        let currentHandle = '';
+        let currentDid = '';
+        let currentPdsUrl = '';
+        let currentCursor = null;
+        let currentMode = 'posts';
+        let isLoading = false;
+
+        const elements = {
+            handleInput: document.getElementById('handle'),
+            loadPostsBtn: document.getElementById('loadPostsBtn'),
+            loadLikesBtn: document.getElementById('loadLikesBtn'),
+            loadMoreBtn: document.getElementById('loadMoreBtn'),
+            loadMoreContainer: document.getElementById('loadMoreContainer'),
+            hideReposts: document.getElementById('hideReposts'),
+            hideReplies: document.getElementById('hideReplies'),
+            profileCard: document.getElementById('profileCard'),
+            contentSection: document.getElementById('contentSection'),
+            content: document.getElementById('content'),
+            error: document.getElementById('error'),
+            sectionTitle: document.getElementById('sectionTitle')
+        };
+
+        elements.loadPostsBtn.addEventListener('click', () => loadContent('posts'));
+        elements.loadLikesBtn.addEventListener('click', () => loadContent('likes'));
+        elements.loadMoreBtn.addEventListener('click', loadMore);
+        elements.handleInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loadContent('posts');
+        });
+
+        function showError(message) {
+            elements.error.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+            setTimeout(() => {
+                elements.error.innerHTML = '';
+            }, 8000);
+        }
+
+        function showLoading() {
+            elements.content.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading...</p>
+                </div>
+            `;
+        }
+
+        function setLoading(loading) {
+            isLoading = loading;
+            elements.loadPostsBtn.disabled = loading;
+            elements.loadLikesBtn.disabled = loading;
+            elements.loadMoreBtn.disabled = loading;
+        }
+
+        async function resolveHandle(handle) {
+            try {
+                handle = handle.trim()
+                    .replace('https://', '')
+                    .replace('http://', '')
+                    .replace('bsky.app/profile/', '')
+                    .replace('@', '');
+
+                if (handle.startsWith('did:')) {
+                    return handle;
+                }
+
+                const response = await fetch(
+                    `${API_PUBLIC}/com.atproto.identity.resolveHandle?handle=${encodeURIComponent(handle)}`
+                );
+                
+                if (!response.ok) {
+                    throw new Error('Could not resolve handle. Please check if it exists.');
+                }
+                
+                const data = await response.json();
+                return data.did;
+            } catch (error) {
+                throw new Error(`Failed to resolve handle: ${error.message}`);
+            }
+        }
+
+        async function getPdsUrl(did) {
+            try {
+                // Get DID document to find PDS URL
+                const response = await fetch(`https://plc.directory/${did}`);
+                if (!response.ok) {
+                    throw new Error('Could not fetch DID document');
+                }
+                
+                const didDoc = await response.json();
+                
+                // Find the PDS service endpoint
+                const pdsService = didDoc.service?.find(s => s.id === '#atproto_pds');
+                if (!pdsService) {
+                    throw new Error('No PDS service found in DID document');
+                }
+                
+                return pdsService.serviceEndpoint;
+            } catch (error) {
+                throw new Error(`Failed to get PDS URL: ${error.message}`);
+            }
+        }
+
+        async function loadProfile(did) {
+            try {
+                const response = await fetch(
+                    `${API_PUBLIC}/app.bsky.actor.getProfile?actor=${encodeURIComponent(did)}`
+                );
+                
+                if (!response.ok) {
+                    throw new Error('Could not load profile');
+                }
+                
+                const profile = await response.json();
+                displayProfile(profile);
+            } catch (error) {
+                throw new Error(`Failed to load profile: ${error.message}`);
+            }
+        }
+
+        function displayProfile(profile) {
+            const avatar = profile.avatar || 'https://via.placeholder.com/80';
+            const displayName = profile.displayName || profile.handle;
+            const description = profile.description || '';
+            
+            elements.profileCard.innerHTML = `
+                <div class="profile-header">
+                    <img src="${avatar}" alt="${escapeHtml(displayName)}" class="avatar">
+                    <div class="profile-info">
+                        <h2>${escapeHtml(displayName)}</h2>
+                        <div class="handle">@${escapeHtml(profile.handle)}</div>
+                        ${description ? `<div class="description">${escapeHtml(description)}</div>` : ''}
+                    </div>
+                </div>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="stat-value">${formatNumber(profile.followersCount || 0)}</span>
+                        <span class="stat-label">followers</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">${formatNumber(profile.followsCount || 0)}</span>
+                        <span class="stat-label">following</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">${formatNumber(profile.postsCount || 0)}</span>
+                        <span class="stat-label">posts</span>
+                    </div>
+                </div>
+            `;
+            elements.profileCard.style.display = 'block';
+        }
+
+        async function loadContent(mode) {
+            const handle = elements.handleInput.value.trim();
+            
+            if (!handle) {
+                showError('Please enter a Bluesky handle or DID');
+                return;
+            }
+
+            setLoading(true);
+            elements.error.innerHTML = '';
+            showLoading();
+            
+            try {
+                currentDid = await resolveHandle(handle);
+                currentPdsUrl = await getPdsUrl(currentDid);
+                currentHandle = handle;
+                currentMode = mode;
+                currentCursor = null;
+
+                await loadProfile(currentDid);
+
+                if (mode === 'posts') {
+                    elements.sectionTitle.textContent = 'Posts';
+                    await loadPosts();
+                } else {
+                    elements.sectionTitle.textContent = 'Likes';
+                    await loadLikes();
+                }
+
+                elements.contentSection.style.display = 'block';
+            } catch (error) {
+                showError(error.message);
+                elements.profileCard.style.display = 'none';
+                elements.contentSection.style.display = 'none';
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function loadPosts(append = false) {
+            try {
+                const hideReplies = elements.hideReplies.checked;
+                let filter = hideReplies ? 'posts_no_replies' : 'posts_with_replies';
+                
+                let url = `${API_PUBLIC}/app.bsky.feed.getAuthorFeed?actor=${encodeURIComponent(currentDid)}&filter=${filter}&limit=50`;
+                
+                if (currentCursor) {
+                    url += `&cursor=${encodeURIComponent(currentCursor)}`;
+                }
+
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load posts');
+                }
+                
+                const data = await response.json();
+                displayPosts(data.feed, append);
+                
+                currentCursor = data.cursor || null;
+                elements.loadMoreContainer.style.display = currentCursor ? 'block' : 'none';
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function loadLikes(append = false) {
+            try {
+                // Step 1: Get like records from user's PDS
+                let url = `${currentPdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(currentDid)}&collection=app.bsky.feed.like&limit=50`;
+                
+                if (currentCursor) {
+                    url += `&cursor=${encodeURIComponent(currentCursor)}`;
+                }
+
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load likes from PDS');
+                }
+                
+                const data = await response.json();
+                
+                if (!data.records || data.records.length === 0) {
+                    if (!append) {
+                        elements.content.innerHTML = `
+                            <div class="empty-state">
+                                <p>No likes found</p>
+                            </div>
+                        `;
+                    }
+                    elements.loadMoreContainer.style.display = 'none';
+                    return;
+                }
+
+                // Step 2: Extract post URIs from like records
+                const postUris = data.records.map(record => record.value.subject.uri);
+                
+                // Step 3: Fetch the actual posts in batches
+                const posts = await fetchPosts(postUris);
+                
+                // Step 4: Display posts
+                displayLikePosts(posts, data.records, append);
+                
+                currentCursor = data.cursor || null;
+                elements.loadMoreContainer.style.display = currentCursor ? 'block' : 'none';
+            } catch (error) {
+                showError(error.message);
+                if (!append) {
+                    elements.content.innerHTML = `
+                        <div class="empty-state">
+                            <p>Failed to load likes</p>
+                            <p style="font-size: 13px; margin-top: 8px; color: #94a3b8;">${escapeHtml(error.message)}</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        async function fetchPosts(uris) {
+            if (uris.length === 0) return [];
+            
+            try {
+                // getPosts can handle up to 25 URIs at once
+                const chunks = [];
+                for (let i = 0; i < uris.length; i += 25) {
+                    chunks.push(uris.slice(i, i + 25));
+                }
+                
+                const allPosts = [];
+                for (const chunk of chunks) {
+                    const urisParam = chunk.map(uri => `uris=${encodeURIComponent(uri)}`).join('&');
+                    const url = `${API_PUBLIC}/app.bsky.feed.getPosts?${urisParam}`;
+                    
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        const data = await response.json();
+                        allPosts.push(...(data.posts || []));
+                    }
+                }
+                
+                return allPosts;
+            } catch (error) {
+                console.error('Error fetching posts:', error);
+                return [];
+            }
+        }
+
+        function displayLikePosts(posts, likeRecords, append = false) {
+            if (!append) {
+                elements.content.innerHTML = '';
+            }
+
+            if (posts.length === 0 && !append) {
+                elements.content.innerHTML = `
+                    <div class="empty-state">
+                        <p>No likes found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Create a map of URI to like timestamp for sorting
+            const likeTimestamps = {};
+            likeRecords.forEach(record => {
+                likeTimestamps[record.value.subject.uri] = new Date(record.value.createdAt);
+            });
+
+            // Sort posts by like timestamp (most recent first)
+            posts.sort((a, b) => {
+                const timeA = likeTimestamps[a.uri] || new Date(0);
+                const timeB = likeTimestamps[b.uri] || new Date(0);
+                return timeB - timeA;
+            });
+
+            posts.forEach(post => {
+                const postDiv = createPostElement(post, null);
+                elements.content.appendChild(postDiv);
+            });
+        }
+
+        function displayPosts(feed, append = false) {
+            const hideReposts = elements.hideReposts.checked;
+            
+            let filteredFeed = feed;
+            if (hideReposts) {
+                filteredFeed = feed.filter(item => {
+                    return !item.reason || item.reason.$type !== 'app.bsky.feed.defs#reasonRepost';
+                });
+            }
+
+            if (!append) {
+                elements.content.innerHTML = '';
+            }
+
+            if (filteredFeed.length === 0 && !append) {
+                elements.content.innerHTML = `
+                    <div class="empty-state">
+                        <p>No ${currentMode} found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredFeed.forEach(item => {
+                const post = item.post;
+                const postDiv = createPostElement(post, item.reason);
+                elements.content.appendChild(postDiv);
+            });
+        }
+
+        function createPostElement(post, reason) {
+            const div = document.createElement('div');
+            div.className = 'post';
+            
+            const author = post.author;
+            const record = post.record;
+            const avatar = author.avatar || 'https://via.placeholder.com/40';
+            
+            const timestamp = new Date(record.createdAt);
+            const timeAgo = getTimeAgo(timestamp);
+            
+            let postText = escapeHtml(record.text || '');
+            
+            if (record.facets && record.facets.length > 0) {
+                postText = applyFacets(record.text, record.facets);
+            }
+
+            let html = '';
+            
+            if (reason && reason.$type === 'app.bsky.feed.defs#reasonRepost') {
+                html += `<div class="repost-indicator">Reposted by @${escapeHtml(reason.by.handle)}</div>`;
+            }
+
+            html += `
+                <div class="post-header">
+                    <img src="${avatar}" alt="${escapeHtml(author.displayName || author.handle)}" class="post-avatar">
+                    <div class="post-author">
+                        <div class="post-name">${escapeHtml(author.displayName || author.handle)}</div>
+                        <div class="post-handle">@${escapeHtml(author.handle)}</div>
+                    </div>
+                    <div class="post-time">${timeAgo}</div>
+                </div>
+                <div class="post-text">${postText}</div>
+            `;
+
+            if (post.embed && post.embed.$type === 'app.bsky.embed.images#view') {
+                const images = post.embed.images || [];
+                images.forEach(img => {
+                    html += `<img src="${img.thumb}" alt="${escapeHtml(img.alt || '')}" class="post-image">`;
+                });
+            }
+
+            html += `
+                <div class="post-engagement">
+                    <span class="engagement-item">${formatNumber(post.replyCount || 0)} replies</span>
+                    <span class="engagement-item">${formatNumber(post.repostCount || 0)} reposts</span>
+                    <span class="engagement-item">${formatNumber(post.likeCount || 0)} likes</span>
+                </div>
+            `;
+
+            div.innerHTML = html;
+            
+            div.addEventListener('click', () => {
+                const postUrl = `https://bsky.app/profile/${author.handle}/post/${post.uri.split('/').pop()}`;
+                window.open(postUrl, '_blank');
+            });
+
+            return div;
+        }
+
+        function applyFacets(text, facets) {
+            const sorted = facets.sort((a, b) => a.index.byteStart - b.index.byteStart);
+            
+            let result = '';
+            let lastIndex = 0;
+            
+            sorted.forEach(facet => {
+                const start = facet.index.byteStart;
+                const end = facet.index.byteEnd;
+                
+                result += escapeHtml(text.substring(lastIndex, start));
+                
+                const facetText = text.substring(start, end);
+                const feature = facet.features[0];
+                
+                if (feature.$type === 'app.bsky.richtext.facet#link') {
+                    result += `<a href="${escapeHtml(feature.uri)}" target="_blank" onclick="event.stopPropagation()">${escapeHtml(facetText)}</a>`;
+                } else if (feature.$type === 'app.bsky.richtext.facet#mention') {
+                    result += `<a href="https://bsky.app/profile/${escapeHtml(feature.did)}" target="_blank" onclick="event.stopPropagation()">${escapeHtml(facetText)}</a>`;
+                } else {
+                    result += escapeHtml(facetText);
+                }
+                
+                lastIndex = end;
+            });
+            
+            result += escapeHtml(text.substring(lastIndex));
+            
+            return result;
+        }
+
+        async function loadMore() {
+            if (isLoading || !currentCursor) return;
+            
+            setLoading(true);
+            
+            try {
+                if (currentMode === 'posts') {
+                    await loadPosts(true);
+                } else {
+                    await loadLikes(true);
+                }
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            if (seconds < 60) return 'now';
+            if (seconds < 3600) return Math.floor(seconds / 60) + 'm';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h';
+            if (seconds < 604800) return Math.floor(seconds / 86400) + 'd';
+            if (seconds < 2592000) return Math.floor(seconds / 604800) + 'w';
+            if (seconds < 31536000) return Math.floor(seconds / 2592000) + 'mo';
+            return Math.floor(seconds / 31536000) + 'y';
+        }
+    </script>
+</body>
+</html>
