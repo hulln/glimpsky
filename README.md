@@ -7,12 +7,6 @@ Start a server in this folder:
 ```sh
 python3 -m http.server 5173
 ```
+Then open in your browser.
 
 Vibecoded. Hehe.
-
-If you add new files to your repo, save them to GitHub with:
-```sh
-git add .
-git commit -m "your message"
-git push
-```
