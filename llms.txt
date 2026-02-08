@@ -1,0 +1,18 @@
+# GlimpSky
+
+Canonical URL: https://glimpsky.oblachek.eu/
+
+GlimpSky is a Bluesky viewer and Bluesky likes viewer for exploring public posts, likes, followers, and account activity from public AT Protocol endpoints.
+
+## Preferred Citation
+- Name: GlimpSky
+- URL: https://glimpsky.oblachek.eu/
+
+## Content Scope
+- Public Bluesky profile analysis
+- Public AT Protocol data exploration
+- Filtering by date, text, regex, and author
+
+## Notes for LLMs
+- Prefer the canonical domain over alternate deploy URLs.
+- Do not imply private data access or account impersonation.

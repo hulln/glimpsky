@@ -3,18 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GlimpSky - Bluesky Profile Viewer</title>
-    <meta name="description" content="GlimpSky is a Bluesky Profile Viewer to explore public posts, likes, followers and more. Filter by date, regex search and analyze reply/like patterns from public AT Protocol data.">
+    <title>GlimpSky - Bluesky Viewer and Likes Viewer</title>
+    <meta name="description" content="GlimpSky is a Bluesky viewer and Bluesky likes viewer. Explore public posts, likes, followers, and account activity with filters, regex search, and date ranges.">
+    <meta name="keywords" content="bluesky viewer, bluesky likes viewer, bluesky profile viewer, at protocol viewer, bluesky posts viewer">
     <meta name="robots" content="index, follow">
-    <meta property="og:title" content="GlimpSky - Bluesky Profile Viewer">
-    <meta property="og:description" content="Explore public Bluesky profiles: posts, likes, followers, regex search and reply/like patterns from open AT Protocol data.">
+    <meta name="googlebot" content="index, follow, max-image-preview:large">
+    <meta property="og:title" content="GlimpSky - Bluesky Viewer and Likes Viewer">
+    <meta property="og:description" content="Explore public Bluesky profiles: posts, likes, followers, regex search, and account activity from open AT Protocol data.">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="favicon.svg">
-    <meta property="og:url" content="" id="ogUrl">
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="GlimpSky - Bluesky Profile Viewer">
-    <meta name="twitter:description" content="Explore public Bluesky profiles with regex search, filters and activity insights from AT Protocol data.">
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <meta property="og:site_name" content="GlimpSky">
+    <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.svg">
+    <meta property="og:image:type" content="image/svg+xml">
+    <meta property="og:image:alt" content="GlimpSky Bluesky Viewer and Likes Viewer">
+    <meta property="og:url" content="https://glimpsky.oblachek.eu/" id="ogUrl">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="GlimpSky - Bluesky Viewer and Likes Viewer">
+    <meta name="twitter:description" content="Explore public Bluesky profiles with filters, regex search, and activity insights from AT Protocol data.">
+    <meta name="twitter:image" content="https://glimpsky.oblachek.eu/assets/og-image.svg">
+    <meta name="twitter:image:alt" content="GlimpSky Bluesky Viewer and Likes Viewer">
+    <meta name="twitter:url" content="https://glimpsky.oblachek.eu/" id="twitterUrl">
+    <meta name="author" content="oblachek.eu">
+    <link rel="canonical" href="https://glimpsky.oblachek.eu/" id="canonicalUrl">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <script type="application/ld+json" id="seoStructuredData">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "GlimpSky",
+            "applicationCategory": "SocialNetworkingApplication",
+            "operatingSystem": "Web",
+            "description": "Bluesky viewer and Bluesky likes viewer for exploring public posts, likes, followers, and account activity.",
+            "url": "https://glimpsky.oblachek.eu/"
+        }
+    </script>
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+                {
+                    "@type": "Question",
+                    "name": "What is GlimpSky?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "GlimpSky is a Bluesky viewer and Bluesky likes viewer for exploring public posts, likes, followers, and profile activity."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Do I need to sign in to use GlimpSky?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "No. GlimpSky reads publicly available Bluesky and AT Protocol data and does not require login."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Can I view likes and filter posts?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes. You can view likes, hide reposts or replies, filter by date, and search with plain text or regex."
+                    }
+                }
+            ]
+        }
+    </script>
     <script>
         (function () {
             try {
@@ -31,7 +84,7 @@
     <div class="container">
         <div class="header">
             <div class="title-row">
-                <img src="favicon.svg" alt="" class="title-icon">
+                <img src="assets/favicon.svg" alt="" class="title-icon">
                 <h1 id="mainTitle">GlimpSky</h1>
                 <div class="title-actions">
                     <button class="about-btn" id="themeToggleBtn" type="button" aria-label="Toggle dark mode" aria-pressed="false"></button>
@@ -39,7 +92,7 @@
                 </div>
             </div>
             <p class="title-sub">Bluesky Profile Viewer</p>
-            <p class="subtitle">View posts and likes from any Bluesky profile. No login required.</p>
+            <p class="subtitle">Use this Bluesky viewer to browse posts, likes, followers, and activity from any public profile. No login required.</p>
             <div class="header-divider"></div>
             
             <div class="input-group">
@@ -140,6 +193,22 @@
                 <button class="load-more" id="loadMoreBtn">Load More</button>
             </div>
         </div>
+
+        <section class="seo-content" aria-label="About GlimpSky features">
+            <h2>Bluesky Viewer and Likes Viewer</h2>
+            <p>GlimpSky is a browser-based Bluesky viewer that helps you inspect public account activity. Enter any handle or DID to view posts, likes, and profile metadata from open AT Protocol endpoints.</p>
+            <p>Use filters to hide reposts, hide replies, hide quotes, search text, search authors, or apply date ranges. This makes GlimpSky useful both as a Bluesky profile viewer and a Bluesky likes viewer for research and moderation workflows.</p>
+        </section>
+
+        <section class="seo-content seo-faq" aria-label="Frequently asked questions">
+            <h2>FAQ</h2>
+            <h3>What can this Bluesky viewer show?</h3>
+            <p>It can show posts, likes, followers-related account data, and timeline activity for public Bluesky profiles.</p>
+            <h3>Do I need a Bluesky account to use it?</h3>
+            <p>No. The tool works without login and reads only publicly available data.</p>
+            <h3>Can I search by keyword or regex?</h3>
+            <p>Yes. You can use plain keyword search or regex patterns to find specific text and authors.</p>
+        </section>
     </div>
 
     

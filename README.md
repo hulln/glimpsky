@@ -1,5 +1,5 @@
 
-<h1><img src="favicon.svg" alt="" width="22" height="22"> GlimpSky - Bluesky Profile Viewer</h1>
+<h1><img src="assets/favicon.svg" alt="" width="22" height="22"> GlimpSky - Bluesky Profile Viewer</h1>
 
 GlimpSky is a lightweight web tool for exploring public Bluesky accounts: posts, likes, followers, and related account activity from public AT Protocol endpoints.
 

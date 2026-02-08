@@ -1,5 +1,6 @@
         const API_PUBLIC = 'https://public.api.bsky.app/xrpc';
         const THEME_STORAGE_KEY = 'glimpsky-theme';
+        const PREFERRED_ORIGIN = 'https://glimpsky.oblachek.eu';
         
         let currentHandle = '';
         let currentDid = '';
@@ -228,7 +229,46 @@
             const url = new URL(window.location.href);
             url.search = '';
             url.hash = '';
+            if (url.pathname.endsWith('/index.html')) {
+                url.pathname = url.pathname.slice(0, -'index.html'.length);
+            }
             return url.toString();
+        }
+
+        function getCanonicalHomeUrl() {
+            const current = new URL(getToolHomeUrl());
+            const isLocalhost = current.hostname === 'localhost' || current.hostname === '127.0.0.1';
+            if (isLocalhost) return current.toString();
+            const canonical = new URL(current.pathname || '/', PREFERRED_ORIGIN);
+            return canonical.toString();
+        }
+
+        function syncSeoUrlTags(homeUrl) {
+            const ogUrl = document.getElementById('ogUrl');
+            if (ogUrl) {
+                ogUrl.setAttribute('content', homeUrl);
+            }
+
+            const twitterUrl = document.getElementById('twitterUrl');
+            if (twitterUrl) {
+                twitterUrl.setAttribute('content', homeUrl);
+            }
+
+            const canonicalUrl = document.getElementById('canonicalUrl');
+            if (canonicalUrl) {
+                canonicalUrl.setAttribute('href', homeUrl);
+            }
+
+            const structuredData = document.getElementById('seoStructuredData');
+            if (structuredData) {
+                try {
+                    const parsed = JSON.parse(structuredData.textContent || '{}');
+                    parsed.url = homeUrl;
+                    structuredData.textContent = JSON.stringify(parsed);
+                } catch (e) {
+                    // Ignore parse failures to avoid breaking app startup.
+                }
+            }
         }
 
         if (elements.shareToolBtn) {
@@ -958,10 +998,7 @@
             updateModeButtons('posts');
             const homeUrl = getToolHomeUrl();
             window.history.replaceState({}, '', homeUrl);
-            const ogUrl = document.getElementById('ogUrl');
-            if (ogUrl) {
-                ogUrl.setAttribute('content', homeUrl);
-            }
+            syncSeoUrlTags(getCanonicalHomeUrl());
         });
 
         async function updateAccountInfo(force = false) {

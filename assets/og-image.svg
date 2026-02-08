@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">GlimpSky</title>
+  <desc id="desc">GlimpSky Bluesky Viewer and Likes Viewer</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1040" cy="90" r="220" fill="#60a5fa" opacity="0.18"/>
+  <circle cx="130" cy="560" r="280" fill="#38bdf8" opacity="0.12"/>
+  <g fill="#ffffff" font-family="Lexend, Segoe UI, Arial, sans-serif">
+    <text x="96" y="248" font-size="78" font-weight="700">GlimpSky</text>
+    <text x="96" y="322" font-size="40" font-weight="500" opacity="0.95">Bluesky Viewer and Likes Viewer</text>
+    <text x="96" y="392" font-size="30" font-weight="400" opacity="0.9">Search public posts, likes, and account activity</text>
+    <text x="96" y="450" font-size="30" font-weight="400" opacity="0.9">with filters, date range, and regex support.</text>
+    <text x="96" y="540" font-size="26" font-weight="500" opacity="0.95">glimpsky.oblachek.eu</text>
+  </g>
+</svg>
