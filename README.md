@@ -1,5 +1,5 @@
 
-# Bluesky Profile Viewer
+# GlimpSky - Bluesky Profile Viewer
 
 A lightweight web tool for exploring public Bluesky accounts: posts, likes, followers, and related data from public AT Protocol endpoints.
 

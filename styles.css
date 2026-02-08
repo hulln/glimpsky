@@ -285,6 +285,33 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
+        .input-with-clear {
+            position: relative;
+        }
+
+        .input-with-clear .search-input {
+            padding-right: 32px;
+        }
+
+        .clear-input {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+            display: none;
+        }
+
+        .clear-input.show {
+            display: block;
+        }
+
         .advanced-buttons {
             display: flex;
             gap: 10px;
@@ -1139,10 +1166,28 @@
                 text-align: center;
             }
 
+            .profile-topline {
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .profile-topline .copy-link-btn {
+                margin-left: 0;
+            }
+
             .stats {
                 justify-content: center;
                 flex-wrap: wrap;
                 gap: 16px;
+            }
+
+            .post-header {
+                flex-wrap: wrap;
+            }
+
+            .post-actions {
+                margin-left: 0;
             }
 
             .post {

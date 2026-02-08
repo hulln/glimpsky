@@ -18,6 +18,7 @@
         let accountInfoToken = 0;
         let joinedLoaded = false;
         let lastActiveLoaded = false;
+        let pendingSortOldest = false;
         const likesCountCache = new Map();
         const mutualsCache = new Map();
         const blockingCountCache = new Map();
@@ -71,9 +72,20 @@
 
         elements.handleInput.addEventListener('input', () => {
             queueHandleSuggestions(elements.handleInput.value);
+            toggleClearButton(elements.handleInput);
         });
 
         elements.sortOldest.addEventListener('change', () => {
+            if (elements.sortOldest.checked && !allPostsLoaded) {
+                pendingSortOldest = true;
+                elements.advancedFiltersContent.classList.add('expanded');
+                elements.advancedFiltersToggle.classList.add('expanded');
+                elements.filterBanner.classList.add('show');
+                return;
+            }
+            if (!elements.sortOldest.checked) {
+                pendingSortOldest = false;
+            }
             handleFilterChange();
         });
         
@@ -83,6 +95,7 @@
             filterInputTimer = setTimeout(() => {
                 handleFilterChange();
             }, 250);
+            toggleClearButton(elements.searchText);
         });
 
         elements.searchAuthor.addEventListener('input', () => {
@@ -90,6 +103,22 @@
             filterInputTimer = setTimeout(() => {
                 handleFilterChange();
             }, 250);
+            toggleClearButton(elements.searchAuthor);
+        });
+
+        document.querySelectorAll('.clear-input').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const targetId = btn.getAttribute('data-clear-target');
+                const input = targetId ? document.getElementById(targetId) : null;
+                if (!input) return;
+                input.value = '';
+                toggleClearButton(input);
+                if (input.id === 'handle') {
+                    closeHandleSuggestions();
+                } else {
+                    await handleFilterChange();
+                }
+            });
         });
 
         elements.dateFrom.addEventListener('change', () => {
@@ -105,12 +134,14 @@
             if (allPostsLoaded) {
                 elements.filterBanner.classList.remove('show');
                 applyFiltersImmediate();
+                pendingSortOldest = false;
             }
         });
 
         elements.filterCancelBtn.addEventListener('click', async () => {
             clearExpensiveFilters();
             elements.filterBanner.classList.remove('show');
+            pendingSortOldest = false;
             await resetToPagedView();
         });
 
@@ -160,7 +191,7 @@
 
         if (elements.shareBskyLink) {
             const url = getToolHomeUrl();
-            const text = `Bluesky Profile Viewer ${url}`;
+            const text = `GlimpSky - Bluesky Profile Viewer ${url}`;
             elements.shareBskyLink.href = `https://bsky.app/intent/compose?text=${encodeURIComponent(text)}`;
         }
 
@@ -174,6 +205,7 @@
         elements.mainTitle.addEventListener('click', () => {
             elements.handleInput.value = '';
             closeHandleSuggestions();
+            toggleClearButton(elements.handleInput);
             elements.profileCard.style.display = 'none';
             elements.contentSection.style.display = 'none';
             elements.content.innerHTML = '';
@@ -209,10 +241,13 @@
             elements.dateTo.value = '';
             elements.searchText.value = '';
             elements.searchAuthor.value = '';
+            toggleClearButton(elements.searchText);
+            toggleClearButton(elements.searchAuthor);
             elements.advancedFiltersContent.classList.remove('expanded');
             elements.advancedFiltersToggle.classList.remove('expanded');
             elements.filterBanner.classList.remove('show');
             elements.sortOldest.checked = false;
+            pendingSortOldest = false;
             updateModeButtons('posts');
             updateUrlParams('', 'posts');
         });
@@ -860,6 +895,10 @@
             updateModeButtons('posts');
             const homeUrl = getToolHomeUrl();
             window.history.replaceState({}, '', homeUrl);
+            const ogUrl = document.getElementById('ogUrl');
+            if (ogUrl) {
+                ogUrl.setAttribute('content', homeUrl);
+            }
         });
 
         async function updateAccountInfo(force = false) {
@@ -1013,6 +1052,10 @@
                 
                 statusDiv.className = 'success-message';
                 statusDiv.textContent = `Successfully loaded all ${allPosts.length} ${contentType}`;
+                if (pendingSortOldest || elements.sortOldest.checked) {
+                    applyFiltersImmediate();
+                    pendingSortOldest = false;
+                }
                 
                 setTimeout(() => {
                     statusDiv.remove();
@@ -1241,6 +1284,8 @@
             elements.dateTo.value = '';
             elements.searchText.value = '';
             elements.searchAuthor.value = '';
+            toggleClearButton(elements.searchText);
+            toggleClearButton(elements.searchAuthor);
         }
 
         async function handleFilterChange() {
@@ -1250,6 +1295,8 @@
                     elements.filterBanner.classList.remove('show');
                     applyFiltersImmediate();
                 } else {
+                    elements.advancedFiltersContent.classList.add('expanded');
+                    elements.advancedFiltersToggle.classList.add('expanded');
                     elements.filterBanner.classList.add('show');
                 }
             } else {
@@ -1407,7 +1454,7 @@
                     const totalLikes = likesCountCache.has(currentDid) ? likesCountCache.get(currentDid).text : null;
                     infoDiv.textContent = `Showing ${filtered.length} of ${allPosts.length} likes${totalLikes ? ` (total ${totalLikes})` : ''}. Some likes may be unavailable.`;
                 } else {
-                    infoDiv.textContent = `Showing ${filtered.length} of ${allPosts.length} ${currentMode}`;
+                    infoDiv.textContent = `Showing ${filtered.length} of ${allPosts.length} loaded items`;
                 }
                 elements.content.insertBefore(infoDiv, elements.content.firstChild);
             }
@@ -1666,13 +1713,15 @@
             posts.sort((a, b) => {
                 const timeA = likeTimestamps[a.uri] || new Date(0);
                 const timeB = likeTimestamps[b.uri] || new Date(0);
-                return elements.sortOldest.checked ? (timeA - timeB) : (timeB - timeA);
+                const sortOldest = elements.sortOldest.checked && allPostsLoaded;
+                return sortOldest ? (timeA - timeB) : (timeB - timeA);
             });
 
             posts.forEach((post, idx) => {
                 const highlight = Array.isArray(highlights) ? highlights[idx] : null;
                 const reply = post && post.reply ? post.reply : null;
-                const postDiv = createPostElement(post, null, reply, highlight);
+                const likedAt = likeTimestamps[post.uri] || null;
+                const postDiv = createPostElement(post, null, reply, highlight, likedAt);
                 elements.content.appendChild(postDiv);
             });
         }
@@ -1712,7 +1761,7 @@
                 return;
             }
 
-            if (elements.sortOldest.checked) {
+            if (elements.sortOldest.checked && allPostsLoaded) {
                 filteredFeed = [...filteredFeed].sort((a, b) => {
                     const timeA = new Date(a.post?.record?.createdAt || 0);
                     const timeB = new Date(b.post?.record?.createdAt || 0);
@@ -1722,12 +1771,12 @@
 
             filteredFeed.forEach(item => {
                 const post = item.post;
-                const postDiv = createPostElement(post, item.reason, item.reply, item._highlight || null);
+                const postDiv = createPostElement(post, item.reason, item.reply, item._highlight || null, null);
                 elements.content.appendChild(postDiv);
             });
         }
 
-        function createPostElement(post, reason, reply, highlight) {
+        function createPostElement(post, reason, reply, highlight, timestampOverride) {
             const div = document.createElement('div');
             div.className = 'post';
             
@@ -1735,7 +1784,7 @@
             const record = post.record;
             const avatar = author.avatar || 'https://via.placeholder.com/40';
             
-            const timestamp = new Date(record.createdAt);
+            const timestamp = timestampOverride ? new Date(timestampOverride) : new Date(record.createdAt);
             const timeLabel = formatEuDate(timestamp);
             
             let postText = escapeHtml(record.text || '');
@@ -1994,6 +2043,17 @@
                 }
             }
             return false;
+        }
+
+        function toggleClearButton(input) {
+            const wrapper = input && input.parentElement;
+            const button = wrapper ? wrapper.querySelector('.clear-input') : null;
+            if (!button) return;
+            if (input.value && input.value.trim()) {
+                button.classList.add('show');
+            } else {
+                button.classList.remove('show');
+            }
         }
 
         function authorMatches(item, predicate) {

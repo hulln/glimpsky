@@ -3,7 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bluesky Profile Viewer</title>
+    <title>GlimpSky - Bluesky Profile Viewer</title>
+    <meta name="description" content="GlimpSky is a Bluesky Profile Viewer to explore public posts, likes, followers and more. Filter by date, regex search and analyze reply/like patterns from public AT Protocol data.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="GlimpSky - Bluesky Profile Viewer">
+    <meta property="og:description" content="Explore public Bluesky profiles: posts, likes, followers, regex search and reply/like patterns from open AT Protocol data.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="favicon.svg">
+    <meta property="og:url" content="" id="ogUrl">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="GlimpSky - Bluesky Profile Viewer">
+    <meta name="twitter:description" content="Explore public Bluesky profiles with regex search, filters and activity insights from AT Protocol data.">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -14,17 +24,20 @@
         <div class="header">
             <div class="title-row">
                 <img src="favicon.svg" alt="" class="title-icon">
-                <h1 id="mainTitle">Bluesky Profile Viewer</h1>
+                <h1 id="mainTitle">GlimpSky - Bluesky Profile Viewer</h1>
             </div>
-            <p class="subtitle">View posts and likes from any Bluesky profile. No login needed.</p>
+            <p class="subtitle">View posts and likes from any Bluesky profile. No login required. </p>
             
             <div class="input-group">
                 <label for="handle">Bluesky Handle or DID</label>
-                <input 
-                    type="text" 
-                    id="handle" 
-                    placeholder="e.g., user.bsky.social or oblachek.eu"
-                    value="">
+                <div class="input-with-clear">
+                    <input 
+                        type="text" 
+                        id="handle" 
+                        placeholder="e.g., user.bsky.social or oblachek.eu"
+                        value="">
+                    <button class="clear-input" type="button" data-clear-target="handle" aria-label="Clear handle">×</button>
+                </div>
                 <div class="suggestions">
                     <div class="suggestions-panel" id="handleSuggestions"></div>
                 </div>
@@ -69,17 +82,23 @@
 
                     <div class="filter-section" style="margin-top: 12px;">
                         <label for="searchText">Search posts by text</label>
-                        <input type="text" class="search-input" id="searchText" placeholder="Enter keywords...">
+                        <div class="input-with-clear">
+                            <input type="text" class="search-input" id="searchText" placeholder="Enter keywords...">
+                            <button class="clear-input" type="button" data-clear-target="searchText" aria-label="Clear search text">×</button>
+                        </div>
                     </div>
 
                     <div class="filter-section" style="margin-top: 12px;">
                         <label for="searchAuthor">Search by author (handle or display name)</label>
-                        <input type="text" class="search-input" id="searchAuthor" placeholder="e.g. /bsky\\.social$/ or @handle">
+                        <div class="input-with-clear">
+                            <input type="text" class="search-input" id="searchAuthor" placeholder="e.g. /bsky\\.social$/ or @handle">
+                            <button class="clear-input" type="button" data-clear-target="searchAuthor" aria-label="Clear author search">×</button>
+                        </div>
                         <div style="margin-top: 6px; font-size: 12px; color: #94a3b8;">Search supports regex in /pattern/flags (e.g. /hello.*/i)</div>
                     </div>
 
                     <div class="filter-banner" id="filterBanner">
-                        <span style="flex: 1;">Filters require loading all content. Load now?</span>
+                        <span style="flex: 1;">Filters, including oldest first, require loading all content. Load now?</span>
                         <div style="display: flex; gap: 8px; flex-shrink: 0;">
                             <button class="btn-outline" id="filterLoadBtn" type="button">Load & Apply</button>
                             <button class="btn-outline" id="filterCancelBtn" type="button">Cancel</button>
@@ -130,7 +149,7 @@
                 <h2>About This Tool</h2>
             </div>
             <div class="info-modal-body">
-                <p>This Bluesky Profile Viewer lets you explore public posts, likes, followers, and other information from any Bluesky account. All data comes from the open AT Protocol via public Bluesky APIs and PDS endpoints. It also demonstrates how accessible open data on ATProto can be.</p>
+                <p>GlimpSky lets you explore public posts, likes, followers and other information from any Bluesky account. All data comes from the open AT Protocol via public Bluesky APIs and PDS endpoints. It also demonstrates how accessible open data on ATProto can be.</p>
                 
                 <p><strong>Inspired by</strong> <a href="https://github.com/ClearskyApp06/clearskyservices" target="_blank" rel="noopener noreferrer">Clearsky</a> (blocking features) and <a href="https://github.com/luizzeroxis/bluesky-likes/" target="_blank" rel="noopener noreferrer">Bluesky Likes by luizzeroxis</a> (likes display).</p>
                 
