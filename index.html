@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bluesky Profile Viewer</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap');
         * {
             margin: 0;
             padding: 0;
@@ -12,7 +13,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: #f8fafc;
             min-height: 100vh;
             padding: 40px 20px;
@@ -90,6 +91,7 @@
             border: 1px solid #cbd5e1;
             border-radius: 6px;
             font-size: 15px;
+            font-family: inherit;
             transition: all 0.2s;
             background: white;
         }
@@ -98,6 +100,74 @@
             outline: none;
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .suggestions {
+            position: relative;
+            margin-top: 8px;
+        }
+
+        .suggestions-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            z-index: 20;
+            overflow: hidden;
+            display: none;
+        }
+
+        .suggestions-panel.open {
+            display: block;
+        }
+
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+        }
+
+        .suggestion-item:hover {
+            background: #f8fafc;
+        }
+
+        .suggestion-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            object-fit: cover;
+            border: 1px solid #e2e8f0;
+            background: #f1f5f9;
+            flex-shrink: 0;
+        }
+
+        .suggestion-meta {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .suggestion-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .suggestion-handle {
+            font-size: 12px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .filter-options {
@@ -213,6 +283,24 @@
             margin-top: 12px;
         }
 
+        .filter-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-top: 12px;
+            font-size: 12px;
+            color: #475569;
+        }
+
+        .filter-banner.show {
+            display: flex;
+        }
+
         .btn-outline {
             background: white;
             color: #475569;
@@ -286,6 +374,7 @@
             border-radius: 6px;
             font-size: 14px;
             font-weight: 500;
+            font-family: inherit;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -299,6 +388,30 @@
             background: #1e293b;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+        }
+
+        .btn-tab {
+            background: white;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-tab:hover:not(:disabled) {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+
+        .btn-tab.active {
+            background: #0f172a;
+            color: white;
+            border-color: #0f172a;
+        }
+
+        .btn-tab.active:hover:not(:disabled) {
+            background: #1e293b;
+            border-color: #1e293b;
         }
 
         .btn-secondary {
@@ -351,6 +464,20 @@
             font-weight: 600;
         }
 
+        .profile-topline {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .profile-topline h2 {
+            margin-bottom: 0;
+        }
+
+        .profile-topline .copy-link-btn {
+            margin-left: auto;
+        }
+
         .handle {
             color: #64748b;
             font-size: 14px;
@@ -364,12 +491,38 @@
             font-size: 14px;
         }
 
+
         .stats {
             display: flex;
             gap: 24px;
             padding-top: 16px;
             border-top: 1px solid #f1f5f9;
             flex-wrap: wrap;
+        }
+
+        .account-info {
+            display: flex;
+            gap: 24px;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px dashed #e2e8f0;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .account-item {
+            display: flex;
+            gap: 6px;
+            align-items: baseline;
+        }
+
+        .account-label {
+            font-weight: 600;
+            color: #0f172a;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
         .stat {
@@ -514,6 +667,7 @@
             justify-content: space-between;
             padding: 14px 16px;
             border-bottom: 1px solid #f1f5f9;
+            position: relative;
         }
 
         .modal-title {
@@ -521,18 +675,23 @@
             font-weight: 600;
             color: #0f172a;
             flex: 1;
+            padding-right: 28px;
         }
 
         .iconButton {
             background: transparent;
             border: none;
             cursor: pointer;
-            font-size: 20px;
+            font-size: 24px;
             line-height: 1;
             color: #64748b;
             padding: 0;
             width: auto;
             height: auto;
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
         }
 
         .iconButton:hover {
@@ -641,23 +800,24 @@
         }
 
         .load-more {
-            padding: 10px 24px;
-            background: white;
-            color: #0f172a;
+            background: transparent;
             border: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 12px;
+            padding: 4px 8px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
             transition: all 0.2s;
+            font-family: inherit;
+            text-decoration: none;
         }
 
         .load-more:hover:not(:disabled) {
-            background: #f8fafc;
+            color: #0f172a;
             border-color: #cbd5e1;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+            background: #f8fafc;
         }
+
 
         .post {
             padding: 20px 24px;
@@ -713,6 +873,32 @@
             white-space: nowrap;
         }
 
+        .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 8px;
+        }
+
+        .copy-link-btn {
+            background: transparent;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            text-decoration: none;
+        }
+
+        .copy-link-btn:hover {
+            color: #0f172a;
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+
         .post-text {
             color: #334155;
             line-height: 1.5;
@@ -729,6 +915,12 @@
 
         .post-text a:hover {
             text-decoration: underline;
+        }
+
+        .highlight {
+            background: #fff7cc;
+            padding: 0 2px;
+            border-radius: 3px;
         }
 
         .post-image {
@@ -763,6 +955,29 @@
             font-size: 13px;
             margin-bottom: 10px;
             font-weight: 500;
+        }
+
+        .quote-indicator {
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .reply-preview,
+        .quote-preview {
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        .preview-meta {
+            color: #64748b;
+            margin-bottom: 6px;
         }
 
         .loading {
@@ -870,7 +1085,7 @@
         
         <div class="header">
             <h1 id="mainTitle">Bluesky Profile Viewer</h1>
-            <p class="subtitle">View posts and likes from any Bluesky profile</p>
+            <p class="subtitle">View posts and likes from any Bluesky profile. No login needed.</p>
             
             <div class="input-group">
                 <label for="handle">Bluesky Handle or DID</label>
@@ -879,6 +1094,9 @@
                     id="handle" 
                     placeholder="e.g., user.bsky.social or oblachek.eu"
                     value="">
+                <div class="suggestions">
+                    <div class="suggestions-panel" id="handleSuggestions"></div>
+                </div>
             </div>
 
             <div class="filter-options">
@@ -889,6 +1107,18 @@
                 <div class="checkbox-group">
                     <input type="checkbox" id="hideReplies">
                     <label for="hideReplies">Hide replies</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="onlyLinks">
+                    <label for="onlyLinks">Only links</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="hideQuotes">
+                    <label for="hideQuotes">Hide quotes</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="sortOldest">
+                    <label for="sortOldest">Oldest first</label>
                 </div>
             </div>
 
@@ -909,21 +1139,22 @@
                     <div class="filter-section" style="margin-top: 12px;">
                         <label for="searchText">Search posts by text</label>
                         <input type="text" class="search-input" id="searchText" placeholder="Enter keywords...">
+                        <div style="margin-top: 6px; font-size: 12px; color: #94a3b8;">Supports regex in /pattern/flags (e.g. /hello.*/i)</div>
                     </div>
 
-                    <div class="advanced-buttons">
-                        <button class="btn-primary" id="applyFiltersBtn" style="display: none;">Apply Filters</button>
-                    </div>
-                    <div class="warning-text show" style="margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                        <span style="flex: 1;">Filtering requires loading all content first. Use "Load All" for faster filtering.</span>
-                        <button class="btn-outline" id="loadAllBtn" style="flex-shrink: 0;">Load All</button>
+                    <div class="filter-banner" id="filterBanner">
+                        <span style="flex: 1;">Filters require loading all content. Load now?</span>
+                        <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                            <button class="btn-outline" id="filterLoadBtn" type="button">Load & Apply</button>
+                            <button class="btn-outline" id="filterCancelBtn" type="button">Cancel</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="button-group">
-                <button class="btn-primary" id="loadPostsBtn">View Posts</button>
-                <button class="btn-secondary" id="loadLikesBtn">View Likes</button>
+                <button class="btn-tab" id="loadPostsBtn">View Posts</button>
+                <button class="btn-tab" id="loadLikesBtn">View Likes</button>
             </div>
         </div>
 
@@ -985,12 +1216,24 @@
         let currentHandle = '';
         let currentDid = '';
         let currentPdsUrl = '';
+        let currentDidDoc = null;
         let currentProfile = null;
         let currentCursor = null;
         let currentMode = 'posts';
         let isLoading = false;
         let allPosts = [];
         let allPostsLoaded = false;
+        let latestPostDate = null;
+        let latestLikeDate = null;
+        let joinedDate = null;
+        let latestFollowDate = null;
+        let latestRepostDate = null;
+        let accountInfoToken = 0;
+        let joinedLoaded = false;
+        let lastActiveLoaded = false;
+        const likesCountCache = new Map();
+        const mutualsCache = new Map();
+        const blockingCountCache = new Map();
 
         const elements = {
             handleInput: document.getElementById('handle'),
@@ -1000,6 +1243,9 @@
             loadMoreContainer: document.getElementById('loadMoreContainer'),
             hideReposts: document.getElementById('hideReposts'),
             hideReplies: document.getElementById('hideReplies'),
+            onlyLinks: document.getElementById('onlyLinks'),
+            hideQuotes: document.getElementById('hideQuotes'),
+            sortOldest: document.getElementById('sortOldest'),
             profileCard: document.getElementById('profileCard'),
             contentSection: document.getElementById('contentSection'),
             content: document.getElementById('content'),
@@ -1018,10 +1264,12 @@
             dateFrom: document.getElementById('dateFrom'),
             dateTo: document.getElementById('dateTo'),
             searchText: document.getElementById('searchText'),
-            loadAllBtn: document.getElementById('loadAllBtn'),
-            applyFiltersBtn: document.getElementById('applyFiltersBtn'),
             advancedFiltersToggle: document.getElementById('advancedFiltersToggle'),
-            advancedFiltersContent: document.getElementById('advancedFiltersContent')
+            advancedFiltersContent: document.getElementById('advancedFiltersContent'),
+            filterBanner: document.getElementById('filterBanner'),
+            filterLoadBtn: document.getElementById('filterLoadBtn'),
+            filterCancelBtn: document.getElementById('filterCancelBtn'),
+            handleSuggestions: document.getElementById('handleSuggestions')
         };
 
         elements.loadPostsBtn.addEventListener('click', () => loadContent('posts'));
@@ -1031,33 +1279,43 @@
             if (e.key === 'Enter') loadContent('posts');
         });
 
-        elements.loadAllBtn.addEventListener('click', loadAllPosts);
+        elements.handleInput.addEventListener('input', () => {
+            queueHandleSuggestions(elements.handleInput.value);
+        });
+
+        elements.sortOldest.addEventListener('change', () => {
+            handleFilterChange();
+        });
         
+        let filterInputTimer = null;
         elements.searchText.addEventListener('input', () => {
-            if (elements.searchText.value.trim()) {
-                elements.applyFiltersBtn.style.display = 'block';
-            } else if (!elements.dateFrom.value && !elements.dateTo.value) {
-                elements.applyFiltersBtn.style.display = 'none';
-            }
+            if (filterInputTimer) clearTimeout(filterInputTimer);
+            filterInputTimer = setTimeout(() => {
+                handleFilterChange();
+            }, 250);
         });
 
         elements.dateFrom.addEventListener('change', () => {
-            if (elements.dateFrom.value || elements.dateTo.value) {
-                elements.applyFiltersBtn.style.display = 'block';
-            } else if (!elements.searchText.value.trim()) {
-                elements.applyFiltersBtn.style.display = 'none';
-            }
+            handleFilterChange();
         });
 
         elements.dateTo.addEventListener('change', () => {
-            if (elements.dateFrom.value || elements.dateTo.value) {
-                elements.applyFiltersBtn.style.display = 'block';
-            } else if (!elements.searchText.value.trim()) {
-                elements.applyFiltersBtn.style.display = 'none';
+            handleFilterChange();
+        });
+
+        elements.filterLoadBtn.addEventListener('click', async () => {
+            await loadAllPosts();
+            if (allPostsLoaded) {
+                elements.filterBanner.classList.remove('show');
+                applyFiltersImmediate();
             }
         });
 
-        elements.applyFiltersBtn.addEventListener('click', applyFilters);
+        elements.filterCancelBtn.addEventListener('click', async () => {
+            clearExpensiveFilters();
+            elements.filterBanner.classList.remove('show');
+            await resetToPagedView();
+        });
 
         elements.advancedFiltersToggle.addEventListener('click', () => {
             elements.advancedFiltersToggle.classList.toggle('expanded');
@@ -1083,6 +1341,7 @@
 
         elements.mainTitle.addEventListener('click', () => {
             elements.handleInput.value = '';
+            closeHandleSuggestions();
             elements.profileCard.style.display = 'none';
             elements.contentSection.style.display = 'none';
             elements.content.innerHTML = '';
@@ -1090,23 +1349,60 @@
             currentHandle = '';
             currentDid = '';
             currentPdsUrl = '';
+            currentDidDoc = null;
             currentProfile = null;
             currentCursor = null;
             currentMode = 'posts';
             allPosts = [];
             allPostsLoaded = false;
+            latestPostDate = null;
+            latestLikeDate = null;
+            joinedDate = null;
+            latestFollowDate = null;
+            latestRepostDate = null;
+            likesCountToken = 0;
+            likesCountTruncated = false;
+            likesCountExact = false;
+            likesCountBusy = false;
+            likesCountCache.clear();
+            mutualsCache.clear();
+            blockingCountCache.clear();
+            joinedLoaded = false;
+            lastActiveLoaded = false;
             elements.hideReposts.checked = true;
             elements.hideReplies.checked = false;
+            elements.onlyLinks.checked = false;
+            elements.hideQuotes.checked = false;
             elements.dateFrom.value = '';
             elements.dateTo.value = '';
             elements.searchText.value = '';
-            elements.applyFiltersBtn.style.display = 'none';
             elements.advancedFiltersContent.classList.remove('expanded');
             elements.advancedFiltersToggle.classList.remove('expanded');
+            elements.filterBanner.classList.remove('show');
+            elements.sortOldest.checked = false;
+            updateModeButtons('posts');
         });
 
-        function showError(message) {
-            elements.error.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+        document.addEventListener('click', (e) => {
+            if (!elements.handleInput.contains(e.target) && !elements.handleSuggestions.contains(e.target)) {
+                closeHandleSuggestions();
+            }
+        });
+
+        function showError(message, showExample = false) {
+            const exampleButton = showExample
+                ? `<button class="btn-outline" id="exampleProfileBtn" type="button" style="margin-top: 8px;">Try example profile</button>`
+                : '';
+            elements.error.innerHTML = `<div class="error">${escapeHtml(message)}${exampleButton}</div>`;
+            if (showExample) {
+                const exampleBtn = document.getElementById('exampleProfileBtn');
+                if (exampleBtn) {
+                    exampleBtn.addEventListener('click', async () => {
+                        elements.handleInput.value = 'bsky.app';
+                        await loadContent('posts');
+                    });
+                }
+            }
             setTimeout(() => {
                 elements.error.innerHTML = '';
             }, 8000);
@@ -1163,6 +1459,7 @@
                 }
                 
                 const didDoc = await response.json();
+                currentDidDoc = didDoc;
                 
                 const pdsService = didDoc.service?.find(s => s.id === '#atproto_pds');
                 if (!pdsService) {
@@ -1187,6 +1484,9 @@
 
                 const profile = await response.json();
                 currentProfile = profile;
+                if (profile.createdAt) {
+                    joinedDate = new Date(profile.createdAt);
+                }
                 displayProfile(profile);
                 return profile;
             } catch (error) {
@@ -1203,9 +1503,26 @@
                 <div class="profile-header">
                     <img src="${avatar}" alt="${escapeHtml(displayName)}" class="avatar">
                     <div class="profile-info">
-                        <h2>${escapeHtml(displayName)}</h2>
+                        <div class="profile-topline">
+                            <h2>${escapeHtml(displayName)}</h2>
+                            <a class="copy-link-btn" href="https://bsky.app/profile/${escapeHtml(profile.handle)}" target="_blank" rel="noopener noreferrer">Open in Bluesky</a>
+                        </div>
                         <div class="handle">@${escapeHtml(profile.handle)}</div>
                         ${description ? `<div class="description">${escapeHtml(description)}</div>` : ''}
+                        <div class="account-info">
+                            <div class="account-item">
+                                <span class="account-label">Joined</span>
+                                <span id="joinedDate">—</span>
+                            </div>
+                            <div class="account-item">
+                                <span class="account-label">Last active</span>
+                                <span id="lastActiveDate">—</span>
+                            </div>
+                            <div class="account-item">
+                                <span class="account-label">Last follow</span>
+                                <span id="lastFollowDate">—</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1214,6 +1531,10 @@
                         <span class="stat-value">${formatNumber(profile.postsCount || 0)}</span>
                         <span class="stat-label">posts</span>
                     </div>
+                    <button class="stat statButton" id="likesStat" type="button" title="Click to compute exact likes">
+                        <span class="stat-value" id="likesCount">—</span>
+                        <span class="stat-label">likes</span>
+                    </button>
                     <button class="stat statButton" id="followersStat" type="button" title="Show followers">
                         <span class="stat-value">${formatNumber(profile.followersCount || 0)}</span>
                         <span class="stat-label">followers</span>
@@ -1239,6 +1560,8 @@
             elements.profileCard.style.display = 'block';
 
             wireProfileStatsButtons();
+            primeMutualsAndBlocking();
+            applyCachedLikesCount();
         }
 
         let listCursor = null;
@@ -1253,6 +1576,7 @@
             listNote = note || '';
             elements.listModalTitle.textContent = title;
             elements.listModalMeta.textContent = listNote;
+            elements.listModalMeta.style.display = listNote ? 'block' : 'none';
             elements.listModalList.innerHTML = '';
             elements.listModalLoadMore.style.display = 'none';
             elements.listModal.classList.add('open');
@@ -1265,6 +1589,7 @@
             elements.listModal.setAttribute('aria-hidden', 'true');
             elements.listModalList.innerHTML = '';
             elements.listModalMeta.textContent = '';
+            elements.listModalMeta.style.display = 'none';
             listCursor = null;
             listLoader = null;
             listLoading = false;
@@ -1433,12 +1758,27 @@
             return { mutuals, truncated };
         }
 
+        async function computeBlockingCount(maxFetch = 5000) {
+            let cursor = null;
+            let count = 0;
+            while (count < maxFetch) {
+                const data = await pdsListRecords('app.bsky.graph.block', cursor, Math.min(100, maxFetch - count));
+                const records = data.records || [];
+                count += records.length;
+                cursor = data.cursor || null;
+                if (!cursor || records.length === 0) break;
+            }
+            const truncated = Boolean(cursor);
+            return { count, truncated };
+        }
+
         function openBlockedByInfo() {
             openListModal(
                 'Blocked by',
-                'This feature is not currently available',
+                '',
                 makeStaticPager([])
             );
+            elements.listModalMeta.style.display = 'none';
             elements.listModalLoadMore.style.display = 'none';
             elements.listModalList.innerHTML = `
                 <div class="empty-state" style="padding: 16px 10px;">
@@ -1451,12 +1791,18 @@
         }
 
         function wireProfileStatsButtons() {
+            const likesEl = document.getElementById('likesStat');
             const followersEl = document.getElementById('followersStat');
             const followingEl = document.getElementById('followingStat');
             const mutualsEl = document.getElementById('mutualsStat');
             const blockingEl = document.getElementById('blockingStat');
             const blockedByEl = document.getElementById('blockedByStat');
 
+            if (likesEl) {
+                likesEl.onclick = async () => {
+                    await updateLikesCount(true);
+                };
+            }
             if (followersEl) {
                 followersEl.onclick = () => openListModal('Followers', '', (cursor) => bskyGetFollowersPage(cursor, 50));
             }
@@ -1465,6 +1811,18 @@
             }
             if (mutualsEl) {
                 mutualsEl.onclick = async () => {
+                    const cacheKey = currentDid || '';
+                    if (cacheKey && mutualsCache.has(cacheKey)) {
+                        const cached = mutualsCache.get(cacheKey);
+                        const countEl = document.getElementById('mutualsCount');
+                        if (countEl) countEl.textContent = formatNumber(cached.mutuals.length);
+                        openListModal(
+                            `Mutuals (${cached.mutuals.length}${cached.truncated ? '+' : ''})`,
+                            cached.truncated ? 'Partial result (hit the 5000-per-list cap). Increase the cap in computeMutuals() if you need the full set.' : '',
+                            makeStaticPager(cached.mutuals, 50)
+                        );
+                        return;
+                    }
                     openListModal('Mutuals', 'Computing…', makeStaticPager([]));
                     elements.listModalLoadMore.style.display = 'none';
                     elements.listModalList.innerHTML = `
@@ -1477,6 +1835,9 @@
                         const { mutuals, truncated } = await computeMutuals(5000);
                         const countEl = document.getElementById('mutualsCount');
                         if (countEl) countEl.textContent = formatNumber(mutuals.length);
+                        if (cacheKey) {
+                            mutualsCache.set(cacheKey, { mutuals, truncated });
+                        }
                         openListModal(
                             `Mutuals (${mutuals.length}${truncated ? '+' : ''})`,
                             truncated ? 'Partial result (hit the 5000-per-list cap). Increase the cap in computeMutuals() if you need the full set.' : '',
@@ -1490,12 +1851,156 @@
             }
             if (blockingEl) {
                 blockingEl.onclick = async () => {
-                    openListModal('Blocking', '', (cursor) => getBlockingPage(cursor));
+                    openListModal('Blocking', 'Some blocked accounts may be deactivated and won’t appear.', (cursor) => getBlockingPage(cursor));
                 };
             }
             if (blockedByEl) {
                 blockedByEl.onclick = () => openBlockedByInfo();
             }
+        }
+
+        async function primeMutualsAndBlocking() {
+            const cacheKey = currentDid || '';
+            const mutualsCountEl = document.getElementById('mutualsCount');
+            const blockingCountEl = document.getElementById('blockingCount');
+
+            if (cacheKey) {
+                if (mutualsCache.has(cacheKey)) {
+                    const cached = mutualsCache.get(cacheKey);
+                    if (mutualsCountEl) mutualsCountEl.textContent = formatNumber(cached.mutuals.length);
+                }
+                if (blockingCountCache.has(cacheKey)) {
+                    const cached = blockingCountCache.get(cacheKey);
+                    if (blockingCountEl) blockingCountEl.textContent = cached.truncated ? `${formatNumber(cached.count)}+` : formatNumber(cached.count);
+                }
+            }
+
+            if (cacheKey && !mutualsCache.has(cacheKey)) {
+                if (mutualsCountEl) mutualsCountEl.textContent = '…';
+                try {
+                    const { mutuals, truncated } = await computeMutuals(5000);
+                    mutualsCache.set(cacheKey, { mutuals, truncated });
+                    if (mutualsCountEl) mutualsCountEl.textContent = formatNumber(mutuals.length);
+                } catch (e) {
+                    if (mutualsCountEl) mutualsCountEl.textContent = '—';
+                }
+            }
+
+            if (cacheKey && !blockingCountCache.has(cacheKey)) {
+                if (blockingCountEl) blockingCountEl.textContent = '…';
+                try {
+                    const { count, truncated } = await computeBlockingCount(5000);
+                    blockingCountCache.set(cacheKey, { count, truncated });
+                    if (blockingCountEl) blockingCountEl.textContent = truncated ? `${formatNumber(count)}+` : formatNumber(count);
+                } catch (e) {
+                    if (blockingCountEl) blockingCountEl.textContent = '—';
+                }
+            }
+        }
+
+        let handleSuggestionTimer = null;
+        let lastSuggestionQuery = '';
+        let suggestionAbort = null;
+
+        function queueHandleSuggestions(value) {
+            if (handleSuggestionTimer) {
+                clearTimeout(handleSuggestionTimer);
+            }
+            handleSuggestionTimer = setTimeout(() => {
+                fetchHandleSuggestions(value);
+            }, 250);
+        }
+
+        async function fetchHandleSuggestions(value) {
+            const query = value.trim().replace('@', '');
+            if (!query || query.length < 2) {
+                closeHandleSuggestions();
+                return;
+            }
+            if (query === lastSuggestionQuery) return;
+            lastSuggestionQuery = query;
+
+            if (suggestionAbort) suggestionAbort.abort();
+            suggestionAbort = new AbortController();
+
+            try {
+                const url = `${API_PUBLIC}/app.bsky.actor.searchActorsTypeahead?term=${encodeURIComponent(query)}&limit=6`;
+                const res = await fetch(url, { signal: suggestionAbort.signal });
+                if (!res.ok) return;
+                const data = await res.json();
+                const actors = data.actors || [];
+                renderHandleSuggestions(actors);
+            } catch (e) {
+                if (e.name === 'AbortError') return;
+            }
+        }
+
+        function renderHandleSuggestions(actors) {
+            if (!actors || actors.length === 0) {
+                closeHandleSuggestions();
+                return;
+            }
+            const html = actors.map(actor => {
+                const avatar = actor.avatar || 'https://via.placeholder.com/40';
+                const name = actor.displayName || actor.handle || actor.did || '';
+                const handle = actor.handle ? '@' + actor.handle : (actor.did || '');
+                const actorId = actor.handle || actor.did || '';
+                return `
+                    <div class="suggestion-item" data-actor="${escapeHtml(actorId)}">
+                        <img class="suggestion-avatar" src="${escapeHtml(avatar)}" alt="">
+                        <div class="suggestion-meta">
+                            <div class="suggestion-name">${escapeHtml(name)}</div>
+                            <div class="suggestion-handle">${escapeHtml(handle)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            elements.handleSuggestions.innerHTML = html;
+            elements.handleSuggestions.classList.add('open');
+            [...elements.handleSuggestions.querySelectorAll('.suggestion-item')].forEach(el => {
+                el.addEventListener('click', async () => {
+                    const actor = el.getAttribute('data-actor');
+                    if (!actor) return;
+                    elements.handleInput.value = actor;
+                    closeHandleSuggestions();
+                    await loadContent('posts');
+                });
+            });
+        }
+
+        function closeHandleSuggestions() {
+            elements.handleSuggestions.classList.remove('open');
+            elements.handleSuggestions.innerHTML = '';
+        }
+
+        function updateUrlParams(handle, mode) {
+            const params = new URLSearchParams();
+            if (handle) params.set('handle', handle);
+            if (mode) params.set('mode', mode);
+            const query = params.toString();
+            const newUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+            window.history.replaceState({ handle, mode }, '', newUrl);
+            if (handle && mode) {
+                localStorage.setItem('lastHandle', handle);
+                localStorage.setItem('lastMode', mode);
+            }
+        }
+
+        function loadFromUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const handle = params.get('handle');
+            const mode = params.get('mode') === 'likes' ? 'likes' : 'posts';
+            if (!handle) return;
+            elements.handleInput.value = handle;
+            loadContent(mode);
+        }
+
+        function loadFromStorage() {
+            const handle = localStorage.getItem('lastHandle');
+            const mode = localStorage.getItem('lastMode') === 'likes' ? 'likes' : 'posts';
+            if (!handle) return;
+            elements.handleInput.value = handle;
+            loadContent(mode);
         }
 
         elements.listModalClose.addEventListener('click', closeListModal);
@@ -1513,6 +2018,135 @@
                 }
             }
         });
+
+        window.addEventListener('popstate', () => {
+            loadFromUrlParams();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateModeButtons('posts');
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('handle')) {
+                loadFromUrlParams();
+            } else {
+                loadFromStorage();
+            }
+        });
+
+        async function updateAccountInfo(force = false) {
+            const joinedEl = document.getElementById('joinedDate');
+            const lastActiveEl = document.getElementById('lastActiveDate');
+            const lastFollowEl = document.getElementById('lastFollowDate');
+            if (!joinedEl || !lastActiveEl || !lastFollowEl) return;
+
+            const token = ++accountInfoToken;
+
+            if (!joinedDate && !joinedLoaded) {
+                joinedDate = await fetchJoinedDate();
+                joinedLoaded = Boolean(joinedDate);
+            }
+            if (token !== accountInfoToken) return;
+            joinedEl.textContent = joinedDate ? formatEuDate(joinedDate) : '—';
+
+            if (lastActiveLoaded && !force) {
+                lastActiveEl.textContent = (latestPostDate || latestLikeDate || latestFollowDate || latestRepostDate)
+                    ? formatEuDate(getLatestActivityDate())
+                    : '—';
+                lastFollowEl.textContent = latestFollowDate ? formatEuDate(latestFollowDate) : '—';
+                return;
+            }
+
+            lastActiveEl.textContent = '…';
+            lastFollowEl.textContent = latestFollowDate ? formatEuDate(latestFollowDate) : '—';
+
+            if (currentDid && currentPdsUrl) {
+                try {
+                    const [postDate, likeDate, followDate, repostDate] = await Promise.all([
+                        fetchLatestPostDate(),
+                        fetchLatestRecordDate('app.bsky.feed.like'),
+                        fetchLatestRecordDate('app.bsky.graph.follow'),
+                        fetchLatestRecordDate('app.bsky.feed.repost')
+                    ]);
+
+                    if (token !== accountInfoToken) return;
+
+                    latestPostDate = postDate || latestPostDate;
+                    latestLikeDate = likeDate || latestLikeDate;
+                    latestFollowDate = followDate || latestFollowDate;
+                    latestRepostDate = repostDate || latestRepostDate;
+
+                    let latestFinal = latestPostDate || null;
+                    if (latestLikeDate && (!latestFinal || latestLikeDate > latestFinal)) latestFinal = latestLikeDate;
+                    if (latestFollowDate && (!latestFinal || latestFollowDate > latestFinal)) latestFinal = latestFollowDate;
+                    if (latestRepostDate && (!latestFinal || latestRepostDate > latestFinal)) latestFinal = latestRepostDate;
+
+                    lastActiveEl.textContent = latestFinal ? formatEuDate(latestFinal) : '—';
+                    lastFollowEl.textContent = latestFollowDate ? formatEuDate(latestFollowDate) : '—';
+                    lastActiveLoaded = true;
+                } catch (e) {
+                    if (token !== accountInfoToken) return;
+                    lastActiveEl.textContent = latestPostDate ? formatEuDate(latestPostDate) : '—';
+                    lastFollowEl.textContent = latestFollowDate ? formatEuDate(latestFollowDate) : '—';
+                }
+            }
+        }
+
+        function getLatestActivityDate() {
+            let latest = latestPostDate || null;
+            if (latestLikeDate && (!latest || latestLikeDate > latest)) latest = latestLikeDate;
+            if (latestFollowDate && (!latest || latestFollowDate > latest)) latest = latestFollowDate;
+            if (latestRepostDate && (!latest || latestRepostDate > latest)) latest = latestRepostDate;
+            return latest;
+        }
+
+        async function fetchJoinedDate() {
+            if (!currentDid) return null;
+            try {
+                if (currentProfile && currentProfile.createdAt) {
+                    return new Date(currentProfile.createdAt);
+                }
+                if (currentDid.startsWith('did:plc:')) {
+                    const direct = await fetchPlcData(`https://plc.directory/${currentDid}/data`);
+                    if (direct && direct.createdAt) return new Date(direct.createdAt);
+
+                    // Fallback through a text proxy to avoid CORS blocks.
+                    const proxy = await fetchPlcData(`https://r.jina.ai/http://plc.directory/${currentDid}/data`, true);
+                    if (proxy && proxy.createdAt) return new Date(proxy.createdAt);
+                }
+                if (currentDidDoc && currentDidDoc.createdAt) {
+                    return new Date(currentDidDoc.createdAt);
+                }
+            } catch (e) {
+                return null;
+            }
+            return null;
+        }
+
+        async function fetchPlcData(url, textMode = false) {
+            try {
+                const res = await fetch(url);
+                if (!res.ok) return null;
+                if (!textMode) {
+                    return await res.json();
+                }
+                const text = await res.text();
+                return extractJsonObject(text);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function extractJsonObject(text) {
+            if (!text) return null;
+            const first = text.indexOf('{');
+            const last = text.lastIndexOf('}');
+            if (first === -1 || last === -1 || last <= first) return null;
+            try {
+                return JSON.parse(text.slice(first, last + 1));
+            } catch (e) {
+                return null;
+            }
+        }
 
         async function loadAllPosts() {
             if (!currentDid) {
@@ -1546,6 +2180,7 @@
                 allPostsLoaded = true;
                 currentCursor = null;
                 elements.loadMoreContainer.style.display = 'none';
+                updateLikesCount();
                 
                 statusDiv.className = 'success-message';
                 statusDiv.textContent = `Successfully loaded all ${allPosts.length} ${contentType}`;
@@ -1632,22 +2267,171 @@
             }
         }
 
-        async function applyFilters() {
-            const hasDateFilter = elements.dateFrom.value || elements.dateTo.value;
-            const hasTextFilter = elements.searchText.value.trim();
-            
-            if (!hasDateFilter && !hasTextFilter) {
-                showError('Please set at least one filter (date range or text search)');
+        let likesCountToken = 0;
+        let likesCountTruncated = false;
+        let likesCountExact = false;
+        let likesCountBusy = false;
+
+        async function updateLikesCount(forceExact = false) {
+            const likesEl = document.getElementById('likesCount');
+            if (!likesEl) return;
+            const likesStat = document.getElementById('likesStat');
+            if (!currentDid || !currentPdsUrl) {
+                likesEl.textContent = '—';
+                if (likesStat) likesStat.removeAttribute('title');
                 return;
             }
 
-            if (!allPostsLoaded) {
-                const confirmed = confirm('Filtering requires loading all content first. This may take a while for large accounts. Continue?');
-                if (!confirmed) return;
-                await loadAllPosts();
-                if (!allPostsLoaded) return;
-            }
+            try {
+                const cacheKey = currentDid;
+                if (!forceExact && likesCountCache.has(cacheKey)) {
+                    const cached = likesCountCache.get(cacheKey);
+                    likesCountTruncated = cached.truncated;
+                    likesCountExact = cached.exact;
+                    likesEl.textContent = cached.text;
+                    if (likesStat) {
+                        if (cached.truncated && !forceExact) {
+                            likesStat.setAttribute('title', cached.title || 'Click to compute exact likes');
+                        } else {
+                            likesStat.removeAttribute('title');
+                        }
+                    }
+                    likesCountBusy = false;
+                    return;
+                }
 
+                if (likesCountBusy) return;
+                if (likesCountExact && !forceExact) return;
+
+                const token = ++likesCountToken;
+                likesCountBusy = true;
+                likesEl.textContent = '…';
+                if (likesStat) likesStat.removeAttribute('title');
+
+                const maxFetch = forceExact ? Number.MAX_SAFE_INTEGER : 2000;
+                const pageSize = 100;
+                let cursor = null;
+                let count = 0;
+                let truncated = false;
+
+                while (count < maxFetch) {
+                    let url = `${currentPdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(currentDid)}&collection=app.bsky.feed.like&limit=${pageSize}`;
+                    if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error('Failed to load likes count');
+                    const data = await res.json();
+                    const batch = (data.records || []).length;
+                    count += batch;
+                    cursor = data.cursor || null;
+                    if (!cursor || batch === 0) break;
+                }
+
+                if (cursor) {
+                    truncated = true;
+                }
+
+                if (token !== likesCountToken) return;
+                likesCountTruncated = truncated;
+                likesCountExact = !truncated;
+                likesEl.textContent = truncated ? `${formatNumber(count)}+` : formatNumber(count);
+                if (likesStat) {
+                    if (truncated && !forceExact) {
+                        likesStat.setAttribute('title', `Showing ${formatNumber(count)}+ (click to compute exact)`);
+                    } else if (forceExact) {
+                        likesStat.setAttribute('title', `Exact likes count`);
+                    } else {
+                        likesStat.removeAttribute('title');
+                    }
+                }
+                if (!forceExact) {
+                    likesCountCache.set(cacheKey, {
+                        text: likesEl.textContent,
+                        truncated: likesCountTruncated,
+                        exact: likesCountExact,
+                        title: likesStat ? likesStat.getAttribute('title') : ''
+                    });
+                }
+            } catch (e) {
+                if (token !== likesCountToken) return;
+                likesEl.textContent = '—';
+            } finally {
+                if (token === likesCountToken) likesCountBusy = false;
+            }
+        }
+
+        function applyCachedLikesCount() {
+            const likesEl = document.getElementById('likesCount');
+            const likesStat = document.getElementById('likesStat');
+            if (!likesEl || !currentDid) return;
+            if (!likesCountCache.has(currentDid)) return;
+            const cached = likesCountCache.get(currentDid);
+            likesCountTruncated = cached.truncated;
+            likesCountExact = cached.exact;
+            likesEl.textContent = cached.text;
+            if (likesStat) {
+                if (cached.truncated) {
+                    likesStat.setAttribute('title', cached.title || 'Click to compute exact likes');
+                } else {
+                    likesStat.removeAttribute('title');
+                }
+            }
+        }
+
+        function hasExpensiveFilters() {
+            return Boolean(
+                elements.sortOldest.checked ||
+                elements.onlyLinks.checked ||
+                elements.dateFrom.value ||
+                elements.dateTo.value ||
+                elements.searchText.value.trim()
+            );
+        }
+
+        function clearExpensiveFilters() {
+            elements.sortOldest.checked = false;
+            elements.onlyLinks.checked = false;
+            elements.dateFrom.value = '';
+            elements.dateTo.value = '';
+            elements.searchText.value = '';
+        }
+
+        async function handleFilterChange() {
+            if (!currentDid) return;
+            if (hasExpensiveFilters()) {
+                if (allPostsLoaded) {
+                    elements.filterBanner.classList.remove('show');
+                    applyFiltersImmediate();
+                } else {
+                    elements.filterBanner.classList.add('show');
+                }
+            } else {
+                elements.filterBanner.classList.remove('show');
+                await resetToPagedView();
+            }
+        }
+
+        async function resetToPagedView() {
+            if (!currentDid) return;
+            currentCursor = null;
+            allPosts = [];
+            allPostsLoaded = false;
+            setLoading(true);
+            showLoading();
+            try {
+                if (currentMode === 'posts') {
+                    await loadPosts(false);
+                } else {
+                    await loadLikes(false);
+                }
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function applyFiltersImmediate() {
+            const hasDateFilter = elements.dateFrom.value || elements.dateTo.value;
+            const hasTextFilter = elements.searchText.value.trim();
+            
             let filtered = [...allPosts];
             
             if (hasDateFilter) {
@@ -1673,11 +2457,48 @@
             }
 
             if (hasTextFilter) {
-                const searchTerm = hasTextFilter.toLowerCase();
+                const raw = hasTextFilter.trim();
+                let regex = null;
+                if (raw.startsWith('/') && raw.lastIndexOf('/') > 0) {
+                    const lastSlash = raw.lastIndexOf('/');
+                    const pattern = raw.slice(1, lastSlash);
+                    const flags = raw.slice(lastSlash + 1) || 'i';
+                    try {
+                        regex = new RegExp(pattern, flags);
+                    } catch (e) {
+                        showError('Invalid regex pattern. Falling back to keyword search.');
+                    }
+                }
+
+                if (regex) {
+                    filtered = filtered.filter(item => {
+                        const post = item.post;
+                        const text = (post.record.text || '');
+                        return regex.test(text);
+                    }).map(item => ({
+                        ...item,
+                        _highlight: { regex }
+                    }));
+                } else {
+                    const keywords = raw.toLowerCase().split(/\s+/).filter(Boolean);
+                    filtered = filtered.filter(item => {
+                        const post = item.post;
+                        const text = (post.record.text || '').toLowerCase();
+                        return keywords.every(word => text.includes(word));
+                    }).map(item => ({
+                        ...item,
+                        _highlight: { keywords }
+                    }));
+                }
+            }
+
+            if (elements.onlyLinks.checked) {
                 filtered = filtered.filter(item => {
-                    const post = item.post;
-                    const text = (post.record.text || '').toLowerCase();
-                    return text.includes(searchTerm);
+                    const isRepost = Boolean(item.reason && item.reason.$type === 'app.bsky.feed.defs#reasonRepost');
+                    const isLikeView = currentMode === 'likes';
+                    if (isRepost) return false;
+                    if (isLikeView) return postHasLink(item.post);
+                    return postHasLink(item.post);
                 });
             }
 
@@ -1705,7 +2526,7 @@
                             createdAt: item.likeTimestamp
                         }
                     }));
-                    displayLikePosts(posts, likeRecords, false);
+                    displayLikePosts(posts, likeRecords, false, filtered.map(item => item._highlight || null));
                 }
                 
                 const infoDiv = document.createElement('div');
@@ -1715,40 +2536,82 @@
             }
         }
 
+        function updateModeButtons(mode) {
+            const isLikes = mode === 'likes';
+            elements.loadPostsBtn.classList.toggle('active', !isLikes);
+            elements.loadLikesBtn.classList.toggle('active', isLikes);
+        }
+
         async function loadContent(mode) {
             const handle = elements.handleInput.value.trim();
             
             if (!handle) {
-                showError('Please enter a Bluesky handle or DID');
+                showError('Please enter a Bluesky handle or DID', true);
                 return;
             }
 
+            closeHandleSuggestions();
+            updateModeButtons(mode);
             setLoading(true);
             elements.error.innerHTML = '';
             showLoading();
             
             try {
-                currentDid = await resolveHandle(handle);
-                currentPdsUrl = await getPdsUrl(currentDid);
+                const prevDid = currentDid;
+                const prevPds = currentPdsUrl;
+                const resolvedDid = await resolveHandle(handle);
+                const resolvedPds = await getPdsUrl(resolvedDid);
+
+                const sameAccount = prevDid && prevDid === resolvedDid && prevPds === resolvedPds;
+
+                currentDid = resolvedDid;
+                currentPdsUrl = resolvedPds;
                 currentHandle = handle;
                 currentMode = mode;
                 currentCursor = null;
                 allPosts = [];
                 allPostsLoaded = false;
+                if (!sameAccount) {
+                    latestPostDate = null;
+                    latestLikeDate = null;
+                    joinedDate = null;
+                    latestFollowDate = null;
+                    latestRepostDate = null;
+                    joinedLoaded = false;
+                    lastActiveLoaded = false;
+                    likesCountCache.clear();
+                    mutualsCache.clear();
+                    blockingCountCache.clear();
+                    likesCountToken = 0;
+                    likesCountTruncated = false;
+                    likesCountExact = false;
+                    likesCountBusy = false;
+                }
 
-                await loadProfile(currentDid);
+                if (!sameAccount) {
+                    await loadProfile(currentDid);
+                    updateAccountInfo(true);
+                } else {
+                    updateAccountInfo(false);
+                }
+                updateUrlParams(currentHandle, currentMode);
 
                 if (mode === 'posts') {
                     elements.sectionTitle.textContent = 'Posts';
                     await loadPosts();
+                    updateLikesCount();
                 } else {
                     elements.sectionTitle.textContent = 'Likes';
                     await loadLikes();
+                    updateLikesCount();
                 }
 
                 elements.contentSection.style.display = 'block';
+                if (hasExpensiveFilters()) {
+                    handleFilterChange();
+                }
             } catch (error) {
-                showError(error.message);
+                showError(error.message, true);
                 elements.profileCard.style.display = 'none';
                 elements.contentSection.style.display = 'none';
             } finally {
@@ -1774,15 +2637,23 @@
                 }
                 
                 const data = await response.json();
+                if (data.feed && data.feed[0] && data.feed[0].post && data.feed[0].post.record && data.feed[0].post.record.createdAt) {
+                    latestPostDate = new Date(data.feed[0].post.record.createdAt);
+                    updateAccountInfo();
+                }
                 
                 if (!append) {
                     allPosts = [...data.feed];
                 } else {
                     allPosts.push(...data.feed);
                 }
-                
-                displayPosts(data.feed, append);
-                
+
+                if (elements.sortOldest.checked) {
+                    displayPosts(allPosts, false);
+                } else {
+                    displayPosts(data.feed, append);
+                }
+
                 currentCursor = data.cursor || null;
                 elements.loadMoreContainer.style.display = currentCursor ? 'block' : 'none';
             } catch (error) {
@@ -1821,8 +2692,33 @@
                 const postUris = data.records.map(record => record.value.subject.uri);
                 
                 const posts = await fetchPosts(postUris);
-                
-                displayLikePosts(posts, data.records, append);
+
+                const postsWithMeta = posts.map(post => ({
+                    post: post,
+                    reason: null,
+                    reply: null,
+                    likeTimestamp: data.records.find(r => r.value.subject.uri === post.uri)?.value.createdAt
+                }));
+
+                if (!append) {
+                    allPosts = [...postsWithMeta];
+                } else {
+                    allPosts.push(...postsWithMeta);
+                }
+
+                if (elements.sortOldest.checked) {
+                    const postsAll = allPosts.map(item => item.post);
+                    const likeRecordsAll = allPosts.map(item => ({
+                        value: {
+                            subject: { uri: item.post.uri },
+                            createdAt: item.likeTimestamp
+                        }
+                    }));
+                    displayLikePosts(postsAll, likeRecordsAll, false);
+                } else {
+                    displayLikePosts(posts, data.records, append);
+                }
+                updateLikesCount();
                 
                 currentCursor = data.cursor || null;
                 elements.loadMoreContainer.style.display = currentCursor ? 'block' : 'none';
@@ -1867,7 +2763,7 @@
             }
         }
 
-        function displayLikePosts(posts, likeRecords, append = false) {
+        function displayLikePosts(posts, likeRecords, append = false, highlights = null) {
             if (!append) {
                 elements.content.innerHTML = '';
             }
@@ -1886,25 +2782,42 @@
                 likeTimestamps[record.value.subject.uri] = new Date(record.value.createdAt);
             });
 
+            if (elements.hideQuotes.checked) {
+                posts = posts.filter(post => !isQuotePost(post));
+            }
+
             posts.sort((a, b) => {
                 const timeA = likeTimestamps[a.uri] || new Date(0);
                 const timeB = likeTimestamps[b.uri] || new Date(0);
-                return timeB - timeA;
+                return elements.sortOldest.checked ? (timeA - timeB) : (timeB - timeA);
             });
 
-            posts.forEach(post => {
-                const postDiv = createPostElement(post, null);
+            posts.forEach((post, idx) => {
+                const highlight = Array.isArray(highlights) ? highlights[idx] : null;
+                const postDiv = createPostElement(post, null, null, highlight);
                 elements.content.appendChild(postDiv);
             });
         }
 
         function displayPosts(feed, append = false) {
             const hideReposts = elements.hideReposts.checked;
+            const hideQuotes = elements.hideQuotes.checked;
+            const onlyLinks = elements.onlyLinks.checked;
             
             let filteredFeed = feed;
             if (hideReposts) {
                 filteredFeed = feed.filter(item => {
                     return !item.reason || item.reason.$type !== 'app.bsky.feed.defs#reasonRepost';
+                });
+            }
+            if (hideQuotes) {
+                filteredFeed = filteredFeed.filter(item => !isQuotePost(item.post));
+            }
+            if (onlyLinks) {
+                filteredFeed = filteredFeed.filter(item => {
+                    const isRepost = Boolean(item.reason && item.reason.$type === 'app.bsky.feed.defs#reasonRepost');
+                    if (isRepost) return false;
+                    return postHasLink(item.post);
                 });
             }
 
@@ -1921,14 +2834,22 @@
                 return;
             }
 
+            if (elements.sortOldest.checked) {
+                filteredFeed = [...filteredFeed].sort((a, b) => {
+                    const timeA = new Date(a.post?.record?.createdAt || 0);
+                    const timeB = new Date(b.post?.record?.createdAt || 0);
+                    return timeA - timeB;
+                });
+            }
+
             filteredFeed.forEach(item => {
                 const post = item.post;
-                const postDiv = createPostElement(post, item.reason, item.reply);
+                const postDiv = createPostElement(post, item.reason, item.reply, item._highlight || null);
                 elements.content.appendChild(postDiv);
             });
         }
 
-        function createPostElement(post, reason, reply) {
+        function createPostElement(post, reason, reply, highlight) {
             const div = document.createElement('div');
             div.className = 'post';
             
@@ -1937,12 +2858,16 @@
             const avatar = author.avatar || 'https://via.placeholder.com/40';
             
             const timestamp = new Date(record.createdAt);
-            const timeAgo = getTimeAgo(timestamp);
+            const timeLabel = formatEuDate(timestamp);
             
             let postText = escapeHtml(record.text || '');
             
             if (record.facets && record.facets.length > 0) {
                 postText = applyFacets(record.text, record.facets);
+            }
+
+            if (highlight && (!record.facets || record.facets.length === 0)) {
+                postText = applyHighlights(postText, highlight);
             }
 
             let html = '';
@@ -1958,6 +2883,11 @@
                 }
             }
 
+            const quoteHandle = getQuoteHandle(post);
+            if (quoteHandle) {
+                html += `<div class="quote-indicator">Quote @${escapeHtml(quoteHandle)}</div>`;
+            }
+
             html += `
                 <div class="post-header">
                     <img src="${avatar}" alt="${escapeHtml(author.displayName || author.handle)}" class="post-avatar">
@@ -1965,10 +2895,23 @@
                         <div class="post-name">${escapeHtml(author.displayName || author.handle)}</div>
                         <div class="post-handle">@${escapeHtml(author.handle)}</div>
                     </div>
-                    <div class="post-time">${timeAgo}</div>
+                    <div class="post-time">${timeLabel}</div>
+                    <div class="post-actions">
+                        <button class="copy-link-btn" type="button" data-post-uri="${escapeHtml(post.uri)}" aria-label="Copy post link">Copy link</button>
+                    </div>
                 </div>
                 <div class="post-text">${postText}</div>
             `;
+
+            const replyPreview = buildReplyPreview(reply);
+            if (replyPreview) {
+                html += replyPreview;
+            }
+
+            const quotePreview = buildQuotePreview(post);
+            if (quotePreview) {
+                html += quotePreview;
+            }
 
             if (post.embed && post.embed.$type === 'app.bsky.embed.images#view') {
                 const images = post.embed.images || [];
@@ -1992,20 +2935,201 @@
                 window.open(postUrl, '_blank');
             });
 
+            const copyBtn = div.querySelector('.copy-link-btn');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const uri = copyBtn.getAttribute('data-post-uri');
+                    const postId = uri ? uri.split('/').pop() : '';
+                    const postUrl = postId ? `https://bsky.app/profile/${author.handle}/post/${postId}` : '';
+                    if (!postUrl) return;
+                    try {
+                        if (navigator.clipboard) {
+                            await navigator.clipboard.writeText(postUrl);
+                            const original = copyBtn.textContent;
+                            copyBtn.textContent = 'Copied';
+                            setTimeout(() => {
+                                copyBtn.textContent = original;
+                            }, 1200);
+                        } else {
+                            window.prompt('Copy this post URL:', postUrl);
+                        }
+                    } catch (err) {
+                        showError('Could not copy link');
+                    }
+                });
+            }
+
             return div;
+        }
+
+        function isQuotePost(post) {
+            if (!post || !post.embed) return false;
+            const type = post.embed.$type || '';
+            if (type === 'app.bsky.embed.record#view') return true;
+            if (type === 'app.bsky.embed.recordWithMedia#view') return true;
+            return false;
+        }
+
+        function getEmbeddedRecordView(embed) {
+            if (!embed) return null;
+            if (embed.$type === 'app.bsky.embed.record#view') {
+                return embed.record || null;
+            }
+            if (embed.$type === 'app.bsky.embed.recordWithMedia#view') {
+                return embed.record || null;
+            }
+            return null;
+        }
+
+        async function fetchLatestRecordDate(collection) {
+            if (!currentDid || !currentPdsUrl) return null;
+            try {
+                const [reverseDate, forwardDate] = await Promise.all([
+                    fetchFirstRecordDate(collection, true),
+                    fetchFirstRecordDate(collection, false)
+                ]);
+
+                if (reverseDate && forwardDate && reverseDate > forwardDate) {
+                    return reverseDate;
+                }
+
+                // If reverse is unsupported or inconclusive, scan forward (capped).
+                const scan = await scanMaxRecordDate(collection, 2000);
+                return scan || reverseDate || forwardDate || null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function fetchFirstRecordDate(collection, reverse) {
+            const url = `${currentPdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(currentDid)}&collection=${encodeURIComponent(collection)}&limit=1${reverse ? '&reverse=true' : ''}`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            const first = data.records && data.records[0];
+            if (first && first.value && first.value.createdAt) {
+                return new Date(first.value.createdAt);
+            }
+            return null;
+        }
+
+        async function scanMaxRecordDate(collection, maxFetch = 2000) {
+            let cursor = null;
+            let scanned = 0;
+            let maxDate = null;
+            const pageSize = 100;
+            while (scanned < maxFetch) {
+                let url = `${currentPdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(currentDid)}&collection=${encodeURIComponent(collection)}&limit=${pageSize}`;
+                if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
+                const res = await fetch(url);
+                if (!res.ok) break;
+                const data = await res.json();
+                const records = data.records || [];
+                if (records.length === 0) break;
+                records.forEach(record => {
+                    const createdAt = record && record.value && record.value.createdAt ? new Date(record.value.createdAt) : null;
+                    if (createdAt && (!maxDate || createdAt > maxDate)) {
+                        maxDate = createdAt;
+                    }
+                });
+                scanned += records.length;
+                cursor = data.cursor || null;
+                if (!cursor) break;
+            }
+            return maxDate;
+        }
+
+        async function fetchLatestPostDate() {
+            if (!currentDid) return null;
+            try {
+                const url = `${API_PUBLIC}/app.bsky.feed.getAuthorFeed?actor=${encodeURIComponent(currentDid)}&filter=posts_with_replies&limit=1`;
+                const res = await fetch(url);
+                if (!res.ok) return null;
+                const data = await res.json();
+                const first = data.feed && data.feed[0] && data.feed[0].post;
+                if (first && first.record && first.record.createdAt) {
+                    return new Date(first.record.createdAt);
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function getQuoteHandle(post) {
+            if (!post || !post.embed) return '';
+            const recordView = getEmbeddedRecordView(post.embed);
+            if (!recordView) return '';
+            if (recordView.$type && recordView.$type !== 'app.bsky.embed.record#viewRecord') return '';
+            const author = recordView.author;
+            return author && author.handle ? author.handle : '';
+        }
+
+        function buildReplyPreview(reply) {
+            if (!reply || !reply.parent) return '';
+            const parent = reply.parent;
+            const text = (parent.record && parent.record.text) ? parent.record.text : '';
+            const snippet = text ? truncateText(text, 140) : '';
+            return `
+                <div class="reply-preview">
+                    ${snippet ? `<div>${escapeHtml(snippet)}</div>` : `<div style="color:#94a3b8;">No text preview</div>`}
+                </div>
+            `;
+        }
+
+        function buildQuotePreview(post) {
+            if (!post || !post.embed) return '';
+            const recordView = getEmbeddedRecordView(post.embed);
+            if (!recordView) return '';
+            if (recordView.$type && recordView.$type !== 'app.bsky.embed.record#viewRecord') return '';
+            const author = recordView.author;
+            const handle = author && author.handle ? `@${author.handle}` : 'unknown';
+            const text = (recordView.value && recordView.value.text) ? recordView.value.text : '';
+            const snippet = text ? truncateText(text, 140) : '';
+            return `
+                <div class="quote-preview">
+                    ${snippet ? `<div>${escapeHtml(snippet)}</div>` : `<div style="color:#94a3b8;">No text preview</div>`}
+                </div>
+            `;
+        }
+
+        function truncateText(text, maxLen) {
+            if (!text) return '';
+            if (text.length <= maxLen) return text;
+            return text.slice(0, maxLen - 1) + '…';
+        }
+
+        function postHasLink(post) {
+            if (!post || !post.record) return false;
+            const text = post.record.text || '';
+            if (/(https?:\/\/|www\.)/i.test(text)) return true;
+            const facets = post.record.facets || [];
+            for (const facet of facets) {
+                const features = facet.features || [];
+                for (const feature of features) {
+                    if (feature.$type === 'app.bsky.richtext.facet#link') {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         function applyFacets(text, facets) {
             const sorted = facets.sort((a, b) => a.index.byteStart - b.index.byteStart);
+            const byteIndexMap = buildByteIndexMap(text);
             
             let result = '';
-            let lastIndex = 0;
+            let lastByte = 0;
             
             sorted.forEach(facet => {
-                const start = facet.index.byteStart;
-                const end = facet.index.byteEnd;
+                const startByte = facet.index.byteStart;
+                const endByte = facet.index.byteEnd;
+                const start = byteIndexMap[startByte] ?? 0;
+                const end = byteIndexMap[endByte] ?? text.length;
                 
-                result += escapeHtml(text.substring(lastIndex, start));
+                result += escapeHtml(text.substring(byteIndexMap[lastByte] ?? 0, start));
                 
                 const facetText = text.substring(start, end);
                 const feature = facet.features[0];
@@ -2018,12 +3142,47 @@
                     result += escapeHtml(facetText);
                 }
                 
-                lastIndex = end;
+                lastByte = endByte;
             });
             
-            result += escapeHtml(text.substring(lastIndex));
+            result += escapeHtml(text.substring(byteIndexMap[lastByte] ?? 0));
             
             return result;
+        }
+
+        function buildByteIndexMap(text) {
+            const encoder = new TextEncoder();
+            const map = {};
+            let bytePos = 0;
+            for (let i = 0; i < text.length; i++) {
+                map[bytePos] = i;
+                const bytes = encoder.encode(text[i]);
+                bytePos += bytes.length;
+            }
+            map[bytePos] = text.length;
+            return map;
+        }
+
+        function applyHighlights(htmlText, highlight) {
+            if (!highlight) return htmlText;
+            if (highlight.regex) {
+                try {
+                    const regex = highlight.regex;
+                    return htmlText.replace(regex, (match) => `<span class="highlight">${escapeHtml(match)}</span>`);
+                } catch (e) {
+                    return htmlText;
+                }
+            }
+            if (highlight.keywords && highlight.keywords.length) {
+                let out = htmlText;
+                highlight.keywords.forEach(word => {
+                    const safe = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const re = new RegExp(safe, 'ig');
+                    out = out.replace(re, (match) => `<span class="highlight">${match}</span>`);
+                });
+                return out;
+            }
+            return htmlText;
         }
 
         async function loadMore() {
@@ -2049,22 +3208,16 @@
         }
 
         function formatNumber(num) {
-            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
             return num.toString();
         }
 
-        function getTimeAgo(date) {
-            const seconds = Math.floor((new Date() - date) / 1000);
-            
-            if (seconds < 60) return 'now';
-            if (seconds < 3600) return Math.floor(seconds / 60) + 'm';
-            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h';
-            if (seconds < 604800) return Math.floor(seconds / 86400) + 'd';
-            if (seconds < 2592000) return Math.floor(seconds / 604800) + 'w';
-            if (seconds < 31536000) return Math.floor(seconds / 2592000) + 'mo';
-            return Math.floor(seconds / 31536000) + 'y';
+        function formatEuDate(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
         }
+
     </script>
 </body>
 </html>
