@@ -1,29 +1,33 @@
 
-# GlimpSky - Bluesky Profile Viewer
+<h1><img src="favicon.svg" alt="" width="22" height="22"> GlimpSky - Bluesky Profile Viewer</h1>
 
-A lightweight web tool for exploring public Bluesky accounts: posts, likes, followers and related data from public AT Protocol endpoints.
-
-Vibecoded with ChatGPT and Claude.
+GlimpSky is a lightweight web tool for exploring public Bluesky accounts: posts, likes, followers, and related account activity from public AT Protocol endpoints.
 
 ## Why this exists
 
-I wanted a simple way to:
-- show only real posts (without reposts, quotes, or replies when needed),
-- search posts with regex,
-- search who a user replies to, and whose posts they like.
+I wanted an easy way to inspect a profile beyond the default app view:
 
-Most existing tools didn’t cover these needs well, so this fills that gap.
+- show only original posts when needed (without reposts, replies, or quotes),
+- search content with plain text or regex,
+- search who a user replies to and which authors they like.
 
-## Features
+## What you can do
 
 - View posts and likes for any public account
-- Hide reposts, replies or quotes
-- Filter by date range and text
-- Regex search across post text
-- Author search across post authors, reply targets and quoted authors
-- Oldest-first ordering (with full load)
-- Account info (joined date, last active, last follow)
-- Quick profile stats, followers/following, mutuals, blocking
+- Hide reposts, replies, and quotes
+- Filter by date range
+- Search post text
+- Search authors across post authors, reply targets, and quoted authors
+- Use regex in both search fields with `/pattern/flags`
+- Sort oldest-first (loads all content first when required)
+- See account info: joined date, last active, last follow
+- Open followers/following lists, mutuals, and blocking
+
+## Search behavior
+
+- Plain text works by default
+- Regex is optional and uses `/pattern/flags` format
+- Example: `/hello.*/i`
 
 ## Run locally
 
@@ -31,8 +35,28 @@ Most existing tools didn’t cover these needs well, so this fills that gap.
 python3 -m http.server 8000
 ```
 
-Then open `http://localhost:8000` in your browser.
+Open `http://localhost:8000` in your browser.
 
-## Data sources
+## Privacy and scope
 
-All data is fetched from public Bluesky APIs and AT Protocol PDS endpoints. Inspired by [Clearsky](https://github.com/ClearskyApp06/clearskyservices) (blocking features) and [Bluesky Likes by luizzeroxis](https://github.com/luizzeroxis/bluesky-likes/) (likes display).
+- Uses publicly available Bluesky/AT Protocol data only
+- No login required
+- Static client-side app (no backend in this repo)
+
+## Known limits
+
+- `Blocked by` cannot be reliably computed from public APIs alone without an external indexer
+- Some likes/posts can be unavailable (deleted posts, deactivated accounts, or inaccessible records)
+
+## Data sources and credits
+
+All data is fetched from public Bluesky APIs and AT Protocol PDS endpoints. Inspired by [Clearsky](https://github.com/ClearskyApp06/clearskyservices) for blocking-related features and [Bluesky Likes by luizzeroxis](https://github.com/luizzeroxis/bluesky-likes/) for likes display patterns.
+Vibecoded with ChatGPT and Claude.
+
+## License
+
+MIT. See `LICENSE`.
+
+## Contributing
+
+Suggestions, issues, and pull requests are welcome.
