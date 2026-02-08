@@ -1010,6 +1010,13 @@
             background: white;
             border-left: 1px solid #e2e8f0;
             border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            border-radius: 0 0 8px 8px;
+        }
+
+        #content.has-load-more {
+            border-bottom: none;
+            border-radius: 0;
         }
 
         .load-more-container {

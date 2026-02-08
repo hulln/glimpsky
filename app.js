@@ -84,6 +84,12 @@
             elements.advancedFiltersToggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
         }
 
+        function setLoadMoreVisible(visible) {
+            const show = Boolean(visible);
+            elements.loadMoreContainer.style.display = show ? 'block' : 'none';
+            elements.content.classList.toggle('has-load-more', show);
+        }
+
         elements.sortOldest.addEventListener('change', () => {
             if (elements.sortOldest.checked && !allPostsLoaded) {
                 pendingSortOldest = true;
@@ -135,6 +141,12 @@
 
         elements.dateTo.addEventListener('change', () => {
             handleFilterChange();
+        });
+
+        [elements.hideReposts, elements.hideReplies, elements.onlyLinks, elements.hideQuotes].forEach((checkbox) => {
+            checkbox.addEventListener('change', () => {
+                rerenderCurrentView();
+            });
         });
 
         elements.filterLoadBtn.addEventListener('click', async () => {
@@ -1098,7 +1110,7 @@
 
                 allPostsLoaded = true;
                 currentCursor = null;
-                elements.loadMoreContainer.style.display = 'none';
+                setLoadMoreVisible(false);
                 updateLikesCount();
                 
                 statusDiv.className = 'success-message';
@@ -1222,6 +1234,7 @@
                 return;
             }
 
+            let token = 0;
             try {
                 const cacheKey = currentDid;
                 if (!forceExact && likesCountCache.has(cacheKey)) {
@@ -1243,7 +1256,7 @@
                 if (likesCountBusy) return;
                 if (likesCountExact && !forceExact) return;
 
-                const token = ++likesCountToken;
+                token = ++likesCountToken;
                 likesCountBusy = true;
                 likesEl.textContent = '…';
                 if (likesStat) likesStat.removeAttribute('title');
@@ -1373,6 +1386,38 @@
             }
         }
 
+        function rerenderCurrentView() {
+            if (!currentDid) return;
+
+            if (hasExpensiveFilters()) {
+                if (allPostsLoaded) {
+                    elements.filterBanner.classList.remove('show');
+                    applyFiltersImmediate();
+                } else {
+                    setAdvancedFiltersExpanded(true);
+                    elements.filterBanner.classList.add('show');
+                }
+                return;
+            }
+
+            elements.filterBanner.classList.remove('show');
+
+            if (currentMode === 'posts') {
+                displayPosts(allPosts, false);
+            } else {
+                const posts = allPosts.map(item => item.post);
+                const likeRecords = allPosts.map(item => ({
+                    value: {
+                        subject: { uri: item.post.uri },
+                        createdAt: item.likeTimestamp
+                    }
+                }));
+                displayLikePosts(posts, likeRecords, false);
+            }
+
+            setLoadMoreVisible(Boolean(currentCursor));
+        }
+
         function applyFiltersImmediate() {
             const hasDateFilter = elements.dateFrom.value || elements.dateTo.value;
             const hasTextFilter = elements.searchText.value.trim();
@@ -1404,17 +1449,7 @@
 
             if (hasTextFilter) {
                 const raw = hasTextFilter.trim();
-                let regex = null;
-                if (raw.startsWith('/') && raw.lastIndexOf('/') > 0) {
-                    const lastSlash = raw.lastIndexOf('/');
-                    const pattern = raw.slice(1, lastSlash);
-                    const flags = raw.slice(lastSlash + 1) || 'i';
-                    try {
-                        regex = new RegExp(pattern, flags);
-                    } catch (e) {
-                        showError('Invalid regex pattern. Falling back to keyword search.');
-                    }
-                }
+                const regex = parseSearchRegex(raw, 'Invalid regex pattern. Falling back to keyword search.');
 
                 if (regex) {
                     filtered = filtered.filter(item => {
@@ -1440,17 +1475,7 @@
 
             if (hasAuthorFilter) {
                 const raw = elements.searchAuthor.value.trim();
-                let regex = null;
-                if (raw.startsWith('/') && raw.lastIndexOf('/') > 0) {
-                    const lastSlash = raw.lastIndexOf('/');
-                    const pattern = raw.slice(1, lastSlash);
-                    const flags = raw.slice(lastSlash + 1) || 'i';
-                    try {
-                        regex = new RegExp(pattern, flags);
-                    } catch (e) {
-                        showError('Invalid regex pattern in author search. Falling back to keyword search.');
-                    }
-                }
+                const regex = parseSearchRegex(raw, 'Invalid regex pattern in author search. Falling back to keyword search.');
 
                 if (regex) {
                     filtered = filtered.filter(item => authorMatches(item, (value) => regex.test(value)));
@@ -1511,9 +1536,8 @@
         }
 
         function updateModeButtons(mode) {
-            const isLikes = mode === 'likes';
-            elements.loadPostsBtn.classList.toggle('active', !isLikes);
-            elements.loadLikesBtn.classList.toggle('active', isLikes);
+            elements.loadPostsBtn.classList.toggle('active', mode === 'posts');
+            elements.loadLikesBtn.classList.toggle('active', mode === 'likes');
         }
 
         async function loadContent(mode) {
@@ -1629,7 +1653,7 @@
                 }
 
                 currentCursor = data.cursor || null;
-                elements.loadMoreContainer.style.display = currentCursor ? 'block' : 'none';
+                setLoadMoreVisible(Boolean(currentCursor));
             } catch (error) {
                 showError(error.message);
             }
@@ -1659,7 +1683,7 @@
                             </div>
                         `;
                     }
-                    elements.loadMoreContainer.style.display = 'none';
+                    setLoadMoreVisible(false);
                     return;
                 }
 
@@ -1695,7 +1719,7 @@
                 updateLikesCount();
                 
                 currentCursor = data.cursor || null;
-                elements.loadMoreContainer.style.display = currentCursor ? 'block' : 'none';
+                setLoadMoreVisible(Boolean(currentCursor));
             } catch (error) {
                 showError(error.message);
                 if (!append) {
@@ -1756,6 +1780,15 @@
                 likeTimestamps[record.value.subject.uri] = new Date(record.value.createdAt);
             });
 
+            const highlightByUri = new Map();
+            if (Array.isArray(highlights)) {
+                posts.forEach((post, idx) => {
+                    if (post && post.uri && highlights[idx]) {
+                        highlightByUri.set(post.uri, highlights[idx]);
+                    }
+                });
+            }
+
             if (elements.hideQuotes.checked) {
                 posts = posts.filter(post => !isQuotePost(post));
             }
@@ -1767,8 +1800,8 @@
                 return sortOldest ? (timeA - timeB) : (timeB - timeA);
             });
 
-            posts.forEach((post, idx) => {
-                const highlight = Array.isArray(highlights) ? highlights[idx] : null;
+            posts.forEach((post) => {
+                const highlight = highlightByUri.get(post.uri) || null;
                 const reply = post && post.reply ? post.reply : null;
                 const likedAt = likeTimestamps[post.uri] || null;
                 const postDiv = createPostElement(post, null, reply, highlight, likedAt);
@@ -1778,6 +1811,7 @@
 
         function displayPosts(feed, append = false) {
             const hideReposts = elements.hideReposts.checked;
+            const hideReplies = elements.hideReplies.checked;
             const hideQuotes = elements.hideQuotes.checked;
             const onlyLinks = elements.onlyLinks.checked;
             
@@ -1786,6 +1820,9 @@
                 filteredFeed = feed.filter(item => {
                     return !item.reason || item.reason.$type !== 'app.bsky.feed.defs#reasonRepost';
                 });
+            }
+            if (hideReplies) {
+                filteredFeed = filteredFeed.filter(item => !(item.post && item.post.record && item.post.record.reply));
             }
             if (hideQuotes) {
                 filteredFeed = filteredFeed.filter(item => !isQuotePost(item.post));
@@ -1848,7 +1885,6 @@
             }
 
             let html = '';
-            
             if (reason && reason.$type === 'app.bsky.feed.defs#reasonRepost') {
                 html += `<div class="repost-indicator">Reposted by @${escapeHtml(reason.by.handle)}</div>`;
             }
@@ -2206,6 +2242,23 @@
                 return out;
             }
             return htmlText;
+        }
+
+        function parseSearchRegex(raw, invalidMessage) {
+            if (!raw.startsWith('/') || raw.lastIndexOf('/') <= 0) return null;
+
+            const lastSlash = raw.lastIndexOf('/');
+            const pattern = raw.slice(1, lastSlash);
+            const rawFlags = raw.slice(lastSlash + 1) || 'i';
+            // Remove stateful flags so repeated test() calls stay deterministic.
+            const flags = rawFlags.replace(/[gy]/g, '');
+
+            try {
+                return new RegExp(pattern, flags || 'i');
+            } catch (e) {
+                showError(invalidMessage);
+                return null;
+            }
         }
 
         async function loadMore() {

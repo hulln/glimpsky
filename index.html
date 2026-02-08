@@ -97,18 +97,18 @@
                     <div class="filter-section filter-section-spaced">
                         <label for="searchText">Search posts by text</label>
                         <div class="input-with-clear">
-                            <input type="text" class="search-input" id="searchText" placeholder="Enter keywords...">
+                            <input type="text" class="search-input" id="searchText" placeholder="e.g., keywords or /hello.*/i">
                             <button class="clear-input" type="button" data-clear-target="searchText" aria-label="Clear search text">×</button>
                         </div>
                     </div>
 
                     <div class="filter-section filter-section-spaced">
-                        <label for="searchAuthor">Search by author (handle or display name)</label>
+                        <label for="searchAuthor">Search by author</label>
                         <div class="input-with-clear">
-                            <input type="text" class="search-input" id="searchAuthor" placeholder="e.g. /bsky\\.social$/ or @handle">
+                            <input type="text" class="search-input" id="searchAuthor" placeholder="e.g., /bsky\\.social$/ or @handle">
                             <button class="clear-input" type="button" data-clear-target="searchAuthor" aria-label="Clear author search">×</button>
                         </div>
-                        <div class="regex-help">Search supports regex in /pattern/flags (e.g. /hello.*/i)</div>
+                        <div class="regex-help">Both fields: plain text works by default. Use /pattern/flags for regex (e.g., /hello.*/i).</div>
                     </div>
 
                     <div class="filter-banner" id="filterBanner">
@@ -163,6 +163,7 @@
                 <h2>About This Tool</h2>
             </div>
             <div class="info-modal-body">
+                <p>Have you ever found a possibly interesting account that reposts a lot and wanted to quickly check whether they post original content, and what that content actually looks like?</p>
                 <p>GlimpSky lets you explore public posts, likes, followers and other information from any Bluesky account. All data comes from the open AT Protocol via public Bluesky APIs and PDS endpoints. It also demonstrates how accessible open data on ATProto can be.</p>
                 
                 <p><strong>Inspired by</strong> <a href="https://github.com/ClearskyApp06/clearskyservices" target="_blank" rel="noopener noreferrer">Clearsky</a> (blocking features) and <a href="https://github.com/luizzeroxis/bluesky-likes/" target="_blank" rel="noopener noreferrer">Bluesky Likes by luizzeroxis</a> (likes display).</p>
