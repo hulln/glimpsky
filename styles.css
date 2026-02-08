@@ -1501,39 +1501,6 @@
             border-color: var(--success-border);
         }
 
-        .seo-content {
-            background: var(--surface-1);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 22px 24px;
-            margin-bottom: 18px;
-        }
-
-        .seo-content h2 {
-            color: var(--text-strong);
-            font-size: 20px;
-            margin-bottom: 12px;
-        }
-
-        .seo-content h3 {
-            color: var(--text-strong);
-            font-size: 16px;
-            margin-top: 14px;
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
-
-        .seo-content p {
-            color: var(--text-main);
-            font-size: 14px;
-            line-height: 1.5;
-            margin-bottom: 9px;
-        }
-
-        .seo-content p:last-child {
-            margin-bottom: 0;
-        }
-
         @media (max-width: 640px) {
             body {
                 padding: 20px 16px;
@@ -1610,8 +1577,5 @@
                 padding: 16px 20px;
             }
 
-            .seo-content {
-                padding: 18px 18px;
-            }
         }
     
