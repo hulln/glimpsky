@@ -15,18 +15,32 @@
     <meta name="twitter:title" content="GlimpSky - Bluesky Profile Viewer">
     <meta name="twitter:description" content="Explore public Bluesky profiles with regex search, filters and activity insights from AT Protocol data.">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('glimpsky-theme');
+                var darkPreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var theme = (stored === 'dark' || stored === 'light') ? stored : (darkPreferred ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <button class="about-btn" id="infoBtn" type="button">About</button>
-        
         <div class="header">
             <div class="title-row">
                 <img src="favicon.svg" alt="" class="title-icon">
-                <h1 id="mainTitle">GlimpSky - Bluesky Profile Viewer</h1>
+                <h1 id="mainTitle">GlimpSky</h1>
+                <div class="title-actions">
+                    <button class="about-btn" id="themeToggleBtn" type="button" aria-label="Toggle dark mode" aria-pressed="false"></button>
+                    <button class="about-btn" id="infoBtn" type="button">About</button>
+                </div>
             </div>
-            <p class="subtitle">View posts and likes from any Bluesky profile. No login required. </p>
+            <p class="title-sub">Bluesky Profile Viewer</p>
+            <p class="subtitle">View posts and likes from any Bluesky profile. No login required.</p>
+            <div class="header-divider"></div>
             
             <div class="input-group">
                 <label for="handle">Bluesky Handle or DID</label>
@@ -67,10 +81,10 @@
             </div>
 
             <div class="advanced-filters-inline" id="advancedFiltersInline">
-                <div class="advanced-filters-toggle" id="advancedFiltersToggle">
+                <button class="advanced-filters-toggle" id="advancedFiltersToggle" type="button" aria-expanded="false" aria-controls="advancedFiltersContent">
                     <span>Advanced filters</span>
                     <span class="toggle-icon">▼</span>
-                </div>
+                </button>
                 <div class="advanced-filters-content" id="advancedFiltersContent">
                     <div class="filter-section">
                         <label for="dateFrom">Filter by date range</label>
@@ -80,7 +94,7 @@
                         </div>
                     </div>
 
-                    <div class="filter-section" style="margin-top: 12px;">
+                    <div class="filter-section filter-section-spaced">
                         <label for="searchText">Search posts by text</label>
                         <div class="input-with-clear">
                             <input type="text" class="search-input" id="searchText" placeholder="Enter keywords...">
@@ -88,18 +102,18 @@
                         </div>
                     </div>
 
-                    <div class="filter-section" style="margin-top: 12px;">
+                    <div class="filter-section filter-section-spaced">
                         <label for="searchAuthor">Search by author (handle or display name)</label>
                         <div class="input-with-clear">
                             <input type="text" class="search-input" id="searchAuthor" placeholder="e.g. /bsky\\.social$/ or @handle">
                             <button class="clear-input" type="button" data-clear-target="searchAuthor" aria-label="Clear author search">×</button>
                         </div>
-                        <div style="margin-top: 6px; font-size: 12px; color: #94a3b8;">Search supports regex in /pattern/flags (e.g. /hello.*/i)</div>
+                        <div class="regex-help">Search supports regex in /pattern/flags (e.g. /hello.*/i)</div>
                     </div>
 
                     <div class="filter-banner" id="filterBanner">
-                        <span style="flex: 1;">Filters, including oldest first, require loading all content. Load now?</span>
-                        <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                        <span class="filter-banner-text">Filters, including oldest first, require loading all content. Load now?</span>
+                        <div class="filter-banner-actions">
                             <button class="btn-outline" id="filterLoadBtn" type="button">Load & Apply</button>
                             <button class="btn-outline" id="filterCancelBtn" type="button">Cancel</button>
                         </div>
@@ -122,7 +136,7 @@
                 <h3 class="section-title" id="sectionTitle">Posts</h3>
             </div>
             <div id="content"></div>
-            <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+            <div class="load-more-container" id="loadMoreContainer">
                 <button class="load-more" id="loadMoreBtn">Load More</button>
             </div>
         </div>

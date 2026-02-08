@@ -1,4 +1,5 @@
         const API_PUBLIC = 'https://public.api.bsky.app/xrpc';
+        const THEME_STORAGE_KEY = 'glimpsky-theme';
         
         let currentHandle = '';
         let currentDid = '';
@@ -47,6 +48,7 @@
             listModalLoadMore: document.getElementById('listModalLoadMore'),
             infoModal: document.getElementById('infoModal'),
             infoBtn: document.getElementById('infoBtn'),
+            themeToggleBtn: document.getElementById('themeToggleBtn'),
             infoModalClose: document.getElementById('infoModalClose'),
             shareToolBtn: document.getElementById('shareToolBtn'),
             shareBskyLink: document.getElementById('shareBskyLink'),
@@ -75,11 +77,17 @@
             toggleClearButton(elements.handleInput);
         });
 
+        function setAdvancedFiltersExpanded(expanded) {
+            const isExpanded = Boolean(expanded);
+            elements.advancedFiltersToggle.classList.toggle('expanded', isExpanded);
+            elements.advancedFiltersContent.classList.toggle('expanded', isExpanded);
+            elements.advancedFiltersToggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        }
+
         elements.sortOldest.addEventListener('change', () => {
             if (elements.sortOldest.checked && !allPostsLoaded) {
                 pendingSortOldest = true;
-                elements.advancedFiltersContent.classList.add('expanded');
-                elements.advancedFiltersToggle.classList.add('expanded');
+                setAdvancedFiltersExpanded(true);
                 elements.filterBanner.classList.add('show');
                 return;
             }
@@ -147,8 +155,8 @@
 
 
         elements.advancedFiltersToggle.addEventListener('click', () => {
-            elements.advancedFiltersToggle.classList.toggle('expanded');
-            elements.advancedFiltersContent.classList.toggle('expanded');
+            const next = !elements.advancedFiltersToggle.classList.contains('expanded');
+            setAdvancedFiltersExpanded(next);
         });
 
         elements.infoBtn.addEventListener('click', () => {
@@ -160,6 +168,49 @@
             elements.infoModal.classList.remove('open');
             elements.infoModal.setAttribute('aria-hidden', 'true');
         });
+
+        function getStoredTheme() {
+            try {
+                const stored = localStorage.getItem(THEME_STORAGE_KEY);
+                return stored === 'dark' || stored === 'light' ? stored : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function getPreferredTheme() {
+            const stored = getStoredTheme();
+            if (stored) return stored;
+            return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function applyTheme(theme, persist = true) {
+            const nextTheme = theme === 'dark' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', nextTheme);
+            if (elements.themeToggleBtn) {
+                const showMoon = nextTheme !== 'dark';
+                elements.themeToggleBtn.classList.toggle('is-dark', nextTheme === 'dark');
+                elements.themeToggleBtn.setAttribute('aria-label', showMoon ? 'Switch to dark mode' : 'Switch to light mode');
+                elements.themeToggleBtn.setAttribute('aria-pressed', nextTheme === 'dark' ? 'true' : 'false');
+            }
+            if (persist) {
+                try {
+                    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+                } catch (e) {
+                    // ignore storage write failures
+                }
+            }
+        }
+
+        function initTheme() {
+            applyTheme(getPreferredTheme(), false);
+            if (elements.themeToggleBtn) {
+                elements.themeToggleBtn.addEventListener('click', () => {
+                    const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+                    applyTheme(current === 'dark' ? 'light' : 'dark');
+                });
+            }
+        }
 
         function getToolHomeUrl() {
             const url = new URL(window.location.href);
@@ -243,8 +294,7 @@
             elements.searchAuthor.value = '';
             toggleClearButton(elements.searchText);
             toggleClearButton(elements.searchAuthor);
-            elements.advancedFiltersContent.classList.remove('expanded');
-            elements.advancedFiltersToggle.classList.remove('expanded');
+            setAdvancedFiltersExpanded(false);
             elements.filterBanner.classList.remove('show');
             elements.sortOldest.checked = false;
             pendingSortOldest = false;
@@ -480,7 +530,7 @@
                 elements.listModalList.insertAdjacentHTML('beforeend', `
                     <div class="empty-state" style="padding: 16px 10px;">
                         <p>Failed to load list</p>
-                        <p style="font-size: 13px; margin-top: 8px; color: #94a3b8;">${escapeHtml(msg)}</p>
+                        <p style="font-size: 13px; margin-top: 8px; color: var(--text-soft);">${escapeHtml(msg)}</p>
                     </div>
                 `);
                 elements.listModalLoadMore.style.display = 'none';
@@ -651,7 +701,7 @@
             elements.listModalList.innerHTML = `
                 <div class="empty-state" style="padding: 16px 10px;">
                     <p>Feature unavailable</p>
-                    <p style="font-size: 13px; margin-top: 8px; color: #94a3b8;">
+                    <p style="font-size: 13px; margin-top: 8px; color: var(--text-soft);">
                         This would require an external indexer service to determine which accounts have blocked this user.
                     </p>
                 </div>
@@ -892,6 +942,7 @@
         });
 
         document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
             updateModeButtons('posts');
             const homeUrl = getToolHomeUrl();
             window.history.replaceState({}, '', homeUrl);
@@ -1295,8 +1346,7 @@
                     elements.filterBanner.classList.remove('show');
                     applyFiltersImmediate();
                 } else {
-                    elements.advancedFiltersContent.classList.add('expanded');
-                    elements.advancedFiltersToggle.classList.add('expanded');
+                    setAdvancedFiltersExpanded(true);
                     elements.filterBanner.classList.add('show');
                 }
             } else {
@@ -1426,7 +1476,7 @@
                 elements.content.innerHTML = `
                     <div class="empty-state">
                         <p>No ${contentType} match your filters</p>
-                        <p style="font-size: 13px; margin-top: 8px; color: #94a3b8;">
+                        <p style="font-size: 13px; margin-top: 8px; color: var(--text-soft);">
                             ${hasDateFilter ? 'Date range: ' + (elements.dateFrom.value || 'any') + ' to ' + (elements.dateTo.value || 'any') : ''}
                             ${hasTextFilter ? (hasDateFilter ? '<br>' : '') + 'Search: "' + escapeHtml(hasTextFilter) + '"' : ''}
                             ${hasAuthorFilter ? ((hasDateFilter || hasTextFilter) ? '<br>' : '') + 'Author: "' + escapeHtml(hasAuthorFilter) + '"' : ''}
@@ -1652,7 +1702,7 @@
                     elements.content.innerHTML = `
                         <div class="empty-state">
                             <p>Failed to load likes</p>
-                            <p style="font-size: 13px; margin-top: 8px; color: #94a3b8;">${escapeHtml(error.message)}</p>
+                            <p style="font-size: 13px; margin-top: 8px; color: var(--text-soft);">${escapeHtml(error.message)}</p>
                         </div>
                     `;
                 }
@@ -2002,7 +2052,7 @@
             const snippet = text ? truncateText(text, 140) : '';
             return `
                 <div class="reply-preview">
-                    ${snippet ? `<div>${escapeHtml(snippet)}</div>` : `<div style="color:#94a3b8;">No text preview</div>`}
+                    ${snippet ? `<div>${escapeHtml(snippet)}</div>` : `<div style="color:var(--text-soft);">No text preview</div>`}
                 </div>
             `;
         }
@@ -2018,7 +2068,7 @@
             const snippet = text ? truncateText(text, 140) : '';
             return `
                 <div class="quote-preview">
-                    ${snippet ? `<div>${escapeHtml(snippet)}</div>` : `<div style="color:#94a3b8;">No text preview</div>`}
+                    ${snippet ? `<div>${escapeHtml(snippet)}</div>` : `<div style="color:var(--text-soft);">No text preview</div>`}
                 </div>
             `;
         }
