@@ -12,7 +12,7 @@
   <circle cx="130" cy="560" r="280" fill="#38bdf8" opacity="0.12"/>
   <g fill="#ffffff" font-family="Lexend, Segoe UI, Arial, sans-serif">
     <text x="96" y="248" font-size="78" font-weight="700">GlimpSky</text>
-    <text x="96" y="322" font-size="40" font-weight="500" opacity="0.95">Bluesky Viewer and Likes Viewer</text>
+    <text x="96" y="322" font-size="40" font-weight="500" opacity="0.95">Bluesky Profile Viewer</text>
     <text x="96" y="392" font-size="30" font-weight="400" opacity="0.9">Search public posts, likes, and account activity</text>
     <text x="96" y="450" font-size="30" font-weight="400" opacity="0.9">with filters, date range, and regex support.</text>
     <text x="96" y="540" font-size="26" font-weight="500" opacity="0.95">glimpsky.oblachek.eu</text>
