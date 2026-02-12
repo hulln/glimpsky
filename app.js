@@ -435,15 +435,19 @@
 
         async function getPdsUrl(did) {
             try {
-                const response = await fetch(`https://plc.directory/${did}`);
-                if (!response.ok) {
+                const didDoc = await fetchDidDocument(did);
+                if (!didDoc) {
                     throw new Error('Could not fetch DID document');
                 }
-                
-                const didDoc = await response.json();
                 currentDidDoc = didDoc;
-                
-                const pdsService = didDoc.service?.find(s => s.id === '#atproto_pds');
+
+                const services = Array.isArray(didDoc.service) ? didDoc.service : [];
+                const pdsService = services.find((service) => {
+                    if (!service || typeof service !== 'object') return false;
+                    const id = typeof service.id === 'string' ? service.id : '';
+                    const type = typeof service.type === 'string' ? service.type : '';
+                    return id === '#atproto_pds' || id === `${did}#atproto_pds` || type === 'AtprotoPersonalDataServer';
+                });
                 if (!pdsService) {
                     throw new Error('No PDS service found in DID document');
                 }
@@ -452,6 +456,58 @@
             } catch (error) {
                 throw new Error(`Failed to get PDS URL: ${error.message}`);
             }
+        }
+
+        async function fetchDidDocument(did) {
+            if (!did) return null;
+
+            const candidates = [];
+            if (did.startsWith('did:web:')) {
+                const didWebUrl = buildDidWebDocumentUrl(did);
+                if (didWebUrl) {
+                    candidates.push(didWebUrl);
+                }
+            }
+            candidates.push(`https://plc.directory/${did}`);
+
+            for (const url of candidates) {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) continue;
+                    return await response.json();
+                } catch (e) {
+                    // Try next candidate URL.
+                }
+            }
+
+            return null;
+        }
+
+        function buildDidWebDocumentUrl(did) {
+            if (!did || !did.startsWith('did:web:')) return '';
+            const methodSpecific = did.slice('did:web:'.length);
+            if (!methodSpecific) return '';
+
+            const rawSegments = methodSpecific.split(':');
+            if (rawSegments.length === 0) return '';
+
+            const decodeSafe = (value) => {
+                try {
+                    return decodeURIComponent(value);
+                } catch (e) {
+                    return value;
+                }
+            };
+
+            const host = decodeSafe(rawSegments[0]);
+            if (!host) return '';
+
+            const pathSegments = rawSegments.slice(1).map((segment) => encodeURIComponent(decodeSafe(segment)));
+            if (pathSegments.length === 0) {
+                return `https://${host}/.well-known/did.json`;
+            }
+
+            return `https://${host}/${pathSegments.join('/')}/did.json`;
         }
 
         async function loadProfile(did) {
@@ -1279,10 +1335,20 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initTheme();
-            updateModeButtons('posts');
-            const homeUrl = getToolHomeUrl();
-            window.history.replaceState({}, '', homeUrl);
             syncSeoUrlTags(getCanonicalHomeUrl());
+
+            const params = new URLSearchParams(window.location.search);
+            const handleFromUrl = params.get('handle');
+            if (handleFromUrl) {
+                loadFromUrlParams();
+                return;
+            }
+
+            updateModeButtons('posts');
+            if (window.location.search || window.location.hash) {
+                const homeUrl = getToolHomeUrl();
+                window.history.replaceState({}, '', homeUrl);
+            }
         });
 
         async function updateAccountInfo(force = false) {
@@ -1751,7 +1817,9 @@
                 url += `&cursor=${encodeURIComponent(cursor)}`;
 
                 const response = await fetch(url);
-                if (!response.ok) break;
+                if (!response.ok) {
+                    throw new Error(`Failed to load posts batch ${batchCount} (HTTP ${response.status})`);
+                }
 
                 const data = await response.json();
                 
@@ -1778,7 +1846,9 @@
                 url += `&cursor=${encodeURIComponent(cursor)}`;
 
                 const response = await fetch(url);
-                if (!response.ok) break;
+                if (!response.ok) {
+                    throw new Error(`Failed to load likes batch ${batchCount} (HTTP ${response.status})`);
+                }
 
                 const data = await response.json();
                 
@@ -2359,16 +2429,16 @@
                     const url = `${API_PUBLIC}/app.bsky.feed.getPosts?${urisParam}`;
                     
                     const response = await fetch(url);
-                    if (response.ok) {
-                        const data = await response.json();
-                        allPosts.push(...(data.posts || []));
+                    if (!response.ok) {
+                        throw new Error(`Failed to load post details (HTTP ${response.status})`);
                     }
+                    const data = await response.json();
+                    allPosts.push(...(data.posts || []));
                 }
                 
                 return allPosts;
             } catch (error) {
-                console.error('Error fetching posts:', error);
-                return [];
+                throw new Error(`Error fetching posts: ${error.message}`);
             }
         }
 
