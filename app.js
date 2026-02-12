@@ -15,15 +15,19 @@
         let latestPostDate = null;
         let latestLikeDate = null;
         let joinedDate = null;
+        let identityUpdatedDate = null;
+        let identityUpdateType = '';
         let latestFollowDate = null;
         let latestRepostDate = null;
         let accountInfoToken = 0;
         let joinedLoaded = false;
         let lastActiveLoaded = false;
+        let identityUpdateLoaded = false;
         let pendingSortOldest = false;
         const likesCountCache = new Map();
         const mutualsCache = new Map();
         const blockingCountCache = new Map();
+        const recentStatsCache = new Map();
 
         const elements = {
             handleInput: document.getElementById('handle'),
@@ -325,6 +329,8 @@
             latestPostDate = null;
             latestLikeDate = null;
             joinedDate = null;
+            identityUpdatedDate = null;
+            identityUpdateType = '';
             latestFollowDate = null;
             latestRepostDate = null;
             likesCountToken = 0;
@@ -334,8 +340,10 @@
             likesCountCache.clear();
             mutualsCache.clear();
             blockingCountCache.clear();
+            recentStatsCache.clear();
             joinedLoaded = false;
             lastActiveLoaded = false;
+            identityUpdateLoaded = false;
             elements.hideReposts.checked = true;
             elements.hideReplies.checked = false;
             elements.onlyLinks.checked = false;
@@ -468,6 +476,9 @@
             const avatar = profile.avatar || 'https://via.placeholder.com/80';
             const displayName = profile.displayName || profile.handle;
             const description = profile.description || '';
+            const descriptionHtml = description ? formatProfileDescription(profile) : '';
+            const homePdsUrl = currentPdsUrl || '';
+            const homePdsLabel = formatPdsLabel(homePdsUrl);
 
             elements.profileCard.innerHTML = `
                 <div class="profile-header">
@@ -478,11 +489,15 @@
                             <a class="copy-link-btn" href="https://bsky.app/profile/${escapeHtml(profile.handle)}" target="_blank" rel="noopener noreferrer">Open in Bluesky</a>
                         </div>
                         <div class="handle">@${escapeHtml(profile.handle)}</div>
-                        ${description ? `<div class="description">${escapeHtml(description)}</div>` : ''}
+                        ${descriptionHtml ? `<div class="description">${descriptionHtml}</div>` : ''}
                         <div class="account-info">
                             <div class="account-item">
                                 <span class="account-label">Joined</span>
                                 <span id="joinedDate">—</span>
+                            </div>
+                            <div class="account-item">
+                                <span class="account-label">Account age</span>
+                                <span id="accountAge">—</span>
                             </div>
                             <div class="account-item">
                                 <span class="account-label">Last active</span>
@@ -492,6 +507,23 @@
                                 <span class="account-label">Last follow</span>
                                 <span id="lastFollowDate">—</span>
                             </div>
+                            <div class="account-item">
+                                <span class="account-label">Identity update</span>
+                                <span id="identityUpdateDate">—</span>
+                            </div>
+                            <div class="account-item">
+                                <span class="account-label">Home PDS</span>
+                                ${homePdsUrl
+                                    ? `<a class="account-value-link" href="${escapeHtml(homePdsUrl)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(homePdsUrl)}">${escapeHtml(homePdsLabel)}</a>`
+                                    : '<span>—</span>'}
+                            </div>
+                        </div>
+                        <div class="recent-activity">
+                            <span class="account-label">Last 30d</span>
+                            <span class="recent-item"><strong id="recentPosts30d">—</strong> posts</span>
+                            <span class="recent-item"><strong id="recentLikes30d">—</strong> likes</span>
+                            <span class="recent-item"><strong id="recentFollows30d">—</strong> follows</span>
+                            <span class="recent-item"><strong id="recentReposts30d">—</strong> reposts</span>
                         </div>
                     </div>
                 </div>
@@ -1003,9 +1035,15 @@
 
         async function updateAccountInfo(force = false) {
             const joinedEl = document.getElementById('joinedDate');
+            const accountAgeEl = document.getElementById('accountAge');
             const lastActiveEl = document.getElementById('lastActiveDate');
+            const identityUpdateEl = document.getElementById('identityUpdateDate');
             const lastFollowEl = document.getElementById('lastFollowDate');
-            if (!joinedEl || !lastActiveEl || !lastFollowEl) return;
+            const recentPostsEl = document.getElementById('recentPosts30d');
+            const recentLikesEl = document.getElementById('recentLikes30d');
+            const recentFollowsEl = document.getElementById('recentFollows30d');
+            const recentRepostsEl = document.getElementById('recentReposts30d');
+            if (!joinedEl || !accountAgeEl || !lastActiveEl || !identityUpdateEl || !lastFollowEl || !recentPostsEl || !recentLikesEl || !recentFollowsEl || !recentRepostsEl) return;
 
             const token = ++accountInfoToken;
 
@@ -1015,46 +1053,97 @@
             }
             if (token !== accountInfoToken) return;
             joinedEl.textContent = joinedDate ? formatEuDate(joinedDate) : '—';
+            accountAgeEl.textContent = joinedDate ? formatAccountAge(joinedDate) : '—';
 
-            if (lastActiveLoaded && !force) {
+            const cachedRecentStats = !force && currentDid ? recentStatsCache.get(currentDid) : null;
+            if (cachedRecentStats) {
+                renderRecentStats(cachedRecentStats);
+            } else if (currentDid && currentPdsUrl) {
+                setRecentStatsLoading();
+            } else {
+                setRecentStatsUnavailable();
+            }
+
+            const shouldFetchLastActive = !(lastActiveLoaded && !force);
+            const shouldFetchIdentityUpdate = !identityUpdateLoaded;
+            const shouldFetchRecentStats = Boolean(currentDid && currentPdsUrl && (force || !cachedRecentStats));
+
+            if (!shouldFetchLastActive) {
                 lastActiveEl.textContent = (latestPostDate || latestLikeDate || latestFollowDate || latestRepostDate)
                     ? formatEuDate(getLatestActivityDate())
                     : '—';
                 lastFollowEl.textContent = latestFollowDate ? formatEuDate(latestFollowDate) : '—';
-                return;
+            } else {
+                lastActiveEl.textContent = '…';
+                lastFollowEl.textContent = latestFollowDate ? formatEuDate(latestFollowDate) : '—';
             }
 
-            lastActiveEl.textContent = '…';
-            lastFollowEl.textContent = latestFollowDate ? formatEuDate(latestFollowDate) : '—';
+            if (!shouldFetchIdentityUpdate) {
+                identityUpdateEl.textContent = formatIdentityUpdate(identityUpdatedDate, identityUpdateType);
+                setIdentityUpdateTooltip(identityUpdateEl, identityUpdateType);
+            } else {
+                identityUpdateEl.textContent = (currentDid && currentPdsUrl) ? '…' : '—';
+                identityUpdateEl.removeAttribute('title');
+            }
 
-            if (currentDid && currentPdsUrl) {
-                try {
-                    const [postDate, likeDate, followDate, repostDate] = await Promise.all([
-                        fetchLatestPostDate(),
-                        fetchLatestRecordDate('app.bsky.feed.like'),
-                        fetchLatestRecordDate('app.bsky.graph.follow'),
-                        fetchLatestRecordDate('app.bsky.feed.repost')
-                    ]);
+            if (!currentDid || !currentPdsUrl || (!shouldFetchLastActive && !shouldFetchRecentStats && !shouldFetchIdentityUpdate)) return;
 
-                    if (token !== accountInfoToken) return;
+            const lastActivePromise = shouldFetchLastActive
+                ? Promise.all([
+                    fetchLatestPostDate(),
+                    fetchLatestRecordDate('app.bsky.feed.like'),
+                    fetchLatestRecordDate('app.bsky.graph.follow'),
+                    fetchLatestRecordDate('app.bsky.feed.repost')
+                ])
+                : Promise.resolve(null);
+            const recentStatsPromise = shouldFetchRecentStats
+                ? fetchRecentActivityStats(30)
+                : Promise.resolve(null);
+            const identityUpdatePromise = shouldFetchIdentityUpdate
+                ? fetchLatestIdentityUpdate()
+                : Promise.resolve(null);
 
+            const [lastActiveResult, recentStatsResult, identityUpdateResult] = await Promise.allSettled([lastActivePromise, recentStatsPromise, identityUpdatePromise]);
+
+            if (token !== accountInfoToken) return;
+
+            if (shouldFetchLastActive) {
+                if (lastActiveResult.status === 'fulfilled' && lastActiveResult.value) {
+                    const [postDate, likeDate, followDate, repostDate] = lastActiveResult.value;
                     latestPostDate = postDate || latestPostDate;
                     latestLikeDate = likeDate || latestLikeDate;
                     latestFollowDate = followDate || latestFollowDate;
                     latestRepostDate = repostDate || latestRepostDate;
-
-                    let latestFinal = latestPostDate || null;
-                    if (latestLikeDate && (!latestFinal || latestLikeDate > latestFinal)) latestFinal = latestLikeDate;
-                    if (latestFollowDate && (!latestFinal || latestFollowDate > latestFinal)) latestFinal = latestFollowDate;
-                    if (latestRepostDate && (!latestFinal || latestRepostDate > latestFinal)) latestFinal = latestRepostDate;
-
+                    const latestFinal = getLatestActivityDate();
                     lastActiveEl.textContent = latestFinal ? formatEuDate(latestFinal) : '—';
                     lastFollowEl.textContent = latestFollowDate ? formatEuDate(latestFollowDate) : '—';
                     lastActiveLoaded = true;
-                } catch (e) {
-                    if (token !== accountInfoToken) return;
+                } else {
                     lastActiveEl.textContent = latestPostDate ? formatEuDate(latestPostDate) : '—';
                     lastFollowEl.textContent = latestFollowDate ? formatEuDate(latestFollowDate) : '—';
+                }
+            }
+
+            if (shouldFetchRecentStats) {
+                if (recentStatsResult.status === 'fulfilled' && recentStatsResult.value) {
+                    recentStatsCache.set(currentDid, recentStatsResult.value);
+                    renderRecentStats(recentStatsResult.value);
+                } else {
+                    setRecentStatsUnavailable();
+                }
+            }
+
+            if (shouldFetchIdentityUpdate) {
+                if (identityUpdateResult.status === 'fulfilled') {
+                    const identityUpdate = identityUpdateResult.value;
+                    identityUpdatedDate = identityUpdate && identityUpdate.date ? identityUpdate.date : null;
+                    identityUpdateType = identityUpdate && identityUpdate.type ? identityUpdate.type : '';
+                    identityUpdateEl.textContent = formatIdentityUpdate(identityUpdatedDate, identityUpdateType);
+                    setIdentityUpdateTooltip(identityUpdateEl, identityUpdateType);
+                    identityUpdateLoaded = true;
+                } else {
+                    identityUpdateEl.textContent = formatIdentityUpdate(identityUpdatedDate, identityUpdateType);
+                    setIdentityUpdateTooltip(identityUpdateEl, identityUpdateType);
                 }
             }
         }
@@ -1065,6 +1154,223 @@
             if (latestFollowDate && (!latest || latestFollowDate > latest)) latest = latestFollowDate;
             if (latestRepostDate && (!latest || latestRepostDate > latest)) latest = latestRepostDate;
             return latest;
+        }
+
+        function setRecentStatsLoading() {
+            const ids = ['recentPosts30d', 'recentLikes30d', 'recentFollows30d', 'recentReposts30d'];
+            ids.forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '…';
+            });
+        }
+
+        function setRecentStatsUnavailable() {
+            const ids = ['recentPosts30d', 'recentLikes30d', 'recentFollows30d', 'recentReposts30d'];
+            ids.forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '—';
+            });
+        }
+
+        function renderRecentStats(stats) {
+            const mapping = {
+                recentPosts30d: stats && stats.posts ? stats.posts : null,
+                recentLikes30d: stats && stats.likes ? stats.likes : null,
+                recentFollows30d: stats && stats.follows ? stats.follows : null,
+                recentReposts30d: stats && stats.reposts ? stats.reposts : null
+            };
+
+            Object.keys(mapping).forEach((id) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.textContent = formatRecentCount(mapping[id]);
+            });
+        }
+
+        function formatRecentCount(metric) {
+            if (!metric || typeof metric.count !== 'number') return '—';
+            if (metric.truncated && metric.count === 0) return '—';
+            return metric.truncated ? `${formatNumber(metric.count)}+` : formatNumber(metric.count);
+        }
+
+        function formatAccountAge(date) {
+            if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '—';
+            const now = new Date();
+
+            let years = now.getFullYear() - date.getFullYear();
+            let months = now.getMonth() - date.getMonth();
+            if (now.getDate() < date.getDate()) {
+                months -= 1;
+            }
+            if (months < 0) {
+                years -= 1;
+                months += 12;
+            }
+
+            if (years > 0) return `${years}y ${months}m`;
+            if (months > 0) return `${months}m`;
+
+            const diffMs = now.getTime() - date.getTime();
+            const days = Math.max(0, Math.floor(diffMs / (24 * 60 * 60 * 1000)));
+            return `${days}d`;
+        }
+
+        function formatIdentityUpdate(date, type) {
+            if (!date) return '—';
+            return formatEuDate(date);
+        }
+
+        function setIdentityUpdateTooltip(element, type) {
+            if (!element) return;
+            if (type) {
+                element.setAttribute('title', `Reason: ${type}`);
+            } else {
+                element.removeAttribute('title');
+            }
+        }
+
+        async function fetchLatestIdentityUpdate() {
+            if (!currentDid || !currentPdsUrl) return null;
+            try {
+                const [plcIdentityUpdate, profileRecordDate] = await Promise.all([
+                    fetchLatestPlcIdentityUpdate(),
+                    fetchLatestRecordDate('app.bsky.actor.profile')
+                ]);
+
+                const profileUpdatedAt = parseDateValue(currentProfile && currentProfile.updatedAt);
+                const profileIndexedAt = parseDateValue(currentProfile && currentProfile.indexedAt);
+                const profileRecordUpdate = profileRecordDate
+                    ? { date: profileRecordDate, type: 'profile change' }
+                    : null;
+                const profileAppUpdate = profileUpdatedAt
+                    ? { date: profileUpdatedAt, type: 'profile change' }
+                    : (profileIndexedAt ? { date: profileIndexedAt, type: 'profile change (indexed)' } : null);
+                const profileIdentityUpdate = pickLatestIdentityUpdate(profileRecordUpdate, profileAppUpdate);
+
+                return pickLatestIdentityUpdate(plcIdentityUpdate, profileIdentityUpdate);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function fetchLatestPlcIdentityUpdate() {
+            if (!currentDid || !currentDid.startsWith('did:plc:')) return null;
+            const auditLog = await fetchPlcAuditLog(currentDid);
+            if (!Array.isArray(auditLog) || auditLog.length === 0) return null;
+
+            const entries = auditLog
+                .filter(entry => entry && entry.nullified !== true)
+                .filter(entry => parseDateValue(entry.createdAt))
+                .sort((a, b) => {
+                    const aTs = parseDateValue(a.createdAt).getTime();
+                    const bTs = parseDateValue(b.createdAt).getTime();
+                    return aTs - bTs;
+                });
+
+            if (entries.length === 0) return null;
+
+            const latestEntry = entries[entries.length - 1];
+            const previousEntry = entries.length > 1 ? entries[entries.length - 2] : null;
+
+            return {
+                date: parseDateValue(latestEntry.createdAt),
+                type: classifyIdentityUpdateType(
+                    previousEntry ? previousEntry.operation : null,
+                    latestEntry.operation
+                )
+            };
+        }
+
+        function pickLatestIdentityUpdate(primaryEvent, secondaryEvent) {
+            const primaryDate = primaryEvent && primaryEvent.date ? primaryEvent.date : null;
+            const secondaryDate = secondaryEvent && secondaryEvent.date ? secondaryEvent.date : null;
+            if (!primaryDate && !secondaryDate) return null;
+            if (primaryDate && !secondaryDate) return primaryEvent;
+            if (!primaryDate && secondaryDate) return secondaryEvent;
+
+            const primaryTs = primaryDate.getTime();
+            const secondaryTs = secondaryDate.getTime();
+            if (primaryTs > secondaryTs) return primaryEvent;
+            if (secondaryTs > primaryTs) return secondaryEvent;
+
+            const mergedType = [primaryEvent.type, secondaryEvent.type]
+                .filter(Boolean)
+                .filter((value, index, arr) => arr.indexOf(value) === index)
+                .join(', ');
+            return { date: primaryDate, type: mergedType || 'identity update' };
+        }
+
+        function classifyIdentityUpdateType(previousOperation, currentOperation) {
+            if (!currentOperation) return 'identity update';
+            if (!previousOperation) return 'account created';
+
+            const types = [];
+            const previousHandle = getOperationHandle(previousOperation);
+            const currentHandle = getOperationHandle(currentOperation);
+            const previousPds = getOperationPds(previousOperation);
+            const currentPds = getOperationPds(currentOperation);
+            const previousAtprotoKey = getOperationAtprotoKey(previousOperation);
+            const currentAtprotoKey = getOperationAtprotoKey(currentOperation);
+            const previousRotationKeys = getOperationRotationKeys(previousOperation);
+            const currentRotationKeys = getOperationRotationKeys(currentOperation);
+
+            if (previousHandle !== currentHandle) types.push('handle change');
+            if (previousPds !== currentPds) types.push('PDS change');
+            if (previousAtprotoKey !== currentAtprotoKey) types.push('signing key change');
+            if (!areSameStringArrays(previousRotationKeys, currentRotationKeys)) types.push('rotation key change');
+
+            return types.length ? types.join(', ') : 'identity update';
+        }
+
+        function getOperationHandle(operation) {
+            const alsoKnownAs = Array.isArray(operation && operation.alsoKnownAs) ? operation.alsoKnownAs : [];
+            const atUri = alsoKnownAs.find(value => typeof value === 'string' && value.startsWith('at://'));
+            return atUri ? atUri.slice(5) : '';
+        }
+
+        function getOperationPds(operation) {
+            const services = operation && operation.services ? operation.services : {};
+            const pds = services.atproto_pds;
+            return pds && typeof pds.endpoint === 'string' ? pds.endpoint : '';
+        }
+
+        function getOperationAtprotoKey(operation) {
+            const methods = operation && operation.verificationMethods ? operation.verificationMethods : {};
+            return methods && typeof methods.atproto === 'string' ? methods.atproto : '';
+        }
+
+        function getOperationRotationKeys(operation) {
+            const keys = Array.isArray(operation && operation.rotationKeys) ? operation.rotationKeys.slice() : [];
+            return keys.sort();
+        }
+
+        function areSameStringArrays(a, b) {
+            if (!Array.isArray(a) || !Array.isArray(b)) return false;
+            if (a.length !== b.length) return false;
+            for (let i = 0; i < a.length; i += 1) {
+                if (a[i] !== b[i]) return false;
+            }
+            return true;
+        }
+
+        async function fetchPlcAuditLog(did) {
+            try {
+                const direct = await fetch(`https://plc.directory/${did}/log/audit`);
+                if (direct.ok) {
+                    return await direct.json();
+                }
+            } catch (e) {
+                // continue to proxy fallback
+            }
+
+            try {
+                const proxy = await fetch(`https://r.jina.ai/http://plc.directory/${did}/log/audit`);
+                if (!proxy.ok) return null;
+                const text = await proxy.text();
+                return extractJsonArray(text);
+            } catch (e) {
+                return null;
+            }
         }
 
         async function fetchJoinedDate() {
@@ -1108,6 +1414,18 @@
             if (!text) return null;
             const first = text.indexOf('{');
             const last = text.lastIndexOf('}');
+            if (first === -1 || last === -1 || last <= first) return null;
+            try {
+                return JSON.parse(text.slice(first, last + 1));
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function extractJsonArray(text) {
+            if (!text) return null;
+            const first = text.indexOf('[');
+            const last = text.lastIndexOf(']');
             if (first === -1 || last === -1 || last <= first) return null;
             try {
                 return JSON.parse(text.slice(first, last + 1));
@@ -1610,13 +1928,17 @@
                     latestPostDate = null;
                     latestLikeDate = null;
                     joinedDate = null;
+                    identityUpdatedDate = null;
+                    identityUpdateType = '';
                     latestFollowDate = null;
                     latestRepostDate = null;
                     joinedLoaded = false;
                     lastActiveLoaded = false;
+                    identityUpdateLoaded = false;
                     likesCountCache.clear();
                     mutualsCache.clear();
                     blockingCountCache.clear();
+                    recentStatsCache.clear();
                     likesCountToken = 0;
                     likesCountTruncated = false;
                     likesCountExact = false;
@@ -2109,6 +2431,113 @@
             }
         }
 
+        async function fetchRecentActivityStats(days = 30) {
+            const sinceDate = new Date(Date.now() - (days * 24 * 60 * 60 * 1000));
+            const safe = (promise) => promise.catch(() => null);
+
+            const [posts, likes, follows, reposts] = await Promise.all([
+                safe(countRecentPostsSince(sinceDate, 5000)),
+                safe(countRecentRecordsSince('app.bsky.feed.like', sinceDate, 5000)),
+                safe(countRecentRecordsSince('app.bsky.graph.follow', sinceDate, 5000)),
+                safe(countRecentRecordsSince('app.bsky.feed.repost', sinceDate, 5000))
+            ]);
+
+            return { days, posts, likes, follows, reposts };
+        }
+
+        async function countRecentPostsSince(sinceDate, maxFetch = 5000) {
+            if (!currentDid) return null;
+            let cursor = null;
+            let scanned = 0;
+            let count = 0;
+            let reachedOlderRecords = false;
+            const pageSize = 100;
+
+            while (scanned < maxFetch) {
+                let url = `${API_PUBLIC}/app.bsky.feed.getAuthorFeed?actor=${encodeURIComponent(currentDid)}&filter=posts_with_replies&limit=${pageSize}`;
+                if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
+                const res = await fetch(url);
+                if (!res.ok) return null;
+                const data = await res.json();
+                const feed = data.feed || [];
+                if (feed.length === 0) break;
+
+                for (const item of feed) {
+                    const post = item && item.post ? item.post : null;
+                    if (!post || !post.record || !post.record.createdAt) continue;
+                    const createdAt = new Date(post.record.createdAt);
+                    if (Number.isNaN(createdAt.getTime())) continue;
+                    if (createdAt < sinceDate) {
+                        reachedOlderRecords = true;
+                        break;
+                    }
+                    const authorDid = post.author && post.author.did ? post.author.did : '';
+                    if (authorDid && authorDid !== currentDid) continue;
+                    count += 1;
+                }
+
+                scanned += feed.length;
+                cursor = data.cursor || null;
+                if (reachedOlderRecords || !cursor) break;
+            }
+
+            return {
+                count,
+                truncated: Boolean(cursor) && !reachedOlderRecords && scanned >= maxFetch
+            };
+        }
+
+        async function countRecentRecordsSince(collection, sinceDate, maxFetch = 5000) {
+            if (!currentDid || !currentPdsUrl) return null;
+            let cursor = null;
+            let scanned = 0;
+            let count = 0;
+            let reachedOlderRecords = false;
+            let newestFirst = null;
+            const pageSize = 100;
+
+            while (scanned < maxFetch) {
+                let url = `${currentPdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(currentDid)}&collection=${encodeURIComponent(collection)}&limit=${pageSize}&reverse=true`;
+                if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
+                const res = await fetch(url);
+                if (!res.ok) return null;
+                const data = await res.json();
+                const records = data.records || [];
+                if (records.length === 0) break;
+
+                if (newestFirst === null) {
+                    const withDates = records
+                        .map(record => (record && record.value && record.value.createdAt) ? new Date(record.value.createdAt) : null)
+                        .filter(date => date && !Number.isNaN(date.getTime()));
+                    if (withDates.length >= 2) {
+                        newestFirst = withDates[0] >= withDates[withDates.length - 1];
+                    }
+                }
+
+                for (const record of records) {
+                    const createdAt = record && record.value && record.value.createdAt ? new Date(record.value.createdAt) : null;
+                    if (!createdAt || Number.isNaN(createdAt.getTime())) continue;
+                    if (createdAt < sinceDate) {
+                        if (newestFirst === true) {
+                            reachedOlderRecords = true;
+                            break;
+                        }
+                        continue;
+                    }
+                    count += 1;
+                }
+
+                scanned += records.length;
+                cursor = data.cursor || null;
+                if ((newestFirst === true && reachedOlderRecords) || !cursor) break;
+            }
+
+            return {
+                count,
+                truncated: Boolean(cursor) && !reachedOlderRecords && scanned >= maxFetch
+            };
+        }
+
         function getQuoteHandle(post) {
             if (!post || !post.embed) return '';
             const recordView = getEmbeddedRecordView(post.embed);
@@ -2210,6 +2639,36 @@
             return recordView.author || null;
         }
 
+        function formatProfileDescription(profile) {
+            const text = profile && typeof profile.description === 'string' ? profile.description : '';
+            if (!text) return '';
+            const facets = Array.isArray(profile.descriptionFacets) ? profile.descriptionFacets.slice() : [];
+            const html = facets.length ? applyFacets(text, facets) : linkifyPlainTextUrls(text);
+            return html.replace(/\n/g, '<br>');
+        }
+
+        function linkifyPlainTextUrls(text, options = {}) {
+            const escaped = escapeHtml(text || '');
+            const stopPropagation = Boolean(options.stopPropagation);
+            const clickAttr = stopPropagation ? ' onclick="event.stopPropagation()"' : '';
+            const urlPattern = /((?:https?:\/\/|www\.)[^\s<]+|(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?:\/[^\s<]*)?)/gi;
+            return escaped.replace(urlPattern, (match, _group, offset, fullText) => {
+                if (offset > 0 && fullText[offset - 1] === '@') return match;
+
+                let url = match;
+                let trailing = '';
+                while (url && /[.,!?;:)]$/.test(url)) {
+                    trailing = url.slice(-1) + trailing;
+                    url = url.slice(0, -1);
+                }
+                if (!url) return match;
+
+                const hasProtocol = /^https?:\/\//i.test(url);
+                const href = hasProtocol ? url : `https://${url}`;
+                return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer"${clickAttr}>${url}</a>${trailing}`;
+            });
+        }
+
         function applyFacets(text, facets) {
             const sorted = facets.sort((a, b) => a.index.byteStart - b.index.byteStart);
             const byteIndexMap = buildByteIndexMap(text);
@@ -2223,23 +2682,29 @@
                 const start = byteIndexMap[startByte] ?? 0;
                 const end = byteIndexMap[endByte] ?? text.length;
                 
-                result += escapeHtml(text.substring(byteIndexMap[lastByte] ?? 0, start));
+                result += linkifyPlainTextUrls(
+                    text.substring(byteIndexMap[lastByte] ?? 0, start),
+                    { stopPropagation: true }
+                );
                 
                 const facetText = text.substring(start, end);
-                const feature = facet.features[0];
+                const feature = Array.isArray(facet.features) ? facet.features[0] : null;
                 
-                if (feature.$type === 'app.bsky.richtext.facet#link') {
-                    result += `<a href="${escapeHtml(feature.uri)}" target="_blank" onclick="event.stopPropagation()">${escapeHtml(facetText)}</a>`;
-                } else if (feature.$type === 'app.bsky.richtext.facet#mention') {
-                    result += `<a href="https://bsky.app/profile/${escapeHtml(feature.did)}" target="_blank" onclick="event.stopPropagation()">${escapeHtml(facetText)}</a>`;
+                if (feature && feature.$type === 'app.bsky.richtext.facet#link') {
+                    result += `<a href="${escapeHtml(feature.uri)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${escapeHtml(facetText)}</a>`;
+                } else if (feature && feature.$type === 'app.bsky.richtext.facet#mention') {
+                    result += `<a href="https://bsky.app/profile/${escapeHtml(feature.did)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${escapeHtml(facetText)}</a>`;
                 } else {
-                    result += escapeHtml(facetText);
+                    result += linkifyPlainTextUrls(facetText, { stopPropagation: true });
                 }
                 
                 lastByte = endByte;
             });
             
-            result += escapeHtml(text.substring(byteIndexMap[lastByte] ?? 0));
+            result += linkifyPlainTextUrls(
+                text.substring(byteIndexMap[lastByte] ?? 0),
+                { stopPropagation: true }
+            );
             
             return result;
         }
@@ -2329,6 +2794,23 @@
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const year = date.getFullYear();
             return `${day}/${month}/${year}`;
+        }
+
+        function parseDateValue(value) {
+            if (!value) return null;
+            const parsed = new Date(value);
+            if (Number.isNaN(parsed.getTime())) return null;
+            return parsed;
+        }
+
+        function formatPdsLabel(url) {
+            if (!url) return '—';
+            try {
+                const parsed = new URL(url);
+                return parsed.host || url;
+            } catch (e) {
+                return url;
+            }
         }
 
     
