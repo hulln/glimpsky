@@ -754,6 +754,13 @@
             }
         }
 
+        @media (max-width: 900px) and (hover: none) and (pointer: coarse) {
+            .account-info {
+                grid-template-columns: 1fr;
+                text-align: left;
+            }
+        }
+
         .account-item {
             display: flex;
             flex-direction: column;
