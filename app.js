@@ -51,6 +51,10 @@
             listModalList: document.getElementById('listModalList'),
             listModalClose: document.getElementById('listModalClose'),
             listModalLoadMore: document.getElementById('listModalLoadMore'),
+            listModalSearchWrap: document.getElementById('listModalSearchWrap'),
+            listModalSearch: document.getElementById('listModalSearch'),
+            listModalSearchAllBtn: document.getElementById('listModalSearchAllBtn'),
+            listModalSearchHint: document.getElementById('listModalSearchHint'),
             infoModal: document.getElementById('infoModal'),
             infoBtn: document.getElementById('infoBtn'),
             themeToggleBtn: document.getElementById('themeToggleBtn'),
@@ -570,20 +574,82 @@
         let listLoader = null;
         let listLoading = false;
         let listNote = '';
+        let listProfiles = [];
+        let listSearchQuery = '';
+        let listSearchEnabled = true;
+        let listLoadError = '';
+        let listSearchLoadingAll = false;
+        let listSearchHintOverride = '';
 
-        function openListModal(title, note, loader) {
+        function openListModal(title, note, loader, options = {}) {
             listCursor = null;
             listLoader = loader;
             listLoading = false;
             listNote = note || '';
+            listProfiles = [];
+            listSearchQuery = '';
+            listLoadError = '';
+            listSearchLoadingAll = false;
+            listSearchHintOverride = '';
+            listSearchEnabled = options.searchable !== false;
             elements.listModalTitle.textContent = title;
             elements.listModalMeta.textContent = listNote;
             elements.listModalMeta.style.display = listNote ? 'block' : 'none';
             elements.listModalList.innerHTML = '';
             elements.listModalLoadMore.style.display = 'none';
+            if (elements.listModalSearch) {
+                elements.listModalSearch.value = '';
+            }
+            setListSearchVisibility(listSearchEnabled);
+            refreshListSearchControls();
             elements.listModal.classList.add('open');
             elements.listModal.setAttribute('aria-hidden', 'false');
             loadMoreList();
+        }
+
+        function setListSearchVisibility(visible) {
+            if (!elements.listModalSearchWrap) return;
+            elements.listModalSearchWrap.style.display = visible ? 'block' : 'none';
+        }
+
+        function setListSearchHint(message) {
+            listSearchHintOverride = message || '';
+            refreshListSearchControls();
+        }
+
+        function refreshListSearchControls() {
+            if (!listSearchEnabled) {
+                if (elements.listModalSearchAllBtn) {
+                    elements.listModalSearchAllBtn.style.display = 'none';
+                }
+                if (elements.listModalSearchHint) {
+                    elements.listModalSearchHint.textContent = '';
+                    elements.listModalSearchHint.style.display = 'none';
+                }
+                return;
+            }
+
+            const hasQuery = Boolean(listSearchQuery);
+            const hasMore = Boolean(listCursor);
+            const isBusy = listLoading || listSearchLoadingAll;
+
+            if (elements.listModalSearchAllBtn) {
+                const showSearchAll = hasQuery && hasMore;
+                elements.listModalSearchAllBtn.style.display = showSearchAll ? 'inline-flex' : 'none';
+                elements.listModalSearchAllBtn.disabled = isBusy || !showSearchAll;
+                elements.listModalSearchAllBtn.textContent = listSearchLoadingAll ? 'Loading…' : 'Search all';
+            }
+
+            if (elements.listModalSearchHint) {
+                let hint = listSearchHintOverride;
+                if (!hint && hasQuery && hasMore) {
+                    hint = 'Searching loaded accounts only. Press Enter or Search all to load the full list (may take a while). Supports plain text and /regex/flags.';
+                } else if (!hint && hasQuery && !hasMore && listProfiles.length > 0) {
+                    hint = 'Full list loaded. Search supports plain text and /regex/flags.';
+                }
+                elements.listModalSearchHint.textContent = hint;
+                elements.listModalSearchHint.style.display = hint ? 'block' : 'none';
+            }
         }
 
         function closeListModal() {
@@ -596,48 +662,125 @@
             listLoader = null;
             listLoading = false;
             listNote = '';
+            listProfiles = [];
+            listSearchQuery = '';
+            listLoadError = '';
+            listSearchEnabled = true;
+            listSearchLoadingAll = false;
+            listSearchHintOverride = '';
+            if (elements.listModalSearch) {
+                elements.listModalSearch.value = '';
+            }
+            setListSearchVisibility(false);
+            refreshListSearchControls();
         }
 
         async function loadMoreList() {
-            if (!listLoader || listLoading) return;
+            if (!listLoader || listLoading || listSearchLoadingAll) return;
             listLoading = true;
+            if (!listSearchLoadingAll) {
+                listSearchHintOverride = '';
+            }
+            refreshListSearchControls();
             elements.listModalLoadMore.disabled = true;
             elements.listModalLoadMore.textContent = 'Loading…';
             try {
                 const res = await listLoader(listCursor);
                 const profiles = res?.profiles || [];
+                listLoadError = '';
                 renderProfileListItems(profiles);
                 listCursor = res?.cursor || null;
                 elements.listModalLoadMore.style.display = listCursor ? 'inline-flex' : 'none';
             } catch (e) {
                 const msg = (e && e.message) ? e.message : String(e);
-                elements.listModalList.insertAdjacentHTML('beforeend', `
-                    <div class="empty-state" style="padding: 16px 10px;">
-                        <p>Failed to load list</p>
-                        <p style="font-size: 13px; margin-top: 8px; color: var(--text-soft);">${escapeHtml(msg)}</p>
-                    </div>
-                `);
+                listLoadError = msg;
+                renderProfileListItems();
                 elements.listModalLoadMore.style.display = 'none';
             } finally {
                 listLoading = false;
                 elements.listModalLoadMore.disabled = false;
                 elements.listModalLoadMore.textContent = 'Load more';
+                refreshListSearchControls();
             }
         }
 
-        function renderProfileListItems(profiles) {
-            if (!profiles || profiles.length === 0) {
-                if (!elements.listModalList.children.length) {
+        async function loadAllListPagesForSearch() {
+            if (!listLoader || listSearchLoadingAll || listLoading || !listCursor) return;
+            listSearchLoadingAll = true;
+            setListSearchHint('Loading full list for search. This can take a while…');
+            elements.listModalLoadMore.disabled = true;
+            elements.listModalLoadMore.textContent = 'Loading…';
+
+            try {
+                while (listCursor) {
+                    const res = await listLoader(listCursor);
+                    const profiles = res?.profiles || [];
+                    listLoadError = '';
+                    appendUniqueProfiles(profiles);
+                    listCursor = res?.cursor || null;
+                    renderProfileListItems();
+                    if (listCursor) {
+                        setListSearchHint(`Loading full list… ${formatNumber(listProfiles.length)} accounts loaded`);
+                    }
+                }
+                setListSearchHint(`Full list loaded (${formatNumber(listProfiles.length)} accounts).`);
+            } catch (e) {
+                const msg = (e && e.message) ? e.message : String(e);
+                listLoadError = msg;
+                setListSearchHint(`Could not finish loading full list: ${msg}`);
+                renderProfileListItems();
+            } finally {
+                listSearchLoadingAll = false;
+                elements.listModalLoadMore.disabled = false;
+                elements.listModalLoadMore.textContent = 'Load more';
+                elements.listModalLoadMore.style.display = listCursor ? 'inline-flex' : 'none';
+                refreshListSearchControls();
+            }
+        }
+
+        function renderProfileListItems(profiles = []) {
+            if (profiles.length > 0) {
+                appendUniqueProfiles(profiles);
+            }
+
+            const visibleProfiles = getFilteredListProfiles();
+            if (visibleProfiles.length === 0) {
+                if (listLoadError && listProfiles.length === 0) {
                     elements.listModalList.innerHTML = `
                         <div class="empty-state" style="padding: 16px 10px;">
-                            <p>Nothing here</p>
+                            <p>Failed to load list</p>
+                            <p style="font-size: 13px; margin-top: 8px; color: var(--text-soft);">${escapeHtml(listLoadError)}</p>
                         </div>
                     `;
+                    refreshListSearchControls();
+                    return;
                 }
+
+                if (listSearchQuery && listProfiles.length > 0) {
+                    elements.listModalList.innerHTML = `
+                        <div class="empty-state" style="padding: 16px 10px;">
+                            <p>No matching accounts</p>
+                        </div>
+                    `;
+                    refreshListSearchControls();
+                    return;
+                }
+
+                if (elements.listModalList.children.length > 0) {
+                    refreshListSearchControls();
+                    return;
+                }
+
+                elements.listModalList.innerHTML = `
+                    <div class="empty-state" style="padding: 16px 10px;">
+                        <p>Nothing here</p>
+                    </div>
+                `;
+                refreshListSearchControls();
                 return;
             }
 
-            const html = profiles.map(p => {
+            const html = visibleProfiles.map(p => {
                 const avatar = p.avatar || 'https://via.placeholder.com/40';
                 const name = p.displayName || p.handle || p.did || '';
                 const handle = p.handle ? '@' + p.handle : (p.did || '');
@@ -653,9 +796,9 @@
                 `;
             }).join('');
 
-            elements.listModalList.insertAdjacentHTML('beforeend', html);
+            elements.listModalList.innerHTML = html;
 
-            [...elements.listModalList.querySelectorAll('.list-item')].slice(-profiles.length).forEach(el => {
+            [...elements.listModalList.querySelectorAll('.list-item')].forEach(el => {
                 el.addEventListener('click', async () => {
                     const actor = el.getAttribute('data-actor');
                     closeListModal();
@@ -665,6 +808,93 @@
                     }
                 });
             });
+            refreshListSearchControls();
+        }
+
+        function appendUniqueProfiles(profiles) {
+            const seen = new Set(
+                listProfiles
+                    .map(profile => getProfileListKey(profile))
+                    .filter(Boolean)
+            );
+
+            profiles.forEach((profile) => {
+                const key = getProfileListKey(profile);
+                if (key && seen.has(key)) return;
+                listProfiles.push(profile);
+                if (key) seen.add(key);
+            });
+        }
+
+        function getProfileListKey(profile) {
+            if (!profile) return '';
+            if (profile.did) return profile.did;
+            if (profile.handle) return profile.handle;
+            return '';
+        }
+
+        function getFilteredListProfiles() {
+            if (!listSearchEnabled || !listSearchQuery) return listProfiles;
+            const matcher = createListSearchMatcher(listSearchQuery);
+            if (matcher.invalidRegex && !listSearchLoadingAll) {
+                listSearchHintOverride = 'Invalid regex. Use /pattern/flags, for example /tim/i. Falling back to plain text.';
+            }
+            if (!matcher.keyword && !matcher.regex) return listProfiles;
+            return listProfiles.filter((profile) => doesProfileMatchSearch(profile, matcher));
+        }
+
+        function createListSearchMatcher(rawQuery) {
+            const raw = (rawQuery || '').trim();
+            if (!raw) {
+                return { keyword: '', regex: null, invalidRegex: false };
+            }
+
+            const parsedRegex = parseListSearchRegex(raw);
+            if (parsedRegex.regex) {
+                return { keyword: '', regex: parsedRegex.regex, invalidRegex: false };
+            }
+
+            let keyword = raw.toLowerCase();
+            if (keyword.startsWith('@')) {
+                keyword = keyword.slice(1);
+            }
+
+            return {
+                keyword,
+                regex: null,
+                invalidRegex: parsedRegex.invalid
+            };
+        }
+
+        function parseListSearchRegex(raw) {
+            if (!raw.startsWith('/') || raw.lastIndexOf('/') <= 0) {
+                return { regex: null, invalid: false };
+            }
+
+            const lastSlash = raw.lastIndexOf('/');
+            const pattern = raw.slice(1, lastSlash);
+            const rawFlags = raw.slice(lastSlash + 1) || 'i';
+            const flags = rawFlags.replace(/[gy]/g, '');
+
+            try {
+                return { regex: new RegExp(pattern, flags || 'i'), invalid: false };
+            } catch (e) {
+                return { regex: null, invalid: true };
+            }
+        }
+
+        function doesProfileMatchSearch(profile, matcher) {
+            if (!profile) return false;
+            const displayName = profile.displayName || '';
+            const handle = profile.handle || '';
+            const handleLower = handle.toLowerCase();
+
+            if (matcher.regex) {
+                return matcher.regex.test(displayName) || matcher.regex.test(handle);
+            }
+
+            if (!matcher.keyword) return true;
+            return displayName.toLowerCase().includes(matcher.keyword) || handleLower.includes(matcher.keyword);
         }
 
         function makeStaticPager(items, pageSize = 50) {
@@ -778,7 +1008,8 @@
             openListModal(
                 'Blocked by',
                 '',
-                makeStaticPager([])
+                makeStaticPager([]),
+                { searchable: false }
             );
             elements.listModalMeta.style.display = 'none';
             elements.listModalLoadMore.style.display = 'none';
@@ -1007,6 +1238,27 @@
 
         elements.listModalClose.addEventListener('click', closeListModal);
         elements.listModalLoadMore.addEventListener('click', loadMoreList);
+        if (elements.listModalSearch) {
+            elements.listModalSearch.addEventListener('input', () => {
+                listSearchQuery = elements.listModalSearch.value.trim();
+                if (!listSearchLoadingAll) {
+                    listSearchHintOverride = '';
+                }
+                renderProfileListItems();
+            });
+            elements.listModalSearch.addEventListener('keydown', async (e) => {
+                if (e.key !== 'Enter') return;
+                if (!listSearchQuery || !listCursor) return;
+                e.preventDefault();
+                await loadAllListPagesForSearch();
+            });
+        }
+        if (elements.listModalSearchAllBtn) {
+            elements.listModalSearchAllBtn.addEventListener('click', async () => {
+                if (!listSearchQuery || !listCursor) return;
+                await loadAllListPagesForSearch();
+            });
+        }
         elements.listModal.addEventListener('click', (e) => {
             if (e.target === elements.listModal) closeListModal();
         });

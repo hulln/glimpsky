@@ -208,6 +208,13 @@
                 <button id="listModalClose" class="iconButton" type="button" aria-label="Close">×</button>
             </div>
             <div id="listModalMeta" class="modal-meta"></div>
+            <div id="listModalSearchWrap" class="modal-search" style="display: none;">
+                <div class="modal-search-row">
+                    <input type="text" class="search-input" id="listModalSearch" placeholder="Search name/@handle or /regex/i">
+                    <button class="btn-secondary modal-search-all-btn" id="listModalSearchAllBtn" type="button" style="display: none;">Search all</button>
+                </div>
+                <div class="modal-search-hint" id="listModalSearchHint" style="display: none;"></div>
+            </div>
             <div id="listModalList" class="modal-list"></div>
             <div class="modal-footer">
                 <button id="listModalLoadMore" class="btn-secondary" type="button">Load more</button>

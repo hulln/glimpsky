@@ -874,6 +874,10 @@
             z-index: 9999;
         }
 
+        #listModal {
+            align-items: flex-start;
+        }
+
         .modal.open {
             display: flex;
         }
@@ -1000,6 +1004,45 @@
             font-size: 13px;
             color: #64748b;
             border-bottom: 1px solid #f1f5f9;
+        }
+
+        .modal-search {
+            padding: 10px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            background: #ffffff;
+        }
+
+        .modal-search-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-search .search-input {
+            flex: 1;
+            min-width: 0;
+            margin: 0;
+        }
+
+        .modal-search-all-btn {
+            flex: 0 0 auto;
+            white-space: nowrap;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .modal-search-all-btn:hover:not(:disabled),
+        #listModalLoadMore:hover:not(:disabled) {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .modal-search-hint {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.35;
         }
 
         .modal-list {
@@ -1408,6 +1451,7 @@
         [data-theme="dark"] .profile-card,
         [data-theme="dark"] .info-modal-content,
         [data-theme="dark"] .modal-content,
+        [data-theme="dark"] .modal-search,
         [data-theme="dark"] .modal-list,
         [data-theme="dark"] .modal-footer,
         [data-theme="dark"] .section-header,
@@ -1433,6 +1477,7 @@
         [data-theme="dark"] .loading,
         [data-theme="dark"] .empty-state,
         [data-theme="dark"] .list-handle,
+        [data-theme="dark"] .modal-search-hint,
         [data-theme="dark"] .iconButton,
         [data-theme="dark"] .modal-meta,
         [data-theme="dark"] .copy-link-btn,
@@ -1487,6 +1532,7 @@
         [data-theme="dark"] .info-modal-header,
         [data-theme="dark"] .modal-header,
         [data-theme="dark"] .modal-meta,
+        [data-theme="dark"] .modal-search,
         [data-theme="dark"] .modal-footer,
         [data-theme="dark"] .post,
         [data-theme="dark"] .share-line,
@@ -1555,6 +1601,12 @@
             border-color: var(--border-strong);
             color: var(--text-strong);
             box-shadow: var(--shadow-soft);
+        }
+
+        [data-theme="dark"] .modal-search-all-btn:hover:not(:disabled),
+        [data-theme="dark"] #listModalLoadMore:hover:not(:disabled) {
+            transform: none;
+            box-shadow: none;
         }
 
         [data-theme="dark"] .share-link,
@@ -1653,6 +1705,16 @@
 
             .profile-topline .copy-link-btn {
                 margin-left: 0;
+            }
+
+            .modal-search-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .modal-search-all-btn {
+                width: 100%;
+                justify-content: center;
             }
 
             .profile-info {
