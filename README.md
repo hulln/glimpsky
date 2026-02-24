@@ -39,6 +39,14 @@ python3 -m http.server 8000
 
 Open `http://localhost:8000` in your browser.
 
+## Language smoke test
+
+With the local server running, you can run a quick EN/SL routing and markup smoke test:
+
+```bash
+bash scripts/language-smoke.sh http://localhost:8000
+```
+
 ## Privacy and scope
 
 - Uses publicly available Bluesky/AT Protocol data only

@@ -214,7 +214,7 @@
             if (elements.themeToggleBtn) {
                 const showMoon = nextTheme !== 'dark';
                 elements.themeToggleBtn.classList.toggle('is-dark', nextTheme === 'dark');
-                elements.themeToggleBtn.setAttribute('aria-label', showMoon ? 'Switch to dark mode' : 'Switch to light mode');
+                elements.themeToggleBtn.setAttribute('aria-label', showMoon ? 'Preklopi na temni način' : 'Preklopi na svetli način');
                 elements.themeToggleBtn.setAttribute('aria-pressed', nextTheme === 'dark' ? 'true' : 'false');
             }
             if (persist) {
@@ -392,22 +392,22 @@
                     if (navigator.clipboard) {
                         await navigator.clipboard.writeText(url);
                         const original = elements.shareToolBtn.textContent;
-                        elements.shareToolBtn.textContent = 'Copied';
+                        elements.shareToolBtn.textContent = 'Kopirano';
                         setTimeout(() => {
                             elements.shareToolBtn.textContent = original;
                         }, 1200);
                     } else {
-                        window.prompt('Copy this link:', url);
+                        window.prompt('Kopirajte to povezavo:', url);
                     }
                 } catch (e) {
-                    showError('Could not copy link');
+                    showError('Povezave ni bilo mogoče kopirati');
                 }
             });
         }
 
         if (elements.shareBskyLink) {
             const url = getToolHomeUrl();
-            const text = `GlimpSky - Bluesky Profile Viewer ${url}`;
+            const text = `GlimpSky - Pregledovalnik profilov Bluesky ${url}`;
             elements.shareBskyLink.href = `https://bsky.app/intent/compose?text=${encodeURIComponent(text)}`;
         }
 
@@ -478,7 +478,7 @@
         });
 
         function showError(message, showExample = false) {
-            const extra = showExample ? ' or <a href="#" id="exampleProfileLink">try a sample profile</a>.' : '';
+            const extra = showExample ? ' ali <a href="#" id="exampleProfileLink">preizkusite primer profila</a>.' : '';
             elements.error.innerHTML = `<div class="error">${escapeHtml(message)}${extra}</div>`;
             if (showExample) {
                 const exampleLink = document.getElementById('exampleProfileLink');
@@ -499,7 +499,7 @@
             elements.content.innerHTML = `
                 <div class="loading">
                     <div class="spinner"></div>
-                    <p>Loading...</p>
+                    <p>Nalaganje...</p>
                 </div>
             `;
         }
@@ -528,13 +528,13 @@
                 );
                 
                 if (!response.ok) {
-                    throw new Error('Could not resolve handle. Please check if it exists.');
+                    throw new Error('Uporabniškega imena ni bilo mogoče razrešiti. Preverite, ali obstaja.');
                 }
                 
                 const data = await response.json();
                 return data.did;
             } catch (error) {
-                throw new Error(`Failed to resolve handle: ${error.message}`);
+                throw new Error(`Napaka pri razreševanju uporabniškega imena: ${error.message}`);
             }
         }
 
@@ -542,7 +542,7 @@
             try {
                 const didDoc = await fetchDidDocument(did);
                 if (!didDoc) {
-                    throw new Error('Could not fetch DID document');
+                    throw new Error('Dokumenta DID ni bilo mogoče pridobiti');
                 }
                 currentDidDoc = didDoc;
 
@@ -554,12 +554,12 @@
                     return id === '#atproto_pds' || id === `${did}#atproto_pds` || type === 'AtprotoPersonalDataServer';
                 });
                 if (!pdsService) {
-                    throw new Error('No PDS service found in DID document');
+                    throw new Error('V dokumentu DID ni najdene storitve PDS');
                 }
                 
                 return pdsService.serviceEndpoint;
             } catch (error) {
-                throw new Error(`Failed to get PDS URL: ${error.message}`);
+                throw new Error(`Napaka pri pridobivanju URL-ja PDS: ${error.message}`);
             }
         }
 
@@ -622,7 +622,7 @@
                 );
 
                 if (!response.ok) {
-                    throw new Error('Could not load profile');
+                    throw new Error('Profila ni bilo mogoče naložiti');
                 }
 
                 const profile = await response.json();
@@ -633,7 +633,7 @@
                 displayProfile(profile);
                 return profile;
             } catch (error) {
-                throw new Error(`Failed to load profile: ${error.message}`);
+                throw new Error(`Napaka pri nalaganju profila: ${error.message}`);
             }
         }
 
@@ -651,44 +651,44 @@
                     <div class="profile-info">
                         <div class="profile-topline">
                             <h2>${escapeHtml(displayName)}</h2>
-                            <a class="copy-link-btn" href="https://bsky.app/profile/${escapeHtml(profile.handle)}" target="_blank" rel="noopener noreferrer">Open in Bluesky</a>
+                            <a class="copy-link-btn" href="https://bsky.app/profile/${escapeHtml(profile.handle)}" target="_blank" rel="noopener noreferrer">Odpri v Bluesky</a>
                         </div>
                         <div class="handle">@${escapeHtml(profile.handle)}</div>
                         ${descriptionHtml ? `<div class="description">${descriptionHtml}</div>` : ''}
                         <div class="account-info">
                             <div class="account-item">
-                                <span class="account-label">Joined</span>
+                                <span class="account-label">Datum ustvaritve</span>
                                 <span id="joinedDate">—</span>
                             </div>
                             <div class="account-item">
-                                <span class="account-label">Account age</span>
+                                <span class="account-label">Starost računa</span>
                                 <span id="accountAge">—</span>
                             </div>
                             <div class="account-item">
-                                <span class="account-label">Last active</span>
+                                <span class="account-label">Zadnja aktivnost</span>
                                 <span id="lastActiveDate">—</span>
                             </div>
                             <div class="account-item">
-                                <span class="account-label">Last follow</span>
+                                <span class="account-label">Zadnje sledenje</span>
                                 <span id="lastFollowDate">—</span>
                             </div>
                             <div class="account-item">
-                                <span class="account-label">Identity update</span>
+                                <span class="account-label">Posodobitev identitete</span>
                                 <span id="identityUpdateDate">—</span>
                             </div>
                             <div class="account-item">
-                                <span class="account-label">Home PDS</span>
+                                <span class="account-label">Domači PDS</span>
                                 ${homePdsUrl
                                     ? `<a class="account-value-link" href="${escapeHtml(homePdsUrl)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(homePdsUrl)}">${escapeHtml(homePdsLabel)}</a>`
                                     : '<span>—</span>'}
                             </div>
                         </div>
                         <div class="recent-activity">
-                            <span class="account-label">Last 30d</span>
-                            <span class="recent-item"><strong id="recentPosts30d">—</strong> posts</span>
-                            <span class="recent-item"><strong id="recentLikes30d">—</strong> likes</span>
-                            <span class="recent-item"><strong id="recentFollows30d">—</strong> follows</span>
-                            <span class="recent-item"><strong id="recentReposts30d">—</strong> reposts</span>
+                            <span class="account-label">Zadnjih 30 dni</span>
+                            <span class="recent-item"><strong id="recentPosts30d">—</strong> objav</span>
+                            <span class="recent-item"><strong id="recentLikes30d">—</strong> všečkov</span>
+                            <span class="recent-item"><strong id="recentFollows30d">—</strong> sledenj</span>
+                            <span class="recent-item"><strong id="recentReposts30d">—</strong> poobjav</span>
                         </div>
                     </div>
                 </div>
@@ -696,31 +696,31 @@
                 <div class="stats">
                     <div class="stat">
                         <span class="stat-value">${formatNumber(profile.postsCount || 0)}</span>
-                        <span class="stat-label">posts</span>
+                        <span class="stat-label">objave</span>
                     </div>
-                    <button class="stat statButton" id="likesStat" type="button" title="Click to compute exact likes">
+                    <button class="stat statButton" id="likesStat" type="button" title="Kliknite za točno štetje všečkov">
                         <span class="stat-value" id="likesCount">—</span>
-                        <span class="stat-label">likes</span>
+                        <span class="stat-label">všečki</span>
                     </button>
-                    <button class="stat statButton" id="followersStat" type="button" title="Show followers">
+                    <button class="stat statButton" id="followersStat" type="button" title="Prikaži sledilce">
                         <span class="stat-value">${formatNumber(profile.followersCount || 0)}</span>
-                        <span class="stat-label">followers</span>
+                        <span class="stat-label">sledilci</span>
                     </button>
-                    <button class="stat statButton" id="followingStat" type="button" title="Show following">
+                    <button class="stat statButton" id="followingStat" type="button" title="Prikaži sledenja">
                         <span class="stat-value">${formatNumber(profile.followsCount || 0)}</span>
-                        <span class="stat-label">following</span>
+                        <span class="stat-label">sledi</span>
                     </button>
-                    <button class="stat statButton" id="mutualsStat" type="button" title="Compute mutuals (can take a while on big accounts)">
+                    <button class="stat statButton" id="mutualsStat" type="button" title="Izračunaj vzajemne povezave (pri velikih računih lahko traja)">
                         <span class="stat-value" id="mutualsCount">—</span>
-                        <span class="stat-label">mutuals</span>
+                        <span class="stat-label">vzajemni</span>
                     </button>
-                    <button class="stat statButton" id="blockingStat" type="button" title="Show accounts this user blocks">
+                    <button class="stat statButton" id="blockingStat" type="button" title="Prikaži račune, ki jih ta uporabnik blokira">
                         <span class="stat-value" id="blockingCount">—</span>
-                        <span class="stat-label">blocking</span>
+                        <span class="stat-label">blokira</span>
                     </button>
-                    <button class="stat statButton" id="blockedByStat" type="button" title="Show accounts that block this user">
+                    <button class="stat statButton" id="blockedByStat" type="button" title="Prikaži račune, ki blokirajo tega uporabnika">
                         <span class="stat-value" id="blockedByCount">—</span>
-                        <span class="stat-label">blocked by</span>
+                        <span class="stat-label">blokirajo ga</span>
                     </button>
                 </div>
             `;
@@ -798,15 +798,15 @@
                 const showSearchAll = hasQuery && hasMore;
                 elements.listModalSearchAllBtn.style.display = showSearchAll ? 'inline-flex' : 'none';
                 elements.listModalSearchAllBtn.disabled = isBusy || !showSearchAll;
-                elements.listModalSearchAllBtn.textContent = listSearchLoadingAll ? 'Loading…' : 'Search all';
+                elements.listModalSearchAllBtn.textContent = listSearchLoadingAll ? 'Nalaganje…' : 'Išči po vsem';
             }
 
             if (elements.listModalSearchHint) {
                 let hint = listSearchHintOverride;
                 if (!hint && hasQuery && hasMore) {
-                    hint = 'Searching loaded accounts only. Press Enter or Search all to load the full list (may take a while). Supports plain text and /regex/flags.';
+                    hint = 'Iščem samo po že naloženih računih. Pritisnite Enter ali Išči po vsem za nalaganje celotnega seznama (lahko traja). Podprta sta navadno besedilo in /regex/zastavice.';
                 } else if (!hint && hasQuery && !hasMore && listProfiles.length > 0) {
-                    hint = 'Full list loaded. Search supports plain text and /regex/flags.';
+                    hint = 'Celoten seznam je naložen. Iskanje podpira navadno besedilo in /regex/zastavice.';
                 }
                 elements.listModalSearchHint.textContent = hint;
                 elements.listModalSearchHint.style.display = hint ? 'block' : 'none';
@@ -844,7 +844,7 @@
             }
             refreshListSearchControls();
             elements.listModalLoadMore.disabled = true;
-            elements.listModalLoadMore.textContent = 'Loading…';
+            elements.listModalLoadMore.textContent = 'Nalaganje…';
             try {
                 const res = await listLoader(listCursor);
                 const profiles = res?.profiles || [];
@@ -860,7 +860,7 @@
             } finally {
                 listLoading = false;
                 elements.listModalLoadMore.disabled = false;
-                elements.listModalLoadMore.textContent = 'Load more';
+                elements.listModalLoadMore.textContent = 'Naloži več';
                 refreshListSearchControls();
             }
         }
@@ -868,9 +868,9 @@
         async function loadAllListPagesForSearch() {
             if (!listLoader || listSearchLoadingAll || listLoading || !listCursor) return;
             listSearchLoadingAll = true;
-            setListSearchHint('Loading full list for search. This can take a while…');
+            setListSearchHint('Nalagam celoten seznam za iskanje. To lahko traja…');
             elements.listModalLoadMore.disabled = true;
-            elements.listModalLoadMore.textContent = 'Loading…';
+            elements.listModalLoadMore.textContent = 'Nalaganje…';
 
             try {
                 while (listCursor) {
@@ -881,19 +881,19 @@
                     listCursor = res?.cursor || null;
                     renderProfileListItems();
                     if (listCursor) {
-                        setListSearchHint(`Loading full list… ${formatNumber(listProfiles.length)} accounts loaded`);
+                        setListSearchHint(`Nalaganje celotnega seznama… naloženih računov: ${formatNumber(listProfiles.length)}`);
                     }
                 }
-                setListSearchHint(`Full list loaded (${formatNumber(listProfiles.length)} accounts).`);
+                setListSearchHint(`Celoten seznam je naložen (${formatNumber(listProfiles.length)} računov).`);
             } catch (e) {
                 const msg = (e && e.message) ? e.message : String(e);
                 listLoadError = msg;
-                setListSearchHint(`Could not finish loading full list: ${msg}`);
+                setListSearchHint(`Nalaganja celotnega seznama ni bilo mogoče dokončati: ${msg}`);
                 renderProfileListItems();
             } finally {
                 listSearchLoadingAll = false;
                 elements.listModalLoadMore.disabled = false;
-                elements.listModalLoadMore.textContent = 'Load more';
+                elements.listModalLoadMore.textContent = 'Naloži več';
                 elements.listModalLoadMore.style.display = listCursor ? 'inline-flex' : 'none';
                 refreshListSearchControls();
             }
@@ -909,7 +909,7 @@
                 if (listLoadError && listProfiles.length === 0) {
                     elements.listModalList.innerHTML = `
                         <div class="empty-state" style="padding: 16px 10px;">
-                            <p>Failed to load list</p>
+                            <p>Seznama ni bilo mogoče naložiti</p>
                             <p style="font-size: 13px; margin-top: 8px; color: var(--text-soft);">${escapeHtml(listLoadError)}</p>
                         </div>
                     `;
@@ -920,7 +920,7 @@
                 if (listSearchQuery && listProfiles.length > 0) {
                     elements.listModalList.innerHTML = `
                         <div class="empty-state" style="padding: 16px 10px;">
-                            <p>No matching accounts</p>
+                            <p>Ni ujemajočih računov</p>
                         </div>
                     `;
                     refreshListSearchControls();
@@ -934,7 +934,7 @@
 
                 elements.listModalList.innerHTML = `
                     <div class="empty-state" style="padding: 16px 10px;">
-                        <p>Nothing here</p>
+                        <p>Tukaj ni ničesar</p>
                     </div>
                 `;
                 refreshListSearchControls();
@@ -998,7 +998,7 @@
             if (!listSearchEnabled || !listSearchQuery) return listProfiles;
             const matcher = createListSearchMatcher(listSearchQuery);
             if (matcher.invalidRegex && !listSearchLoadingAll) {
-                listSearchHintOverride = 'Invalid regex. Use /pattern/flags, for example /tim/i. Falling back to plain text.';
+                listSearchHintOverride = 'Neveljaven regex. Uporabite /vzorec/zastavice, npr. /tim/i. Preklapljam na navadno besedilo.';
             }
             if (!matcher.keyword && !matcher.regex) return listProfiles;
             return listProfiles.filter((profile) => doesProfileMatchSearch(profile, matcher));
@@ -1090,7 +1090,7 @@
             let url = `${API_PUBLIC}/app.bsky.graph.getFollowers?actor=${encodeURIComponent(currentDid)}&limit=${limit}`;
             if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
             const res = await fetch(url);
-            if (!res.ok) throw new Error('Failed to load followers');
+            if (!res.ok) throw new Error('Sledilcev ni bilo mogoče naložiti');
             const data = await res.json();
             return { profiles: data.followers || [], cursor: data.cursor || null };
         }
@@ -1099,7 +1099,7 @@
             let url = `${API_PUBLIC}/app.bsky.graph.getFollows?actor=${encodeURIComponent(currentDid)}&limit=${limit}`;
             if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
             const res = await fetch(url);
-            if (!res.ok) throw new Error('Failed to load following');
+            if (!res.ok) throw new Error('Sledenj ni bilo mogoče naložiti');
             const data = await res.json();
             return { profiles: data.follows || [], cursor: data.cursor || null };
         }
@@ -1108,7 +1108,7 @@
             let url = `${currentPdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(currentDid)}&collection=${encodeURIComponent(collection)}&limit=${limit}`;
             if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
             const res = await fetch(url);
-            if (!res.ok) throw new Error('Failed to list records from PDS');
+            if (!res.ok) throw new Error('Zapisov iz PDS ni bilo mogoče pridobiti');
             return await res.json();
         }
 
@@ -1167,7 +1167,7 @@
 
         function openBlockedByInfo() {
             openListModal(
-                'Blocked by',
+                'Blokiran od',
                 '',
                 makeStaticPager([]),
                 { searchable: false }
@@ -1176,9 +1176,9 @@
             elements.listModalLoadMore.style.display = 'none';
             elements.listModalList.innerHTML = `
                 <div class="empty-state" style="padding: 16px 10px;">
-                    <p>Feature unavailable</p>
+                    <p>Funkcija ni na voljo</p>
                     <p style="font-size: 13px; margin-top: 8px; color: var(--text-soft);">
-                        This would require an external indexer service to determine which accounts have blocked this user.
+                        To bi zahtevalo zunanjo indeksno storitev za določitev, kateri računi blokirajo tega uporabnika.
                     </p>
                 </div>
             `;
@@ -1198,10 +1198,10 @@
                 };
             }
             if (followersEl) {
-                followersEl.onclick = () => openListModal('Followers', '', (cursor) => bskyGetFollowersPage(cursor, 50));
+                followersEl.onclick = () => openListModal('Sledilci', '', (cursor) => bskyGetFollowersPage(cursor, 50));
             }
             if (followingEl) {
-                followingEl.onclick = () => openListModal('Following', '', (cursor) => bskyGetFollowsPage(cursor, 50));
+                followingEl.onclick = () => openListModal('Sledi', '', (cursor) => bskyGetFollowsPage(cursor, 50));
             }
             if (mutualsEl) {
                 mutualsEl.onclick = async () => {
@@ -1211,18 +1211,18 @@
                         const countEl = document.getElementById('mutualsCount');
                         if (countEl) countEl.textContent = formatNumber(cached.mutuals.length);
                         openListModal(
-                            `Mutuals (${cached.mutuals.length}${cached.truncated ? '+' : ''})`,
-                            cached.truncated ? 'Partial result (hit the 5000-per-list cap). Increase the cap in computeMutuals() if you need the full set.' : '',
+                            `Vzajemni (${cached.mutuals.length}${cached.truncated ? '+' : ''})`,
+                            cached.truncated ? 'Delni rezultat (dosežena je omejitev 5000 na seznam). Če potrebujete celoten nabor, povečajte omejitev v computeMutuals().' : '',
                             makeStaticPager(cached.mutuals, 50)
                         );
                         return;
                     }
-                    openListModal('Mutuals', 'Computing…', makeStaticPager([]));
+                    openListModal('Vzajemni', 'Izračunavam…', makeStaticPager([]));
                     elements.listModalLoadMore.style.display = 'none';
                     elements.listModalList.innerHTML = `
                         <div class="loading" style="padding: 24px 10px;">
                             <div class="spinner"></div>
-                            <p>Computing mutuals…</p>
+                            <p>Izračunavam vzajemne…</p>
                         </div>
                     `;
                     try {
@@ -1233,8 +1233,8 @@
                             mutualsCache.set(cacheKey, { mutuals, truncated });
                         }
                         openListModal(
-                            `Mutuals (${mutuals.length}${truncated ? '+' : ''})`,
-                            truncated ? 'Partial result (hit the 5000-per-list cap). Increase the cap in computeMutuals() if you need the full set.' : '',
+                            `Vzajemni (${mutuals.length}${truncated ? '+' : ''})`,
+                            truncated ? 'Delni rezultat (dosežena je omejitev 5000 na seznam). Če potrebujete celoten nabor, povečajte omejitev v computeMutuals().' : '',
                             makeStaticPager(mutuals, 50)
                         );
                     } catch (e) {
@@ -1245,7 +1245,7 @@
             }
             if (blockingEl) {
                 blockingEl.onclick = async () => {
-                    openListModal('Blocking', 'Some blocked accounts may be deactivated and won’t appear.', (cursor) => getBlockingPage(cursor));
+                    openListModal('Blokira', 'Nekateri blokirani računi so lahko deaktivirani in ne bodo prikazani.', (cursor) => getBlockingPage(cursor));
                 };
             }
             if (blockedByEl) {
@@ -1631,7 +1631,7 @@
                 months += 12;
             }
 
-            if (years > 0) return `${years}y ${months}m`;
+            if (years > 0) return `${years}l ${months}m`;
             if (months > 0) return `${months}m`;
 
             const diffMs = now.getTime() - date.getTime();
@@ -1647,7 +1647,7 @@
         function setIdentityUpdateTooltip(element, type) {
             if (!element) return;
             if (type) {
-                element.setAttribute('title', `Reason: ${type}`);
+                element.setAttribute('title', `Razlog: ${type}`);
             } else {
                 element.removeAttribute('title');
             }
@@ -1664,11 +1664,11 @@
                 const profileUpdatedAt = parseDateValue(currentProfile && currentProfile.updatedAt);
                 const profileIndexedAt = parseDateValue(currentProfile && currentProfile.indexedAt);
                 const profileRecordUpdate = profileRecordDate
-                    ? { date: profileRecordDate, type: 'profile change' }
+                    ? { date: profileRecordDate, type: 'sprememba profila' }
                     : null;
                 const profileAppUpdate = profileUpdatedAt
-                    ? { date: profileUpdatedAt, type: 'profile change' }
-                    : (profileIndexedAt ? { date: profileIndexedAt, type: 'profile change (indexed)' } : null);
+                    ? { date: profileUpdatedAt, type: 'sprememba profila' }
+                    : (profileIndexedAt ? { date: profileIndexedAt, type: 'sprememba profila (indeksirano)' } : null);
                 const profileIdentityUpdate = pickLatestIdentityUpdate(profileRecordUpdate, profileAppUpdate);
 
                 return pickLatestIdentityUpdate(plcIdentityUpdate, profileIdentityUpdate);
@@ -1721,12 +1721,12 @@
                 .filter(Boolean)
                 .filter((value, index, arr) => arr.indexOf(value) === index)
                 .join(', ');
-            return { date: primaryDate, type: mergedType || 'identity update' };
+            return { date: primaryDate, type: mergedType || 'posodobitev identitete' };
         }
 
         function classifyIdentityUpdateType(previousOperation, currentOperation) {
-            if (!currentOperation) return 'identity update';
-            if (!previousOperation) return 'account created';
+            if (!currentOperation) return 'posodobitev identitete';
+            if (!previousOperation) return 'račun ustvarjen';
 
             const types = [];
             const previousHandle = getOperationHandle(previousOperation);
@@ -1738,12 +1738,12 @@
             const previousRotationKeys = getOperationRotationKeys(previousOperation);
             const currentRotationKeys = getOperationRotationKeys(currentOperation);
 
-            if (previousHandle !== currentHandle) types.push('handle change');
-            if (previousPds !== currentPds) types.push('PDS change');
-            if (previousAtprotoKey !== currentAtprotoKey) types.push('signing key change');
-            if (!areSameStringArrays(previousRotationKeys, currentRotationKeys)) types.push('rotation key change');
+            if (previousHandle !== currentHandle) types.push('sprememba uporabniškega imena');
+            if (previousPds !== currentPds) types.push('sprememba PDS');
+            if (previousAtprotoKey !== currentAtprotoKey) types.push('sprememba podpisnega ključa');
+            if (!areSameStringArrays(previousRotationKeys, currentRotationKeys)) types.push('sprememba rotacijskega ključa');
 
-            return types.length ? types.join(', ') : 'identity update';
+            return types.length ? types.join(', ') : 'posodobitev identitete';
         }
 
         function getOperationHandle(operation) {
@@ -1860,24 +1860,24 @@
 
         async function loadAllPosts() {
             if (!currentDid) {
-                showError('Please load content first before using this feature');
+                showError('Za uporabo te funkcije najprej naložite vsebino');
                 return;
             }
 
             if (allPostsLoaded) {
-                showError('All content is already loaded');
+                showError('Vsa vsebina je že naložena');
                 return;
             }
 
-            const contentType = currentMode === 'posts' ? 'posts' : 'likes';
-            const confirmed = confirm(`This will load all ${contentType} from this account. For accounts with many ${contentType}, this may take several minutes. Continue?`);
+            const contentType = currentMode === 'posts' ? 'objav' : 'všečkov';
+            const confirmed = confirm(`To bo naložilo vse ${contentType} tega računa. Pri računih z veliko ${contentType} lahko traja nekaj minut. Nadaljujem?`);
             if (!confirmed) return;
 
             setLoading(true);
             const statusDiv = document.createElement('div');
             statusDiv.className = 'warning-text show';
             statusDiv.style.marginBottom = '16px';
-            statusDiv.textContent = `Loading all ${contentType}...`;
+            statusDiv.textContent = `Nalagam vse ${contentType}...`;
             elements.content.insertBefore(statusDiv, elements.content.firstChild);
 
             try {
@@ -1893,7 +1893,7 @@
                 updateLikesCount();
                 
                 statusDiv.className = 'success-message';
-                statusDiv.textContent = `Successfully loaded all ${allPosts.length} ${contentType}`;
+                statusDiv.textContent = `Uspešno naloženo vseh ${allPosts.length} ${contentType}`;
                 if (pendingSortOldest || elements.sortOldest.checked) {
                     applyFiltersImmediate();
                     pendingSortOldest = false;
@@ -1904,7 +1904,7 @@
                 }, 5000);
 
             } catch (error) {
-                showError(`Failed to load all ${contentType}: ` + error.message);
+                showError(`Napaka pri nalaganju vseh ${contentType}: ` + error.message);
                 statusDiv.remove();
             } finally {
                 setLoading(false);
@@ -1924,7 +1924,7 @@
 
                 const response = await fetch(url);
                 if (!response.ok) {
-                    throw new Error(`Failed to load posts batch ${batchCount} (HTTP ${response.status})`);
+                    throw new Error(`Napaka pri nalaganju paketa objav ${batchCount} (HTTP ${response.status})`);
                 }
 
                 const data = await response.json();
@@ -1935,7 +1935,7 @@
                 
                 cursor = data.cursor || null;
                 
-                statusDiv.textContent = `Loading... ${allPosts.length} posts loaded (batch ${batchCount})`;
+                statusDiv.textContent = `Nalaganje... naloženih ${allPosts.length} objav (paket ${batchCount})`;
                 
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
@@ -1953,7 +1953,7 @@
 
                 const response = await fetch(url);
                 if (!response.ok) {
-                    throw new Error(`Failed to load likes batch ${batchCount} (HTTP ${response.status})`);
+                    throw new Error(`Napaka pri nalaganju paketa všečkov ${batchCount} (HTTP ${response.status})`);
                 }
 
                 const data = await response.json();
@@ -1996,7 +1996,7 @@
                 
                 cursor = data.cursor || null;
                 
-                statusDiv.textContent = `Loading... ${allLikeRecords.length} likes loaded (batch ${batchCount})`;
+                statusDiv.textContent = `Nalaganje... naloženih ${allLikeRecords.length} všečkov (paket ${batchCount})`;
                 
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
@@ -2027,7 +2027,7 @@
                     likesEl.textContent = cached.text;
                     if (likesStat) {
                         if (cached.truncated && !forceExact) {
-                            likesStat.setAttribute('title', cached.title || 'Click to compute exact likes');
+                            likesStat.setAttribute('title', cached.title || 'Kliknite za točno štetje všečkov');
                         } else {
                             likesStat.removeAttribute('title');
                         }
@@ -2054,7 +2054,7 @@
                     let url = `${currentPdsUrl}/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(currentDid)}&collection=app.bsky.feed.like&limit=${pageSize}`;
                     if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
                     const res = await fetch(url);
-                    if (!res.ok) throw new Error('Failed to load likes count');
+                    if (!res.ok) throw new Error('Števila všečkov ni bilo mogoče naložiti');
                     const data = await res.json();
                     const batch = (data.records || []).length;
                     count += batch;
@@ -2072,9 +2072,9 @@
                 likesEl.textContent = truncated ? `${formatNumber(count)}+` : formatNumber(count);
                 if (likesStat) {
                     if (truncated && !forceExact) {
-                        likesStat.setAttribute('title', `Showing ${formatNumber(count)}+ (click to compute exact)`);
+                        likesStat.setAttribute('title', `Prikazano ${formatNumber(count)}+ (kliknite za točen izračun)`);
                     } else if (forceExact) {
-                        likesStat.setAttribute('title', `Exact likes count`);
+                        likesStat.setAttribute('title', 'Točno število všečkov');
                     } else {
                         likesStat.removeAttribute('title');
                     }
@@ -2106,7 +2106,7 @@
             likesEl.textContent = cached.text;
             if (likesStat) {
                 if (cached.truncated) {
-                    likesStat.setAttribute('title', cached.title || 'Click to compute exact likes');
+                    likesStat.setAttribute('title', cached.title || 'Kliknite za točno štetje všečkov');
                 } else {
                     likesStat.removeAttribute('title');
                 }
@@ -2232,7 +2232,7 @@
 
             if (hasTextFilter) {
                 const raw = hasTextFilter.trim();
-                const regex = parseSearchRegex(raw, 'Invalid regex pattern. Falling back to keyword search.');
+                const regex = parseSearchRegex(raw, 'Neveljaven regex vzorec. Preklapljam na iskanje po ključnih besedah.');
 
                 if (regex) {
                     filtered = filtered.filter(item => {
@@ -2258,7 +2258,7 @@
 
             if (hasAuthorFilter) {
                 const raw = elements.searchAuthor.value.trim();
-                const regex = parseSearchRegex(raw, 'Invalid regex pattern in author search. Falling back to keyword search.');
+                const regex = parseSearchRegex(raw, 'Neveljaven regex vzorec pri iskanju avtorja. Preklapljam na iskanje po ključnih besedah.');
 
                 if (regex) {
                     filtered = filtered.filter(item => authorMatches(item, (value) => regex.test(value)));
@@ -2280,14 +2280,14 @@
 
             elements.content.innerHTML = '';
             if (filtered.length === 0) {
-                const contentType = currentMode === 'posts' ? 'posts' : 'likes';
+                const contentType = currentMode === 'posts' ? 'objave' : 'všečki';
                 elements.content.innerHTML = `
                     <div class="empty-state">
-                        <p>No ${contentType} match your filters</p>
+                        <p>Ni rezultatov za izbrane filtre (${contentType})</p>
                         <p style="font-size: 13px; margin-top: 8px; color: var(--text-soft);">
-                            ${hasDateFilter ? 'Date range: ' + (elements.dateFrom.value || 'any') + ' to ' + (elements.dateTo.value || 'any') : ''}
-                            ${hasTextFilter ? (hasDateFilter ? '<br>' : '') + 'Search: "' + escapeHtml(hasTextFilter) + '"' : ''}
-                            ${hasAuthorFilter ? ((hasDateFilter || hasTextFilter) ? '<br>' : '') + 'Author: "' + escapeHtml(hasAuthorFilter) + '"' : ''}
+                            ${hasDateFilter ? 'Datumski razpon: ' + (elements.dateFrom.value || 'katerikoli') + ' do ' + (elements.dateTo.value || 'katerikoli') : ''}
+                            ${hasTextFilter ? (hasDateFilter ? '<br>' : '') + 'Iskanje: "' + escapeHtml(hasTextFilter) + '"' : ''}
+                            ${hasAuthorFilter ? ((hasDateFilter || hasTextFilter) ? '<br>' : '') + 'Avtor: "' + escapeHtml(hasAuthorFilter) + '"' : ''}
                         </p>
                     </div>
                 `;
@@ -2310,9 +2310,9 @@
                 infoDiv.className = 'success-message';
                 if (currentMode === 'likes') {
                     const totalLikes = likesCountCache.has(currentDid) ? likesCountCache.get(currentDid).text : null;
-                    infoDiv.textContent = `Showing ${filtered.length} of ${allPosts.length} likes${totalLikes ? ` (total ${totalLikes})` : ''}. Some likes may be unavailable.`;
+                    infoDiv.textContent = `Prikazano ${filtered.length} od ${allPosts.length} všečkov${totalLikes ? ` (skupaj ${totalLikes})` : ''}. Nekateri všečki morda niso na voljo.`;
                 } else {
-                    infoDiv.textContent = `Showing ${filtered.length} of ${allPosts.length} loaded items`;
+                    infoDiv.textContent = `Prikazano ${filtered.length} od ${allPosts.length} naloženih elementov`;
                 }
                 elements.content.insertBefore(infoDiv, elements.content.firstChild);
             }
@@ -2327,7 +2327,7 @@
             const handle = elements.handleInput.value.trim();
             
             if (!handle) {
-                showError('Please enter a Bluesky handle or DID', true);
+                showError('Vnesite uporabniško ime Bluesky ali DID', true);
                 return;
             }
 
@@ -2382,11 +2382,11 @@
                 updateUrlParams(currentHandle, currentMode);
 
                 if (mode === 'posts') {
-                    elements.sectionTitle.textContent = 'Posts';
+                    elements.sectionTitle.textContent = 'Objave';
                     await loadPosts();
                     updateLikesCount();
                 } else {
-                    elements.sectionTitle.textContent = 'Likes';
+                    elements.sectionTitle.textContent = 'Všečki';
                     await loadLikes();
                     updateLikesCount();
                 }
@@ -2418,7 +2418,7 @@
                 const response = await fetch(url);
                 
                 if (!response.ok) {
-                    throw new Error('Failed to load posts');
+                    throw new Error('Objav ni bilo mogoče naložiti');
                 }
                 
                 const data = await response.json();
@@ -2457,7 +2457,7 @@
                 const response = await fetch(url);
                 
                 if (!response.ok) {
-                    throw new Error('Failed to load likes from PDS');
+                    throw new Error('Všečkov iz PDS ni bilo mogoče naložiti');
                 }
                 
                 const data = await response.json();
@@ -2466,7 +2466,7 @@
                     if (!append) {
                         elements.content.innerHTML = `
                             <div class="empty-state">
-                                <p>No likes found</p>
+                                <p>Ni najdenih všečkov</p>
                             </div>
                         `;
                     }
@@ -2512,7 +2512,7 @@
                 if (!append) {
                     elements.content.innerHTML = `
                         <div class="empty-state">
-                            <p>Failed to load likes</p>
+                            <p>Všečkov ni bilo mogoče naložiti</p>
                             <p style="font-size: 13px; margin-top: 8px; color: var(--text-soft);">${escapeHtml(error.message)}</p>
                         </div>
                     `;
@@ -2536,7 +2536,7 @@
                     
                     const response = await fetch(url);
                     if (!response.ok) {
-                        throw new Error(`Failed to load post details (HTTP ${response.status})`);
+                        throw new Error(`Podrobnosti objave ni bilo mogoče naložiti (HTTP ${response.status})`);
                     }
                     const data = await response.json();
                     allPosts.push(...(data.posts || []));
@@ -2544,7 +2544,7 @@
                 
                 return allPosts;
             } catch (error) {
-                throw new Error(`Error fetching posts: ${error.message}`);
+                throw new Error(`Napaka pri pridobivanju objav: ${error.message}`);
             }
         }
 
@@ -2556,7 +2556,7 @@
             if (posts.length === 0 && !append) {
                 elements.content.innerHTML = `
                     <div class="empty-state">
-                        <p>No likes found</p>
+                        <p>Ni najdenih všečkov</p>
                     </div>
                 `;
                 return;
@@ -2629,7 +2629,7 @@
             if (filteredFeed.length === 0 && !append) {
                 elements.content.innerHTML = `
                     <div class="empty-state">
-                        <p>No ${currentMode} found</p>
+                        <p>Ni najdenih elementov za ta pogled</p>
                     </div>
                 `;
                 return;
@@ -2673,21 +2673,21 @@
 
             let html = '';
             if (reason && reason.$type === 'app.bsky.feed.defs#reasonRepost') {
-                html += `<div class="repost-indicator">Reposted by @${escapeHtml(reason.by.handle)}</div>`;
+                html += `<div class="repost-indicator">Repost od @${escapeHtml(reason.by.handle)}</div>`;
             }
             
             if (reply && reply.parent) {
                 const parentAuthor = reply.parent.author;
                 if (parentAuthor && parentAuthor.handle) {
-                    html += `<div class="reply-indicator">Reply to @${escapeHtml(parentAuthor.handle)}</div>`;
+                    html += `<div class="reply-indicator">Odgovor uporabniku @${escapeHtml(parentAuthor.handle)}</div>`;
                 }
             } else if (record.reply && record.reply.parent) {
-                html += `<div class="reply-indicator">Reply</div>`;
+                html += `<div class="reply-indicator">Odgovor</div>`;
             }
 
             const quoteHandle = getQuoteHandle(post);
             if (quoteHandle) {
-                html += `<div class="quote-indicator">Quote @${escapeHtml(quoteHandle)}</div>`;
+                html += `<div class="quote-indicator">Citat @${escapeHtml(quoteHandle)}</div>`;
             }
 
             html += `
@@ -2699,7 +2699,7 @@
                     </div>
                     <div class="post-time">${timeLabel}</div>
                     <div class="post-actions">
-                        <button class="copy-link-btn" type="button" data-post-uri="${escapeHtml(post.uri)}" aria-label="Copy post link">Copy link</button>
+                        <button class="copy-link-btn" type="button" data-post-uri="${escapeHtml(post.uri)}" aria-label="Kopiraj povezavo objave">Kopiraj povezavo</button>
                     </div>
                 </div>
                 <div class="post-text">${postText}</div>
@@ -2724,9 +2724,9 @@
 
             html += `
                 <div class="post-engagement">
-                    <span class="engagement-item">${formatNumber(post.replyCount || 0)} replies</span>
-                    <span class="engagement-item">${formatNumber(post.repostCount || 0)} reposts</span>
-                    <span class="engagement-item">${formatNumber(post.likeCount || 0)} likes</span>
+                    <span class="engagement-item">${formatNumber(post.replyCount || 0)} odgovorov</span>
+                    <span class="engagement-item">${formatNumber(post.repostCount || 0)} poobjav</span>
+                    <span class="engagement-item">${formatNumber(post.likeCount || 0)} všečkov</span>
                 </div>
             `;
 
@@ -2749,15 +2749,15 @@
                         if (navigator.clipboard) {
                             await navigator.clipboard.writeText(postUrl);
                             const original = copyBtn.textContent;
-                            copyBtn.textContent = 'Copied';
+                            copyBtn.textContent = 'Kopirano';
                             setTimeout(() => {
                                 copyBtn.textContent = original;
                             }, 1200);
                         } else {
-                            window.prompt('Copy this post URL:', postUrl);
+                            window.prompt('Kopirajte URL objave:', postUrl);
                         }
                     } catch (err) {
-                        showError('Could not copy link');
+                        showError('Povezave ni bilo mogoče kopirati');
                     }
                 });
             }
@@ -2982,7 +2982,7 @@
             const snippet = text ? truncateText(text, 140) : '';
             return `
                 <div class="reply-preview">
-                    ${snippet ? `<div>${escapeHtml(snippet)}</div>` : `<div style="color:var(--text-soft);">No text preview</div>`}
+                    ${snippet ? `<div>${escapeHtml(snippet)}</div>` : `<div style="color:var(--text-soft);">Predogled besedila ni na voljo</div>`}
                 </div>
             `;
         }
@@ -2993,12 +2993,12 @@
             if (!recordView) return '';
             if (recordView.$type && recordView.$type !== 'app.bsky.embed.record#viewRecord') return '';
             const author = recordView.author;
-            const handle = author && author.handle ? `@${author.handle}` : 'unknown';
+            const handle = author && author.handle ? `@${author.handle}` : 'neznano';
             const text = (recordView.value && recordView.value.text) ? recordView.value.text : '';
             const snippet = text ? truncateText(text, 140) : '';
             return `
                 <div class="quote-preview">
-                    ${snippet ? `<div>${escapeHtml(snippet)}</div>` : `<div style="color:var(--text-soft);">No text preview</div>`}
+                    ${snippet ? `<div>${escapeHtml(snippet)}</div>` : `<div style="color:var(--text-soft);">Predogled besedila ni na voljo</div>`}
                 </div>
             `;
         }

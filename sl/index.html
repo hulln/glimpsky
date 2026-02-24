@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlimpSky - Pregledovalnik profilov Bluesky</title>
+    <meta name="description" content="GlimpSky je pregledovalnik profilov Bluesky. Raziskujte javne objave, všečke, sledilce in aktivnost računa s filtri, regex iskanjem in datumskimi razponi.">
+    <meta name="keywords" content="bluesky pregledovalnik, bluesky všečki, bluesky profil, at protocol pregledovalnik, bluesky objave">
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow, max-image-preview:large">
+    <meta property="og:title" content="GlimpSky - Pregledovalnik profilov Bluesky">
+    <meta property="og:description" content="Raziskujte javne profile Bluesky: objave, všečke, sledilce, regex iskanje in aktivnost računa iz odprtih podatkov AT Protocol.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="GlimpSky">
+    <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.png">
+    <meta property="og:image:url" content="https://glimpsky.oblachek.eu/assets/og-image.png">
+    <meta property="og:image:secure_url" content="https://glimpsky.oblachek.eu/assets/og-image.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="GlimpSky pregledovalnik profilov Bluesky">
+    <meta property="og:url" content="https://glimpsky.oblachek.eu/sl/" id="ogUrl">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="GlimpSky - Pregledovalnik profilov Bluesky">
+    <meta name="twitter:description" content="Raziskujte javne profile Bluesky s filtri, regex iskanjem in vpogledi v aktivnost iz podatkov AT Protocol.">
+    <meta name="twitter:image" content="https://glimpsky.oblachek.eu/assets/og-image.png">
+    <meta name="twitter:image:alt" content="GlimpSky pregledovalnik profilov Bluesky">
+    <meta name="twitter:url" content="https://glimpsky.oblachek.eu/sl/" id="twitterUrl">
+    <meta name="author" content="oblachek.eu">
+    <link rel="canonical" href="https://glimpsky.oblachek.eu/sl/" id="canonicalUrl">
+    <link rel="alternate" hreflang="en" href="https://glimpsky.oblachek.eu/">
+    <link rel="alternate" hreflang="sl" href="https://glimpsky.oblachek.eu/sl/">
+    <link rel="alternate" hreflang="x-default" href="https://glimpsky.oblachek.eu/">
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+    <script type="application/ld+json" id="seoStructuredData">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "GlimpSky",
+            "applicationCategory": "SocialNetworkingApplication",
+            "operatingSystem": "Web",
+            "description": "Pregledovalnik profilov Bluesky za raziskovanje javnih objav, všečkov, sledilcev in aktivnosti računa.",
+            "url": "https://glimpsky.oblachek.eu/sl/"
+        }
+    </script>
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+                {
+                    "@type": "Question",
+                    "name": "Kaj je GlimpSky?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "GlimpSky je pregledovalnik profilov Bluesky za raziskovanje javnih objav, všečkov, sledilcev in aktivnosti profila."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Ali se moram za uporabo GlimpSky prijaviti?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Ne. GlimpSky bere javno dostopne podatke Bluesky in AT Protocol ter ne zahteva prijave."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Ali lahko gledam všečke in filtriram objave?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Da. Lahko gledate všečke, skrijete poobjave ali odgovore, filtrirate po datumu in iščete z navadnim besedilom ali regexom."
+                    }
+                }
+            ]
+        }
+    </script>
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('glimpsky-theme');
+                var darkPreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var theme = (stored === 'dark' || stored === 'light') ? stored : (darkPreferred ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title-row">
+                <img src="/assets/favicon.svg" alt="" class="title-icon">
+                <h1 id="mainTitle">GlimpSky</h1>
+                <div class="title-actions">
+                    <button class="about-btn" id="themeToggleBtn" type="button" aria-label="Preklopi temni način" aria-pressed="false"></button>
+                    <div class="lang-toggle" id="languageToggle" role="group" aria-label="Jezik">
+                        <a class="lang-option" id="langOptionEn" href="/" aria-label="Angleščina">EN</a>
+                        <a class="lang-option" id="langOptionSl" href="/sl/" aria-label="Slovenščina">SL</a>
+                    </div>
+                    <button class="about-btn" id="infoBtn" type="button">O orodju</button>
+                </div>
+            </div>
+            <p class="title-sub">Pregledovalnik profilov Bluesky</p>
+            <p class="subtitle">Oglejte si objave in všečke kateregakoli profila Bluesky. Brez prijave.</p>
+            <div class="header-divider"></div>
+            
+            <div class="input-group">
+                <label for="handle">Bluesky uporabniško ime ali DID</label>
+                <div class="input-with-clear">
+                    <input 
+                        type="text" 
+                        id="handle" 
+                        placeholder="npr. user.bsky.social ali oblachek.eu"
+                        value="">
+                    <button class="clear-input" type="button" data-clear-target="handle" aria-label="Počisti uporabniško ime">×</button>
+                </div>
+                <div class="suggestions">
+                    <div class="suggestions-panel" id="handleSuggestions"></div>
+                </div>
+            </div>
+
+            <div class="filter-options">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="hideReposts" checked>
+                    <label for="hideReposts">Skrij poobjave</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="hideReplies">
+                    <label for="hideReplies">Skrij odgovore</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="onlyLinks">
+                    <label for="onlyLinks">Samo povezave</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="hideQuotes">
+                    <label for="hideQuotes">Skrij citate</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="sortOldest">
+                    <label for="sortOldest">Najprej najstarejše</label>
+                </div>
+            </div>
+
+            <div class="advanced-filters-inline" id="advancedFiltersInline">
+                <button class="advanced-filters-toggle" id="advancedFiltersToggle" type="button" aria-expanded="false" aria-controls="advancedFiltersContent">
+                    <span>Napredni filtri</span>
+                    <span class="toggle-icon">▼</span>
+                </button>
+                <div class="advanced-filters-content" id="advancedFiltersContent">
+                    <div class="filter-section">
+                        <label for="dateFrom">Filtriraj po datumskem razponu</label>
+                        <div class="date-inputs">
+                            <input type="date" id="dateFrom" placeholder="Od">
+                            <input type="date" id="dateTo" placeholder="Do">
+                        </div>
+                    </div>
+
+                    <div class="filter-section filter-section-spaced">
+                        <label for="searchText">Išči po besedilu objav</label>
+                        <div class="input-with-clear">
+                            <input type="text" class="search-input" id="searchText" placeholder="npr. ključne besede ali /hello.*/i">
+                            <button class="clear-input" type="button" data-clear-target="searchText" aria-label="Počisti besedilo iskanja">×</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-section filter-section-spaced">
+                        <label for="searchAuthor">Išči po avtorju</label>
+                        <div class="input-with-clear">
+                            <input type="text" class="search-input" id="searchAuthor" placeholder="npr. /bsky\\.social$/ ali @uporabnik">
+                            <button class="clear-input" type="button" data-clear-target="searchAuthor" aria-label="Počisti iskanje avtorja">×</button>
+                        </div>
+                        <div class="regex-help">V obeh poljih je privzeto iskanje z navadnim besedilom. Za regex uporabite /vzorec/zastavice (npr. /hello.*/i).</div>
+                    </div>
+
+                    <div class="filter-banner" id="filterBanner">
+                        <span class="filter-banner-text">Filtri, vključno z razvrstitvijo najprej najstarejše, zahtevajo nalaganje celotne vsebine. Naložim?</span>
+                        <div class="filter-banner-actions">
+                            <button class="btn-outline" id="filterLoadBtn" type="button">Naloži in uporabi</button>
+                            <button class="btn-outline" id="filterCancelBtn" type="button">Prekliči</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-tab" id="loadPostsBtn">Prikaži objave</button>
+                <button class="btn-tab" id="loadLikesBtn">Prikaži všečke</button>
+            </div>
+        </div>
+
+        <div id="error"></div>
+        
+        <div class="profile-card" id="profileCard"></div>
+
+        <div class="content-section" id="contentSection">
+            <div class="section-header">
+                <h3 class="section-title" id="sectionTitle">Objave</h3>
+            </div>
+            <div id="content"></div>
+            <div class="load-more-container" id="loadMoreContainer">
+                <button class="load-more" id="loadMoreBtn">Naloži več</button>
+            </div>
+        </div>
+
+    </div>
+
+    
+    <div id="listModal" class="modal" aria-hidden="true">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="listModalTitle">
+            <div class="modal-header">
+                <div class="modal-title" id="listModalTitle">Seznam</div>
+                <button id="listModalClose" class="iconButton" type="button" aria-label="Zapri">×</button>
+            </div>
+            <div id="listModalMeta" class="modal-meta"></div>
+            <div id="listModalSearchWrap" class="modal-search" style="display: none;">
+                <div class="modal-search-row">
+                    <input type="text" class="search-input" id="listModalSearch" placeholder="Išči ime/@uporabnik ali /regex/i">
+                    <button class="btn-secondary modal-search-all-btn" id="listModalSearchAllBtn" type="button" style="display: none;">Išči po vsem</button>
+                </div>
+                <div class="modal-search-hint" id="listModalSearchHint" style="display: none;"></div>
+            </div>
+            <div id="listModalList" class="modal-list"></div>
+            <div class="modal-footer">
+                <button id="listModalLoadMore" class="btn-secondary" type="button">Naloži več</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="infoModal" class="modal" aria-hidden="true">
+        <div class="info-modal-content" role="dialog" aria-modal="true">
+            <div class="info-modal-header">
+                <h2>O orodju</h2>
+            </div>
+            <div class="info-modal-body">
+                <p>Ste kdaj naleteli na potencialno zanimiv račun, ki veliko poobjavlja, in želeli na hitro preveriti, ali objavlja tudi izvirno vsebino, ter, če ja, kakšno?</p>
+                <p>GlimpSky omogoča pregledovanje javnih objav, všečkov, sledilcev in drugih podatkov kateregakoli računa Bluesky. Vsi podatki prihajajo od odprtega protokola AT prek javnih Bluesky API-jev in PDS končnih točk. Obenem orodje služi kot prikaz, kako dostopni so lahko odprti podatki na ATProto.</p>
+                
+                <p><strong>Navdih</strong>: <a href="https://github.com/ClearskyApp06/clearskyservices" target="_blank" rel="noopener noreferrer">Clearsky</a> (blokiranje) in <a href="https://github.com/luizzeroxis/bluesky-likes/" target="_blank" rel="noopener noreferrer">Bluesky Likes by luizzeroxis</a> (prikaz všečkov).</p>
+                
+                <p><strong>Avtor</strong>: <a href="https://bsky.app/profile/oblachek.eu" target="_blank" rel="noopener noreferrer">oblachek.eu</a> z zvrhanim košem dobrih vibracij po imenu ChatGPT in Claude.</p>
+                
+                <p>To orodje je namenjeno izključno v informativne in izobraževalne namene.</p>
+                <p class="share-line">Deli: <a class="share-link" id="shareToolBtn" href="#" role="button">Kopiraj povezavo</a> <a class="share-link" id="shareBskyLink" href="#" target="_blank" rel="noopener noreferrer">Deli na Bluesky</a></p>
+            </div>
+            <div class="info-modal-footer">
+                <button id="infoModalClose" type="button">Zapri</button>
+            </div>
+        </div>
+    </div>
+
+<script src="app.js" defer></script>
+</body>
+</html>
