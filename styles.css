@@ -147,6 +147,17 @@
             height: 30px;
             display: inline-flex;
             align-items: center;
+            padding: 3px 11px;
+            background: var(--surface-2);
+            border-color: var(--border-strong);
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        #infoBtn:hover {
+            background: var(--surface-3);
+            color: var(--text-strong);
+            border-color: var(--border-strong);
         }
 
         #themeToggleBtn::before {
@@ -971,6 +982,11 @@
 
         .info-modal-body p:last-child {
             margin-bottom: 0;
+        }
+
+        .info-modal-body .guides-note {
+            font-size: 12px;
+            margin-top: 6px;
         }
 
         .info-modal-body a {

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bluesky Profile Viewer - Posts, Likes, Followers | GlimpSky</title>
+  <meta name="description" content="Use GlimpSky as a Bluesky profile viewer to inspect posts, likes, followers, and account activity without login.">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="Bluesky Profile Viewer - GlimpSky">
+  <meta property="og:description" content="Inspect public Bluesky profiles, likes, followers, and activity in one place.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://glimpsky.oblachek.eu/guides/bluesky-profile-viewer/">
+  <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bluesky Profile Viewer - GlimpSky">
+  <meta name="twitter:description" content="Explore posts, likes, followers and activity of public Bluesky accounts.">
+  <link rel="canonical" href="https://glimpsky.oblachek.eu/guides/bluesky-profile-viewer/">
+  <link rel="alternate" hreflang="en" href="https://glimpsky.oblachek.eu/guides/bluesky-profile-viewer/">
+  <link rel="alternate" hreflang="x-default" href="https://glimpsky.oblachek.eu/guides/bluesky-profile-viewer/">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/guides/guide.css?v=20260224d">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can I view a Bluesky profile without login?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. GlimpSky reads public Bluesky and AT Protocol data and does not require sign-in."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What can I inspect in a profile viewer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You can inspect posts, likes, followers, follows, recent activity, and apply filters for replies, reposts, quotes, dates, and text search."
+          }
+        }
+      ]
+    }
+  </script>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <a href="/">GlimpSky Tool</a>
+      <span>/</span>
+      <a href="/guides/">Guides</a>
+      <span>/</span>
+      <span>Bluesky Profile Viewer</span>
+    </div>
+
+    <article class="card">
+      <h1>Bluesky Profile Viewer</h1>
+      <p class="lead">Use GlimpSky to quickly inspect public Bluesky accounts: original posts, likes, followers, and recent activity in one place.</p>
+
+      <div class="cta-row">
+        <a class="btn primary" href="/" target="_blank" rel="noopener noreferrer">Open Viewer</a>
+        <a class="btn" href="/?handle=bsky.app&mode=posts" target="_blank" rel="noopener noreferrer">Try Example Profile</a>
+      </div>
+
+      <h2>Why use a dedicated profile viewer?</h2>
+      <p>The default social app view is optimized for browsing feeds, not investigation. A profile viewer gives you fast controls to understand how an account behaves over time.</p>
+
+      <div class="grid">
+        <div class="tile">
+          <h3>Post Quality Check</h3>
+          <p>Hide reposts, replies, or quotes and focus on original writing.</p>
+        </div>
+        <div class="tile">
+          <h3>Account Behavior</h3>
+          <p>Review likes, follow activity, and recent posting cadence.</p>
+        </div>
+        <div class="tile">
+          <h3>Search and Filtering</h3>
+          <p>Use keyword or regex search plus date ranges for deep analysis.</p>
+        </div>
+        <div class="tile">
+          <h3>No Login Needed</h3>
+          <p>Everything is based on public AT Protocol data.</p>
+        </div>
+      </div>
+
+      <h2>How to use GlimpSky as a profile viewer</h2>
+      <ol>
+        <li>Enter a handle or DID (for example, <code>user.bsky.social</code>).</li>
+        <li>Choose <strong>View Posts</strong> or <strong>View Likes</strong>.</li>
+        <li>Apply filters: hide reposts/replies, date range, text search, and author search.</li>
+      </ol>
+
+      <p class="note">Tip: If you need oldest-first sorting or full-date filtering, load all content first for accurate results on large accounts.</p>
+
+      <div class="related">
+        <strong>Related guides:</strong>
+        <ul>
+          <li><a href="/guides/bluesky-likes-viewer/">Bluesky Likes Viewer</a></li>
+          <li><a href="/guides/how-to-see-bluesky-likes/">How to See Bluesky Likes</a></li>
+        </ul>
+      </div>
+
+      <p class="footer">GlimpSky reads public data only and is intended for informational use.</p>
+    </article>
+  </div>
+</body>
+</html>
