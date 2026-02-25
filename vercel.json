@@ -1,4 +1,16 @@
 {
+  "redirects": [
+    {
+      "source": "/guides/how-to-see-bluesky-likes",
+      "destination": "/guides/bluesky-likes-viewer/",
+      "permanent": true
+    },
+    {
+      "source": "/guides/how-to-see-bluesky-likes/",
+      "destination": "/guides/bluesky-likes-viewer/",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)\\.(js|css)",

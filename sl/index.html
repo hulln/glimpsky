@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GlimpSky - Pregledovalnik profilov Bluesky</title>
-    <meta name="description" content="GlimpSky je pregledovalnik profilov Bluesky. Raziskujte javne objave, všečke, sledilce in aktivnost računa s filtri, regex iskanjem in datumskimi razponi.">
-    <meta name="keywords" content="bluesky pregledovalnik, bluesky všečki, bluesky profil, at protocol pregledovalnik, bluesky objave">
+    <meta name="description" content="GlimpSky je pregledovalnik profilov Bluesky. Omogoča pregledovanje javnih objav, všečkov, sledilcev in aktivnosti računa z naprednim iskanjem s filtri, regularnimi izrazi (regex) in datumskimi razponi.">
+    <meta name="keywords" content="bluesky pregledovalnik, bluesky všečki, bluesky profil, at protokol pregledovalnik, bluesky objave">
     <meta name="robots" content="index, follow">
     <meta name="googlebot" content="index, follow, max-image-preview:large">
     <meta property="og:title" content="GlimpSky - Pregledovalnik profilov Bluesky">
-    <meta property="og:description" content="Raziskujte javne profile Bluesky: objave, všečke, sledilce, regex iskanje in aktivnost računa iz odprtih podatkov AT Protocol.">
+    <meta property="og:description" content="GlimpSky je pregledovalnik profilov Bluesky. Omogoča pregledovanje javnih objav, všečkov, sledilcev in aktivnosti računa z naprednim iskanjem s filtri, regularnimi izrazi (regex) in datumskimi razponi.">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="GlimpSky">
     <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.png">
@@ -22,7 +22,7 @@
     <meta property="og:url" content="https://glimpsky.oblachek.eu/sl/" id="ogUrl">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="GlimpSky - Pregledovalnik profilov Bluesky">
-    <meta name="twitter:description" content="Raziskujte javne profile Bluesky s filtri, regex iskanjem in vpogledi v aktivnost iz podatkov AT Protocol.">
+    <meta name="twitter:description" content="GlimpSky je pregledovalnik profilov Bluesky. Omogoča pregledovanje javnih objav, všečkov, sledilcev in aktivnosti računa z naprednim iskanjem s filtri, regularnimi izrazi (regex) in datumskimi razponi.">
     <meta name="twitter:image" content="https://glimpsky.oblachek.eu/assets/og-image.png">
     <meta name="twitter:image:alt" content="GlimpSky pregledovalnik profilov Bluesky">
     <meta name="twitter:url" content="https://glimpsky.oblachek.eu/sl/" id="twitterUrl">
@@ -39,7 +39,7 @@
             "name": "GlimpSky",
             "applicationCategory": "SocialNetworkingApplication",
             "operatingSystem": "Web",
-            "description": "Pregledovalnik profilov Bluesky za raziskovanje javnih objav, všečkov, sledilcev in aktivnosti računa.",
+            "description": "GlimpSky je pregledovalnik profilov Bluesky. Omogoča pregledovanje javnih objav, všečkov, sledilcev in aktivnosti računa z naprednim iskanjem s filtri, regularnimi izrazi (regex) in datumskimi razponi.",
             "url": "https://glimpsky.oblachek.eu/sl/"
         }
     </script>
@@ -53,7 +53,7 @@
                     "name": "Kaj je GlimpSky?",
                     "acceptedAnswer": {
                         "@type": "Answer",
-                        "text": "GlimpSky je pregledovalnik profilov Bluesky za raziskovanje javnih objav, všečkov, sledilcev in aktivnosti profila."
+                        "text": "GlimpSky je pregledovalnik profilov Bluesky za ogled javnih objav, všečkov, sledilcev in aktivnosti profila."
                     }
                 },
                 {
@@ -66,10 +66,10 @@
                 },
                 {
                     "@type": "Question",
-                    "name": "Ali lahko gledam všečke in filtriram objave?",
+                    "name": "Ali lahko vidim všečke in filtriram objave?",
                     "acceptedAnswer": {
                         "@type": "Answer",
-                        "text": "Da. Lahko gledate všečke, skrijete poobjave ali odgovore, filtrirate po datumu in iščete z navadnim besedilom ali regexom."
+                        "text": "Da. Lahko vidite všečke, skrijete poobjave ali odgovore, filtrirate po datumu in iščete z navadnim besedilom ali regularnimi izrazi."
                     }
                 }
             ]
@@ -85,7 +85,7 @@
             } catch (e) {}
         })();
     </script>
-    <link rel="stylesheet" href="/styles.css?v=20260224b">
+    <link rel="stylesheet" href="/styles.css?v=20260225c">
 </head>
 <body>
     <div class="container">
@@ -242,8 +242,8 @@
                 
                 <p><strong>Avtor</strong>: <a href="https://bsky.app/profile/oblachek.eu" target="_blank" rel="noopener noreferrer">oblachek.eu</a> z zvrhanim košem dobrih vibracij po imenu ChatGPT in Claude.</p>
 
-                <p>To orodje je namenjeno izključno v informativne in izobraževalne namene.</p>
-                <p class="guides-note"><strong>Vodiči</strong> (trenutno na voljo samo v angleščini): <a href="/guides/bluesky-profile-viewer/">Bluesky Profile Viewer</a>, <a href="/guides/bluesky-likes-viewer/">Bluesky Likes Viewer</a>, <a href="/guides/how-to-see-bluesky-likes/">How to See Bluesky Likes</a>.</p>
+                <p>To orodje je ustvarjeno izključno v informativne in izobraževalne namene. GlimpSky je neodvisen projekt in ni povezan z, podprt ali sponzoriran s strani Bluesky Social PBC ali projekta AT Protocol.</p>
+                <p class="guides-note"><strong>Vodiči</strong> (trenutno na voljo samo v angleščini): <a href="/guides/bluesky-profile-viewer/">Bluesky Profile Viewer</a>, <a href="/guides/bluesky-likes-viewer/">Bluesky Likes Viewer</a>, <a href="/guides/bluesky-followers-search/">Bluesky Followers Search</a>.</p>
                 <p class="share-line">Deli: <a class="share-link" id="shareToolBtn" href="#" role="button">Kopiraj povezavo</a> <a class="share-link" id="shareBskyLink" href="#" target="_blank" rel="noopener noreferrer">Deli na Bluesky</a></p>
             </div>
             <div class="info-modal-footer">

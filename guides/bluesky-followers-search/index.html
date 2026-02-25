@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bluesky Followers Search - Search Followers and Following | GlimpSky</title>
+  <meta name="description" content="Search followers and following of a specific public Bluesky profile with plain text or regex, including full-list search.">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="Bluesky Followers Search - GlimpSky">
+  <meta property="og:description" content="Find specific accounts inside follower/following lists of public Bluesky profiles.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://glimpsky.oblachek.eu/guides/bluesky-followers-search/">
+  <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bluesky Followers Search - GlimpSky">
+  <meta name="twitter:description" content="Search followers/following with regex and full-list loading.">
+  <link rel="canonical" href="https://glimpsky.oblachek.eu/guides/bluesky-followers-search/">
+  <link rel="alternate" hreflang="en" href="https://glimpsky.oblachek.eu/guides/bluesky-followers-search/">
+  <link rel="alternate" hreflang="x-default" href="https://glimpsky.oblachek.eu/guides/bluesky-followers-search/">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/guides/guide.css?v=20260225e">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Bluesky Followers Search - Search Followers and Following",
+      "description": "Search followers and following of a specific public Bluesky profile with plain text or regex, including full-list search.",
+      "inLanguage": "en",
+      "mainEntityOfPage": "https://glimpsky.oblachek.eu/guides/bluesky-followers-search/",
+      "author": {
+        "@type": "Organization",
+        "name": "GlimpSky"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "GlimpSky"
+      }
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can I search followers of one specific Bluesky profile?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Open a profile in GlimpSky, click followers or following, and search inside that specific list."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does follower search support regex?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. The list modal supports plain text and regex with /pattern/flags syntax."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why can full search take longer on large accounts?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Large lists need additional loading for complete search coverage, so Search all can take extra time."
+          }
+        }
+      ]
+    }
+  </script>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <a href="/">GlimpSky Tool</a>
+      <span>/</span>
+      <a href="/guides/">Guides</a>
+      <span>/</span>
+      <span>Bluesky Followers Search</span>
+    </div>
+
+    <article class="card">
+      <h1>Bluesky Followers Search</h1>
+      <p class="lead">In the official Bluesky app, searching followers of one specific profile is limited. GlimpSky provides a dedicated searchable follower/following modal.</p>
+
+      <div class="cta-row">
+        <a class="btn primary" href="/" target="_blank" rel="noopener noreferrer">Open Viewer</a>
+        <a class="btn" href="/?handle=bsky.app&mode=posts" target="_blank" rel="noopener noreferrer">Try Example Profile</a>
+      </div>
+
+      <h2>How to search followers or following</h2>
+      <ol>
+        <li>Load a profile in GlimpSky.</li>
+        <li>Click the <strong>followers</strong> or <strong>following</strong> stat on the profile card.</li>
+        <li>In the list modal, search by name, <code>@handle</code>, or <code>/regex/flags</code>.</li>
+        <li>If <strong>Search all</strong> appears, click it (or press Enter) to search the full list, not only loaded entries.</li>
+        <li>Click any result to open that account in GlimpSky.</li>
+      </ol>
+      <p class="note">Regex is useful when plain text is too strict, for example matching multiple name variants with one query. Guide: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions" target="_blank" rel="noopener noreferrer">MDN Regular expressions</a>.</p>
+
+      <h2>Also available in this modal workflow</h2>
+      <ul>
+        <li><strong>Mutuals</strong> list with cached computation.</li>
+        <li><strong>Blocking</strong> list from public records.</li>
+        <li><strong>Load more</strong> pagination for large lists.</li>
+      </ul>
+
+      <h2>Limitations</h2>
+      <ul>
+        <li>Very large lists can take time to fully load for complete search.</li>
+        <li>Mutuals can be partial on very large accounts (current computation cap).</li>
+        <li><strong>Blocked by</strong> is currently unavailable without an external indexer.</li>
+      </ul>
+
+      <div class="related">
+        <strong>Related guides:</strong>
+        <ul>
+          <li><a href="/guides/bluesky-profile-viewer/">Bluesky Profile Viewer</a></li>
+          <li><a href="/guides/bluesky-likes-viewer/">Bluesky Likes Viewer</a></li>
+        </ul>
+      </div>
+
+      <p class="footer">This guide covers only publicly available data.</p>
+    </article>
+  </div>
+</body>
+</html>

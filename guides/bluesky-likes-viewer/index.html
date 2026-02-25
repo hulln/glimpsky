@@ -3,22 +3,72 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bluesky Likes Viewer - inspect public likes | GlimpSky</title>
-  <meta name="description" content="Bluesky likes viewer for public accounts. Analyze liked posts, filter by date and text, and track activity patterns with GlimpSky.">
+  <title>Bluesky Likes Viewer - Full Likes Filtering Guide | GlimpSky</title>
+  <meta name="description" content="View and analyze likes of public Bluesky accounts with date/text/author filters, regex, only-links, oldest-first, and exact likes recount.">
   <meta name="robots" content="index, follow">
   <meta property="og:title" content="Bluesky Likes Viewer - GlimpSky">
-  <meta property="og:description" content="Inspect public Bluesky likes with advanced filters and search.">
+  <meta property="og:description" content="Inspect and filter public Bluesky likes with advanced search and full-load mode.">
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://glimpsky.oblachek.eu/guides/bluesky-likes-viewer/">
   <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Bluesky Likes Viewer - GlimpSky">
-  <meta name="twitter:description" content="View and filter public Bluesky likes without login.">
+  <meta name="twitter:description" content="How to see and filter public Bluesky likes with regex, author search, and date windows.">
   <link rel="canonical" href="https://glimpsky.oblachek.eu/guides/bluesky-likes-viewer/">
   <link rel="alternate" hreflang="en" href="https://glimpsky.oblachek.eu/guides/bluesky-likes-viewer/">
   <link rel="alternate" hreflang="x-default" href="https://glimpsky.oblachek.eu/guides/bluesky-likes-viewer/">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/guides/guide.css?v=20260224d">
+  <link rel="stylesheet" href="/guides/guide.css?v=20260225e">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Bluesky Likes Viewer - Full Likes Filtering Guide",
+      "description": "View and analyze likes of public Bluesky accounts with date/text/author filters, regex, only-links, oldest-first, and exact likes recount.",
+      "inLanguage": "en",
+      "mainEntityOfPage": "https://glimpsky.oblachek.eu/guides/bluesky-likes-viewer/",
+      "author": {
+        "@type": "Organization",
+        "name": "GlimpSky"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "GlimpSky"
+      }
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can I see a Bluesky account's likes without logging in?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. GlimpSky reads public data and can show likes for public Bluesky accounts without sign-in."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What filters are available in Likes view?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You can filter by date range, text query, author query, hide quotes, only links, and oldest-first order."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why can likes count start as 2000+?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Some totals start as partial values; click the likes stat to run an exact recount."
+          }
+        }
+      ]
+    }
+  </script>
 </head>
 <body>
   <div class="page">
@@ -32,38 +82,51 @@
 
     <article class="card">
       <h1>Bluesky Likes Viewer</h1>
-      <p class="lead">Analyze what public Bluesky accounts like, when they like it, and how those patterns evolve over time.</p>
+      <p class="lead">Analyze what public Bluesky accounts like, when they like it, and who they engage with using advanced filters.</p>
 
       <div class="cta-row">
         <a class="btn primary" href="/?mode=likes" target="_blank" rel="noopener noreferrer">Open Likes View</a>
         <a class="btn" href="/?handle=bsky.app&mode=likes" target="_blank" rel="noopener noreferrer">Try Example Account</a>
       </div>
 
-      <h2>What this view helps you do</h2>
-      <ul>
-        <li>Understand topic preferences of a public account.</li>
-        <li>Search likes by keyword or regex.</li>
-        <li>Filter by date range to compare periods.</li>
-        <li>Inspect frequently liked authors.</li>
-      </ul>
-
-      <h2>How to inspect likes in 3 steps</h2>
+      <h2 id="how-to-see-likes">How to see likes (quick steps)</h2>
       <ol>
-        <li>Open GlimpSky and enter a handle or DID.</li>
+        <li>Open GlimpSky and enter a public handle or DID.</li>
         <li>Select <strong>View Likes</strong>.</li>
-        <li>Use filters for date, text, and author.</li>
+        <li>Apply filters (date, text, author, quotes, links, oldest-first).</li>
+        <li>If prompted, click <strong>Load and Apply</strong> and wait for full loading.</li>
       </ol>
 
-      <p class="note">For very large accounts, initial counts can be partial. Clicking the likes count triggers a full recount.</p>
+      <h2>Filters supported in Likes view</h2>
+      <ul>
+        <li><strong>Date range</strong>: filters by like timestamp.</li>
+        <li><strong>Search posts by text</strong>: plain text or <code>/regex/flags</code>.</li>
+        <li><strong>Search by author</strong>: handle, DID, or display name; plain text or regex.</li>
+        <li><strong>Hide quotes</strong>, <strong>Only links</strong>, and <strong>Oldest first</strong>.</li>
+      </ul>
+      <p class="note">Regex is better than plain text when you need flexible matching (alternatives, partial patterns, and flags like case-insensitive search). Guide: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions" target="_blank" rel="noopener noreferrer">MDN Regular expressions</a>.</p>
 
-      <h2>Important limitation</h2>
-      <p>Some liked records may be unavailable if they were deleted, deactivated, or temporarily unreachable through public endpoints.</p>
+      <h2>Find likes tied to another profile</h2>
+      <p>The official Bluesky app does not provide direct two-profile interaction search. In GlimpSky you can do this with author filtering.</p>
+      <ol>
+        <li>Enter profile A in the main handle field.</li>
+        <li>Enter profile B in <strong>Search by author</strong>.</li>
+        <li>Use plain text or regex and run <strong>Load and Apply</strong> for complete results.</li>
+      </ol>
+
+      <h2>Counts and known limits</h2>
+      <ul>
+        <li>Likes stat may start as a partial value (for example <code>2000+</code>); click it to compute exact likes.</li>
+        <li>Some likes may be unavailable if source records/posts are deleted, deactivated, or temporarily unreachable.</li>
+      </ul>
+
+      <p class="note">Author matching can include post author, reply parent author, and quoted author, which is useful for interaction analysis.</p>
 
       <div class="related">
         <strong>Related guides:</strong>
         <ul>
           <li><a href="/guides/bluesky-profile-viewer/">Bluesky Profile Viewer</a></li>
-          <li><a href="/guides/how-to-see-bluesky-likes/">How to See Bluesky Likes</a></li>
+          <li><a href="/guides/bluesky-followers-search/">Bluesky Followers Search</a></li>
         </ul>
       </div>
 
