@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GlimpSky - Bluesky Profile Viewer</title>
-    <meta name="description" content="GlimpSky is a Bluesky profile viewer. Explore public posts, likes, followers, and account activity with advanced filtering, regex search, and date ranges.">
-    <meta name="keywords" content="bluesky viewer, bluesky likes viewer, bluesky profile viewer, at protocol viewer, bluesky posts viewer">
+    <title>GlimpSky - Bluesky Profile Viewer, Likes, and Regex Search</title>
+    <meta name="description" content="Explore public Bluesky posts, likes, followers, and account activity. Filter by date, author, and regex with interactive analytics. No login required.">
+    <meta name="keywords" content="bluesky regex, bluesky regex search, bluesky viewer, bluesky likes viewer, bluesky profile viewer, at protocol viewer, bluesky follower search, bluesky posts viewer">
     <meta name="robots" content="index, follow">
     <meta name="googlebot" content="index, follow, max-image-preview:large">
-    <meta property="og:title" content="GlimpSky - Bluesky Profile Viewer">
-    <meta property="og:description" content="GlimpSky is a Bluesky profile viewer. Explore public posts, likes, followers, and account activity with advanced filtering, regex search, and date ranges.">
+    <meta property="og:title" content="GlimpSky - Bluesky Profile Viewer, Likes, and Regex Search">
+    <meta property="og:description" content="Explore public Bluesky posts, likes, followers, and account activity. Filter by date, author, and regex with interactive analytics. No login required.">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="GlimpSky">
     <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.png?v=20260225c">
@@ -21,8 +21,8 @@
     <meta property="og:image:alt" content="GlimpSky Bluesky Profile Viewer">
     <meta property="og:url" content="https://glimpsky.oblachek.eu/" id="ogUrl">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="GlimpSky - Bluesky Profile Viewer">
-    <meta name="twitter:description" content="GlimpSky is a Bluesky profile viewer. Explore public posts, likes, followers, and account activity with advanced filtering, regex search, and date ranges.">
+    <meta name="twitter:title" content="GlimpSky - Bluesky Profile Viewer, Likes, and Regex Search">
+    <meta name="twitter:description" content="Explore public Bluesky posts, likes, followers, and account activity. Filter by date, author, and regex with interactive analytics. No login required.">
     <meta name="twitter:image" content="https://glimpsky.oblachek.eu/assets/og-image.png?v=20260225c">
     <meta name="twitter:image:alt" content="GlimpSky Bluesky Profile Viewer">
     <meta name="twitter:url" content="https://glimpsky.oblachek.eu/" id="twitterUrl">
@@ -39,7 +39,7 @@
             "name": "GlimpSky",
             "applicationCategory": "SocialNetworkingApplication",
             "operatingSystem": "Web",
-            "description": "GlimpSky is a Bluesky profile viewer. Explore public posts, likes, followers, and account activity with advanced filtering, regex search, and date ranges.",
+            "description": "Explore public Bluesky posts, likes, followers, and account activity. Filter by date, author, and regex with interactive analytics. No login required.",
             "url": "https://glimpsky.oblachek.eu/"
         }
     </script>
@@ -70,6 +70,14 @@
                     "acceptedAnswer": {
                         "@type": "Answer",
                         "text": "Yes. You can view likes, hide reposts or replies, filter by date, and search with plain text or regex."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Does GlimpSky support Bluesky regex search?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes. Search fields support /pattern/flags regex syntax for post text, author filters, and follower/following list search."
                     }
                 }
             ]
@@ -103,7 +111,7 @@
                 </div>
             </div>
             <p class="title-sub">Bluesky Profile Viewer</p>
-            <p class="subtitle">View posts and likes from any Bluesky profile. No login required.</p>
+            <p class="subtitle">Analyze any public Bluesky profile with filters, regex search, and clean activity analytics.</p>
             <div class="header-divider"></div>
             
             <div class="input-group">

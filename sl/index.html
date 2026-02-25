@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GlimpSky - Pregledovalnik profilov Bluesky</title>
+    <title>GlimpSky - Pregledovalnik profilov Bluesky in regex iskanje</title>
     <meta name="description" content="GlimpSky je pregledovalnik profilov Bluesky. Omogoča pregledovanje javnih objav, všečkov, sledilcev in aktivnosti računa z naprednim iskanjem s filtri, regularnimi izrazi (regex) in datumskimi razponi.">
-    <meta name="keywords" content="bluesky pregledovalnik, bluesky všečki, bluesky profil, at protokol pregledovalnik, bluesky objave">
+    <meta name="keywords" content="bluesky pregledovalnik, bluesky regex, bluesky regex iskanje, bluesky všečki, bluesky profil, at protokol pregledovalnik, bluesky objave">
     <meta name="robots" content="index, follow">
     <meta name="googlebot" content="index, follow, max-image-preview:large">
-    <meta property="og:title" content="GlimpSky - Pregledovalnik profilov Bluesky">
+    <meta property="og:title" content="GlimpSky - Pregledovalnik profilov Bluesky in regex iskanje">
     <meta property="og:description" content="GlimpSky je pregledovalnik profilov Bluesky. Omogoča pregledovanje javnih objav, všečkov, sledilcev in aktivnosti računa z naprednim iskanjem s filtri, regularnimi izrazi (regex) in datumskimi razponi.">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="GlimpSky">
@@ -21,7 +21,7 @@
     <meta property="og:image:alt" content="GlimpSky pregledovalnik profilov Bluesky">
     <meta property="og:url" content="https://glimpsky.oblachek.eu/sl/" id="ogUrl">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="GlimpSky - Pregledovalnik profilov Bluesky">
+    <meta name="twitter:title" content="GlimpSky - Pregledovalnik profilov Bluesky in regex iskanje">
     <meta name="twitter:description" content="GlimpSky je pregledovalnik profilov Bluesky. Omogoča pregledovanje javnih objav, všečkov, sledilcev in aktivnosti računa z naprednim iskanjem s filtri, regularnimi izrazi (regex) in datumskimi razponi.">
     <meta name="twitter:image" content="https://glimpsky.oblachek.eu/assets/og-image.png?v=20260225c">
     <meta name="twitter:image:alt" content="GlimpSky pregledovalnik profilov Bluesky">
@@ -71,6 +71,14 @@
                         "@type": "Answer",
                         "text": "Da. Lahko vidite všečke, skrijete poobjave ali odgovore, filtrirate po datumu in iščete z navadnim besedilom ali regularnimi izrazi."
                     }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Ali GlimpSky podpira regex iskanje na Bluesky?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Da. Iskalna polja podpirajo zapis /vzorec/zastavice za objave, avtorje ter iskanje po seznamih sledilcev in sledenih računov."
+                    }
                 }
             ]
         }
@@ -103,7 +111,7 @@
                 </div>
             </div>
             <p class="title-sub">Pregledovalnik profilov Bluesky</p>
-            <p class="subtitle">Oglejte si objave in všečke kateregakoli profila Bluesky. Brez prijave.</p>
+            <p class="subtitle">Oglejte si objave in všečke kateregakoli profila Bluesky z navadnim ali regex iskanjem. Brez prijave.</p>
             <div class="header-divider"></div>
             
             <div class="input-group">
