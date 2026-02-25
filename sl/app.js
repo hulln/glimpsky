@@ -29,6 +29,7 @@
         let analyticsExpanded = false;
         let analyticsRangePreset = ANALYTICS_RANGE_DEFAULT;
         let likesTimelineMainOnly = false;
+        let visualizationTransitionTimer = null;
         const likesCountCache = new Map();
         const mutualsCache = new Map();
         const blockingCountCache = new Map();
@@ -125,16 +126,34 @@
             elements.analyticsToggleBtn.classList.toggle('expanded', analyticsExpanded);
             elements.analyticsToggleBtn.setAttribute('aria-expanded', analyticsExpanded ? 'true' : 'false');
 
-            const isComplete = allPostsLoaded || !currentCursor;
-            const helperText = (!analyticsExpanded && !isComplete)
-                ? '<span class="analytics-toggle-hint">Najbolje z datumskim razponom ali Naloži vse.</span>'
-                : '';
             const label = analyticsExpanded ? 'Skrij analitiko' : 'Prikaži analitiko';
-            elements.analyticsToggleBtn.innerHTML = `<span class="analytics-toggle-label">${label}</span>${helperText}`;
+            elements.analyticsToggleBtn.innerHTML = `<span class="analytics-toggle-label">${label}</span>`;
 
             if (elements.visualizations && elements.visualizations.innerHTML.trim()) {
-                elements.visualizations.style.display = analyticsExpanded ? 'grid' : 'none';
+                elements.visualizations.style.display = 'grid';
+                elements.visualizations.classList.add('has-data');
+                elements.visualizations.classList.toggle('is-open', analyticsExpanded);
+                if (!analyticsExpanded) {
+                    elements.visualizations.classList.remove('is-range-updating');
+                }
+            } else if (elements.visualizations) {
+                elements.visualizations.classList.remove('has-data', 'is-open', 'is-range-updating');
+                elements.visualizations.style.display = 'none';
             }
+        }
+
+        function pulseVisualizationRangeTransition() {
+            if (!elements.visualizations || !elements.visualizations.classList.contains('is-open')) return;
+            elements.visualizations.classList.add('is-range-updating');
+            if (visualizationTransitionTimer) {
+                clearTimeout(visualizationTransitionTimer);
+            }
+            visualizationTransitionTimer = window.setTimeout(() => {
+                if (elements.visualizations) {
+                    elements.visualizations.classList.remove('is-range-updating');
+                }
+                visualizationTransitionTimer = null;
+            }, 170);
         }
 
         function setLoadMoreVisible(visible) {
@@ -2615,8 +2634,13 @@
 
         function clearVisualizations() {
             if (!elements.visualizations) return;
+            if (visualizationTransitionTimer) {
+                clearTimeout(visualizationTransitionTimer);
+                visualizationTransitionTimer = null;
+            }
             elements.visualizations.innerHTML = '';
             elements.visualizations.style.display = 'none';
+            elements.visualizations.classList.remove('has-data', 'is-open', 'is-range-updating');
             setAnalyticsToggleVisible(false);
             setAnalyticsExpanded(false);
         }
@@ -2783,6 +2807,8 @@
                     <ul class="viz-top-list">${topRows}</ul>
                 </div>
             `;
+            elements.visualizations.style.display = 'grid';
+            elements.visualizations.classList.add('has-data');
             setAnalyticsToggleVisible(true);
             setAnalyticsExpanded(analyticsExpanded);
             attachTimelineInteractions(mode, activeTimelineSeriesDefs);
@@ -2791,6 +2817,7 @@
             if (likesMainOnlyInput) {
                 likesMainOnlyInput.addEventListener('change', () => {
                     likesTimelineMainOnly = likesMainOnlyInput.checked;
+                    pulseVisualizationRangeTransition();
                     rerenderCurrentView();
                 });
             }
@@ -2849,6 +2876,7 @@
                     }
                     const targetDate = getAnalyticsTargetStartDate(nextRange);
                     await ensureLoadedThroughDate(targetDate);
+                    pulseVisualizationRangeTransition();
                     rerenderCurrentView();
                 });
             });

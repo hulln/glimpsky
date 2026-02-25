@@ -126,12 +126,8 @@
             elements.analyticsToggleBtn.classList.toggle('expanded', analyticsExpanded);
             elements.analyticsToggleBtn.setAttribute('aria-expanded', analyticsExpanded ? 'true' : 'false');
 
-            const isComplete = allPostsLoaded || !currentCursor;
-            const helperText = (!analyticsExpanded && !isComplete)
-                ? '<span class="analytics-toggle-hint">Best with date range or Load all.</span>'
-                : '';
             const label = analyticsExpanded ? 'Hide analytics' : 'Show analytics';
-            elements.analyticsToggleBtn.innerHTML = `<span class="analytics-toggle-label">${label}</span>${helperText}`;
+            elements.analyticsToggleBtn.innerHTML = `<span class="analytics-toggle-label">${label}</span>`;
 
             if (elements.visualizations && elements.visualizations.innerHTML.trim()) {
                 elements.visualizations.style.display = 'grid';
