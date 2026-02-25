@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bluesky Likes Viewer - Full Likes Filtering Guide | GlimpSky</title>
-  <meta name="description" content="View and analyze likes of public Bluesky accounts with date/text/author filters, regex, only-links, oldest-first, and exact likes recount.">
+  <meta name="description" content="View and analyze likes of public Bluesky accounts with date/text/author filters, interactive likes analytics, all-likes main line mode, and exact likes recount.">
   <meta name="robots" content="index, follow">
   <meta property="og:title" content="Bluesky Likes Viewer - GlimpSky">
-  <meta property="og:description" content="Inspect and filter public Bluesky likes with advanced search and full-load mode.">
+  <meta property="og:description" content="Inspect and filter public Bluesky likes with interactive analytics, all-likes main line mode, and full-load support.">
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://glimpsky.oblachek.eu/guides/bluesky-likes-viewer/">
-  <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.png">
+  <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.png?v=20260225a">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Bluesky Likes Viewer - GlimpSky">
-  <meta name="twitter:description" content="How to see and filter public Bluesky likes with regex, author search, and date windows.">
+  <meta name="twitter:description" content="How to see and filter public Bluesky likes with analytics, regex, author search, and date windows.">
   <link rel="canonical" href="https://glimpsky.oblachek.eu/guides/bluesky-likes-viewer/">
   <link rel="alternate" hreflang="en" href="https://glimpsky.oblachek.eu/guides/bluesky-likes-viewer/">
   <link rel="alternate" hreflang="x-default" href="https://glimpsky.oblachek.eu/guides/bluesky-likes-viewer/">
@@ -24,7 +24,7 @@
       "@context": "https://schema.org",
       "@type": "Article",
       "headline": "Bluesky Likes Viewer - Full Likes Filtering Guide",
-      "description": "View and analyze likes of public Bluesky accounts with date/text/author filters, regex, only-links, oldest-first, and exact likes recount.",
+      "description": "View and analyze likes of public Bluesky accounts with date/text/author filters, interactive likes analytics, all-likes main line mode, and exact likes recount.",
       "inLanguage": "en",
       "mainEntityOfPage": "https://glimpsky.oblachek.eu/guides/bluesky-likes-viewer/",
       "author": {
@@ -64,6 +64,14 @@
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "Some totals start as partial values; click the likes stat to run an exact recount."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I view one combined likes timeline line?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Likes analytics includes an All likes line and a toggle to show only that main line."
           }
         }
       ]
@@ -106,6 +114,15 @@
       </ul>
       <p class="note">Regex is better than plain text when you need flexible matching (alternatives, partial patterns, and flags like case-insensitive search). Guide: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions" target="_blank" rel="noopener noreferrer">MDN Regular expressions</a>.</p>
 
+      <h2 id="likes-analytics">Likes analytics (likes-specific)</h2>
+      <ul>
+        <li>Timeline includes one aggregate <strong>All likes</strong> line plus category lines (text, links, media, replies, quotes).</li>
+        <li>Use <strong>Show only All likes line</strong> to hide category lines when you want one clean trend line.</li>
+        <li><strong>Content mix</strong> and <strong>Top liked authors</strong> update with the selected analytics range.</li>
+        <li>Click timeline points/buckets to apply date filters, and click top liked authors to apply author filters.</li>
+      </ul>
+      <p class="note">For shared analytics behavior (range buttons, custom/date-filter behavior, loading coverage), see <a href="/guides/bluesky-profile-viewer/#analytics-workflow">Profile analytics workflow</a>.</p>
+
       <h2>Find likes tied to another profile</h2>
       <p>The official Bluesky app does not provide direct two-profile interaction search. In GlimpSky you can do this with author filtering.</p>
       <ol>
@@ -117,6 +134,7 @@
       <h2>Counts and known limits</h2>
       <ul>
         <li>Likes stat may start as a partial value (for example <code>2000+</code>); click it to compute exact likes.</li>
+        <li>If coverage is partial, use <strong>Load more</strong> or <strong>Load all data</strong> to include older likes.</li>
         <li>Some likes may be unavailable if source records/posts are deleted, deactivated, or temporarily unreachable.</li>
       </ul>
 

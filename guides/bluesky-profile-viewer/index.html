@@ -4,21 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bluesky Profile Viewer - Full Account Analysis | GlimpSky</title>
-  <meta name="description" content="Inspect public Bluesky profiles with post/like filters, follower search, mutuals, blocking, Home PDS, account age, and recent activity stats.">
+  <meta name="description" content="Inspect public Bluesky profiles with post/like filters, interactive analytics, follower search, mutuals, blocking, Home PDS, account age, and recent activity stats.">
   <meta name="robots" content="index, follow">
   <meta property="og:title" content="Bluesky Profile Viewer - GlimpSky">
-  <meta property="og:description" content="Analyze profile activity, social graph, and advanced filters in one place.">
+  <meta property="og:description" content="Analyze profile activity, social graph, interactive analytics, and advanced filters in one place.">
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://glimpsky.oblachek.eu/guides/bluesky-profile-viewer/">
-  <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.png">
+  <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.png?v=20260225a">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Bluesky Profile Viewer - GlimpSky">
-  <meta name="twitter:description" content="Profile diagnostics, follower search, and post/like filtering for public Bluesky accounts.">
+  <meta name="twitter:description" content="Profile diagnostics, follower search, interactive analytics, and post/like filtering for public Bluesky accounts.">
   <link rel="canonical" href="https://glimpsky.oblachek.eu/guides/bluesky-profile-viewer/">
   <link rel="alternate" hreflang="en" href="https://glimpsky.oblachek.eu/guides/bluesky-profile-viewer/">
   <link rel="alternate" hreflang="x-default" href="https://glimpsky.oblachek.eu/guides/bluesky-profile-viewer/">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/guides/guide.css?v=20260225e">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Bluesky Profile Viewer - Full Account Analysis",
+      "description": "Inspect public Bluesky profiles with post/like filters, interactive analytics, follower search, mutuals, blocking, Home PDS, account age, and recent activity stats.",
+      "inLanguage": "en",
+      "mainEntityOfPage": "https://glimpsky.oblachek.eu/guides/bluesky-profile-viewer/",
+      "author": {
+        "@type": "Organization",
+        "name": "GlimpSky"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "GlimpSky"
+      }
+    }
+  </script>
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -94,6 +112,18 @@
         <li>Likes count can show partial totals first; click likes stat for an exact recount.</li>
       </ul>
       <p class="note">Regex helps you match variable patterns (for example alternatives, partial matches, and case-insensitive search) that plain text cannot. Guide: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions" target="_blank" rel="noopener noreferrer">MDN Regular expressions</a>.</p>
+
+      <h2 id="analytics-workflow">Analytics workflow (shared)</h2>
+      <ul>
+        <li>Use <strong>Show analytics</strong> to open timeline, content mix, and top interaction cards.</li>
+        <li><strong>Week</strong>, <strong>Month</strong>, and <strong>Year</strong> buttons change analytics range only.</li>
+        <li><strong>Custom</strong> is driven by date filters and applies to both analytics and the list below.</li>
+        <li>If data is partial, use <strong>Load more</strong> or <strong>Load all data</strong> for older coverage.</li>
+        <li>Timeline is interactive: hover for breakdowns and click points/buckets to set date filters.</li>
+        <li><strong>Content mix</strong> and <strong>Top interaction targets</strong> recalculate for the selected analytics range.</li>
+        <li>Click a top target to filter by author, then use <strong>Reset author</strong> to clear.</li>
+      </ul>
+      <p class="note">Likes mode adds an aggregate <strong>All likes</strong> line and a one-click mode to show only that line. See <a href="/guides/bluesky-likes-viewer/#likes-analytics">likes analytics details</a>.</p>
 
       <h2>Workflow helpers</h2>
       <ul>

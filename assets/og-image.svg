@@ -10,7 +10,7 @@
   <rect width="1200" height="630" fill="url(#bg)"/>
   <circle cx="1040" cy="90" r="220" fill="#60a5fa" opacity="0.18"/>
   <circle cx="130" cy="560" r="280" fill="#38bdf8" opacity="0.12"/>
-  <g fill="#ffffff" font-family="Lexend, Segoe UI, Arial, sans-serif">
+  <g fill="#ffffff" font-family="'IBM Plex Sans', Segoe UI, Arial, sans-serif">
     <text x="96" y="248" font-size="78" font-weight="700">GlimpSky</text>
     <text x="96" y="322" font-size="40" font-weight="500" opacity="0.95">Bluesky Profile Viewer</text>
     <text x="96" y="392" font-size="30" font-weight="400" opacity="0.9">Search public posts, likes, and account activity</text>

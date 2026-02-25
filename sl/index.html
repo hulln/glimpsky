@@ -12,9 +12,9 @@
     <meta property="og:description" content="GlimpSky je pregledovalnik profilov Bluesky. Omogoča pregledovanje javnih objav, všečkov, sledilcev in aktivnosti računa z naprednim iskanjem s filtri, regularnimi izrazi (regex) in datumskimi razponi.">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="GlimpSky">
-    <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.png">
-    <meta property="og:image:url" content="https://glimpsky.oblachek.eu/assets/og-image.png">
-    <meta property="og:image:secure_url" content="https://glimpsky.oblachek.eu/assets/og-image.png">
+    <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.png?v=20260225a">
+    <meta property="og:image:url" content="https://glimpsky.oblachek.eu/assets/og-image.png?v=20260225a">
+    <meta property="og:image:secure_url" content="https://glimpsky.oblachek.eu/assets/og-image.png?v=20260225a">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -23,7 +23,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="GlimpSky - Pregledovalnik profilov Bluesky">
     <meta name="twitter:description" content="GlimpSky je pregledovalnik profilov Bluesky. Omogoča pregledovanje javnih objav, všečkov, sledilcev in aktivnosti računa z naprednim iskanjem s filtri, regularnimi izrazi (regex) in datumskimi razponi.">
-    <meta name="twitter:image" content="https://glimpsky.oblachek.eu/assets/og-image.png">
+    <meta name="twitter:image" content="https://glimpsky.oblachek.eu/assets/og-image.png?v=20260225a">
     <meta name="twitter:image:alt" content="GlimpSky pregledovalnik profilov Bluesky">
     <meta name="twitter:url" content="https://glimpsky.oblachek.eu/sl/" id="twitterUrl">
     <meta name="author" content="oblachek.eu">
@@ -85,7 +85,7 @@
             } catch (e) {}
         })();
     </script>
-    <link rel="stylesheet" href="/styles.css?v=20260225c">
+    <link rel="stylesheet" href="/styles.css?v=20260225u">
 </head>
 <body>
     <div class="container">
@@ -176,7 +176,7 @@
                     </div>
 
                     <div class="filter-banner" id="filterBanner">
-                        <span class="filter-banner-text">Filtri, vključno z razvrstitvijo najprej najstarejše, zahtevajo nalaganje celotne vsebine. Naložim?</span>
+                        <span class="filter-banner-text">Prikazani so filtrirani rezultati samo za naložene elemente. Naložim vse za popolne rezultate?</span>
                         <div class="filter-banner-actions">
                             <button class="btn-outline" id="filterLoadBtn" type="button">Naloži in uporabi</button>
                             <button class="btn-outline" id="filterCancelBtn" type="button">Prekliči</button>
@@ -197,8 +197,15 @@
 
         <div class="content-section" id="contentSection">
             <div class="section-header">
-                <h3 class="section-title" id="sectionTitle">Objave</h3>
+                <div class="section-title-row">
+                    <h3 class="section-title" id="sectionTitle">Objave</h3>
+                    <button class="analytics-toggle-btn" id="analyticsToggleBtn" type="button" aria-expanded="false">
+                        <span class="analytics-toggle-label">Prikaži analitiko</span>
+                    </button>
+                </div>
+                <div class="coverage-hint" id="coverageHint"></div>
             </div>
+            <div class="visualizations" id="visualizations" aria-live="polite"></div>
             <div id="content"></div>
             <div class="load-more-container" id="loadMoreContainer">
                 <button class="load-more" id="loadMoreBtn">Naloži več</button>
@@ -252,6 +259,6 @@
         </div>
     </div>
 
-<script src="app.js?v=20260224a" defer></script>
+<script src="app.js?v=20260225u" defer></script>
 </body>
 </html>

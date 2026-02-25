@@ -2,6 +2,7 @@
         const THEME_STORAGE_KEY = 'glimpsky-theme';
         const LANGUAGE_STORAGE_KEY = 'glimpsky-lang';
         const PREFERRED_ORIGIN = 'https://glimpsky.oblachek.eu';
+        const ANALYTICS_RANGE_DEFAULT = '30d';
         
         let currentHandle = '';
         let currentDid = '';
@@ -25,6 +26,9 @@
         let lastActiveLoaded = false;
         let identityUpdateLoaded = false;
         let pendingSortOldest = false;
+        let analyticsExpanded = false;
+        let analyticsRangePreset = ANALYTICS_RANGE_DEFAULT;
+        let likesTimelineMainOnly = false;
         const likesCountCache = new Map();
         const mutualsCache = new Map();
         const blockingCountCache = new Map();
@@ -44,6 +48,9 @@
             profileCard: document.getElementById('profileCard'),
             contentSection: document.getElementById('contentSection'),
             content: document.getElementById('content'),
+            visualizations: document.getElementById('visualizations'),
+            coverageHint: document.getElementById('coverageHint'),
+            analyticsToggleBtn: document.getElementById('analyticsToggleBtn'),
             error: document.getElementById('error'),
             sectionTitle: document.getElementById('sectionTitle'),
             listModal: document.getElementById('listModal'),
@@ -80,6 +87,12 @@
         elements.loadPostsBtn.addEventListener('click', () => loadContent('posts'));
         elements.loadLikesBtn.addEventListener('click', () => loadContent('likes'));
         elements.loadMoreBtn.addEventListener('click', loadMore);
+        if (elements.analyticsToggleBtn) {
+            elements.analyticsToggleBtn.addEventListener('click', () => {
+                setAnalyticsExpanded(!analyticsExpanded);
+                updateCoverageHint();
+            });
+        }
         elements.handleInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') loadContent('posts');
         });
@@ -96,10 +109,39 @@
             elements.advancedFiltersToggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
         }
 
+        function setAnalyticsToggleVisible(visible) {
+            if (!elements.analyticsToggleBtn) return;
+            elements.analyticsToggleBtn.classList.toggle('show', Boolean(visible));
+            if (!visible) {
+                elements.analyticsToggleBtn.classList.remove('expanded');
+                elements.analyticsToggleBtn.setAttribute('aria-expanded', 'false');
+            }
+        }
+
+        function setAnalyticsExpanded(expanded) {
+            analyticsExpanded = Boolean(expanded);
+            if (!elements.analyticsToggleBtn) return;
+
+            elements.analyticsToggleBtn.classList.toggle('expanded', analyticsExpanded);
+            elements.analyticsToggleBtn.setAttribute('aria-expanded', analyticsExpanded ? 'true' : 'false');
+
+            const isComplete = allPostsLoaded || !currentCursor;
+            const helperText = (!analyticsExpanded && !isComplete)
+                ? '<span class="analytics-toggle-hint">Best with date range or Load all.</span>'
+                : '';
+            const label = analyticsExpanded ? 'Hide analytics' : 'Show analytics';
+            elements.analyticsToggleBtn.innerHTML = `<span class="analytics-toggle-label">${label}</span>${helperText}`;
+
+            if (elements.visualizations && elements.visualizations.innerHTML.trim()) {
+                elements.visualizations.style.display = analyticsExpanded ? 'grid' : 'none';
+            }
+        }
+
         function setLoadMoreVisible(visible) {
             const show = Boolean(visible);
             elements.loadMoreContainer.style.display = show ? 'block' : 'none';
             elements.content.classList.toggle('has-load-more', show);
+            updateCoverageHint();
         }
 
         elements.sortOldest.addEventListener('change', () => {
@@ -425,6 +467,8 @@
             elements.profileCard.style.display = 'none';
             elements.contentSection.style.display = 'none';
             elements.content.innerHTML = '';
+            clearVisualizations();
+            updateCoverageHint();
             elements.error.innerHTML = '';
             currentHandle = '';
             currentDid = '';
@@ -467,6 +511,7 @@
             elements.filterBanner.classList.remove('show');
             elements.sortOldest.checked = false;
             pendingSortOldest = false;
+            likesTimelineMainOnly = false;
             updateModeButtons('posts');
             updateUrlParams('', 'posts');
         });
@@ -496,6 +541,7 @@
         }
 
         function showLoading() {
+            clearVisualizations();
             elements.content.innerHTML = `
                 <div class="loading">
                     <div class="spinner"></div>
@@ -2138,13 +2184,21 @@
         async function handleFilterChange() {
             if (!currentDid) return;
             if (hasExpensiveFilters()) {
-                if (allPostsLoaded) {
-                    elements.filterBanner.classList.remove('show');
-                    applyFiltersImmediate();
-                } else {
+                const dateRangeTarget = getAnalyticsTargetStartDate('custom');
+                if (dateRangeTarget) {
+                    await ensureLoadedThroughDate(dateRangeTarget);
+                }
+
+                const needsMoreForActiveFilters = dateRangeTarget
+                    ? !isLoadedThroughDate(dateRangeTarget)
+                    : !allPostsLoaded;
+                if (needsMoreForActiveFilters && currentCursor) {
                     setAdvancedFiltersExpanded(true);
                     elements.filterBanner.classList.add('show');
+                } else {
+                    elements.filterBanner.classList.remove('show');
                 }
+                applyFiltersImmediate();
             } else {
                 elements.filterBanner.classList.remove('show');
                 await resetToPagedView();
@@ -2173,13 +2227,13 @@
             if (!currentDid) return;
 
             if (hasExpensiveFilters()) {
-                if (allPostsLoaded) {
-                    elements.filterBanner.classList.remove('show');
-                    applyFiltersImmediate();
-                } else {
+                if (!allPostsLoaded) {
                     setAdvancedFiltersExpanded(true);
                     elements.filterBanner.classList.add('show');
+                } else {
+                    elements.filterBanner.classList.remove('show');
                 }
+                applyFiltersImmediate();
                 return;
             }
 
@@ -2291,6 +2345,7 @@
                         </p>
                     </div>
                 `;
+                clearVisualizations();
             } else {
                 if (currentMode === 'posts') {
                     displayPosts(filtered, false);
@@ -2336,6 +2391,10 @@
             setLoading(true);
             elements.error.innerHTML = '';
             showLoading();
+            analyticsExpanded = false;
+            analyticsRangePreset = ANALYTICS_RANGE_DEFAULT;
+            setAnalyticsToggleVisible(false);
+            setAnalyticsExpanded(false);
             
             try {
                 const prevDid = currentDid;
@@ -2392,6 +2451,7 @@
                 }
 
                 elements.contentSection.style.display = 'block';
+                updateCoverageHint();
                 if (hasExpensiveFilters()) {
                     handleFilterChange();
                 }
@@ -2399,6 +2459,7 @@
                 showError(error.message, true);
                 elements.profileCard.style.display = 'none';
                 elements.contentSection.style.display = 'none';
+                updateCoverageHint();
             } finally {
                 setLoading(false);
             }
@@ -2440,6 +2501,7 @@
                 }
 
                 currentCursor = data.cursor || null;
+                allPostsLoaded = !currentCursor;
                 setLoadMoreVisible(Boolean(currentCursor));
             } catch (error) {
                 showError(error.message);
@@ -2470,6 +2532,8 @@
                             </div>
                         `;
                     }
+                    allPostsLoaded = true;
+                    currentCursor = null;
                     setLoadMoreVisible(false);
                     return;
                 }
@@ -2506,6 +2570,7 @@
                 updateLikesCount();
                 
                 currentCursor = data.cursor || null;
+                allPostsLoaded = !currentCursor;
                 setLoadMoreVisible(Boolean(currentCursor));
             } catch (error) {
                 showError(error.message);
@@ -2548,6 +2613,1025 @@
             }
         }
 
+        function clearVisualizations() {
+            if (!elements.visualizations) return;
+            elements.visualizations.innerHTML = '';
+            elements.visualizations.style.display = 'none';
+            setAnalyticsToggleVisible(false);
+            setAnalyticsExpanded(false);
+        }
+
+        function renderVisualizations(rows, mode) {
+            if (!elements.visualizations) return;
+            if (!Array.isArray(rows) || rows.length === 0) {
+                clearVisualizations();
+                return;
+            }
+
+            const hasDateRangeFilter = Boolean(elements.dateFrom.value || elements.dateTo.value);
+            const activeRangeKey = hasDateRangeFilter ? 'custom' : analyticsRangePreset;
+            const activeRange = getAnalyticsRangeDefinition(activeRangeKey);
+            const snapshot = buildVisualizationSnapshot(rows, mode, activeRangeKey);
+            if (!snapshot) {
+                clearVisualizations();
+                return;
+            }
+
+            const activityLabel = mode === 'likes' ? 'likes' : 'posts';
+            const timelineTitle = `${formatEuDate(snapshot.timeline.start)} - ${formatEuDate(snapshot.timeline.end)}`;
+            const timelineScopeBase = hasDateRangeFilter
+                ? 'Date filters apply to both the chart and the list below.'
+                : `Showing ${activeRange.scopeLabel}${snapshot.timeline.isComplete ? '.' : ' (older results may still be unloaded).'}`;
+            const timelineGroupingNote = snapshot.timeline.bucketMode === 'week'
+                ? ' Grouped by week for readability.'
+                : (snapshot.timeline.bucketMode === 'month' ? ' Grouped by month for readability.' : '');
+            const timelineScopeNote = `${timelineScopeBase}${timelineGroupingNote}`;
+            const analyticsOnlyNote = hasDateRangeFilter
+                ? ''
+                : '<p class="viz-activity-note">Week, Month and Year buttons change only the chart. To filter the list, use date filters above.</p>';
+            const timelineSeriesDefs = (mode === 'likes' && likesTimelineMainOnly)
+                ? snapshot.timeline.seriesDefs.filter((series) => series.key === 'allLikes')
+                : snapshot.timeline.seriesDefs;
+            const activeTimelineSeriesDefs = timelineSeriesDefs.length > 0 ? timelineSeriesDefs : snapshot.timeline.seriesDefs;
+            const timelineSvg = buildTimelineSvg(snapshot.timeline.points, activeTimelineSeriesDefs);
+            const startLabel = formatTimelineAxisLabel(snapshot.timeline.points[0], snapshot.timeline.bucketMode, snapshot.timeline.points.length);
+            const midLabel = formatTimelineAxisLabel(snapshot.timeline.points[Math.floor(snapshot.timeline.points.length / 2)], snapshot.timeline.bucketMode, snapshot.timeline.points.length);
+            const endLabel = formatTimelineAxisLabel(snapshot.timeline.points[snapshot.timeline.points.length - 1], snapshot.timeline.bucketMode, snapshot.timeline.points.length);
+            const activeKpiLabel = snapshot.timeline.bucketMode === 'week'
+                ? 'active weeks'
+                : (snapshot.timeline.bucketMode === 'month' ? 'active months' : 'active days');
+            const peakKpiLabel = snapshot.timeline.bucketMode === 'week'
+                ? 'peak/week'
+                : (snapshot.timeline.bucketMode === 'month' ? 'peak/month' : 'peak/day');
+            const timelineNote = snapshot.timeline.activityNote
+                ? `<p class="viz-activity-note">${escapeHtml(snapshot.timeline.activityNote)}</p>`
+                : '';
+            const timelineLegend = activeTimelineSeriesDefs.map((series) => `
+                <span class="viz-legend-item">
+                    <span class="viz-legend-swatch" style="--viz-legend-color:${series.lineColor}"></span>
+                    <span>${escapeHtml(series.label)}</span>
+                </span>
+            `).join('');
+            const rangeControls = getAnalyticsRangeDefinitions().map((range) => `
+                <button
+                    class="viz-range-btn${range.key === activeRangeKey ? ' is-active' : ''}"
+                    type="button"
+                    data-viz-range="${range.key}"
+                    title="${range.ariaLabel}"
+                    aria-pressed="${range.key === activeRangeKey ? 'true' : 'false'}"
+                >${range.label}</button>
+            `).join('');
+            const likesSeriesToggle = mode === 'likes'
+                ? `
+                    <label class="viz-line-mode-label" for="vizLikesMainOnlyInput">
+                        <input type="checkbox" id="vizLikesMainOnlyInput" ${likesTimelineMainOnly ? 'checked' : ''}>
+                        <span>Show only All likes line</span>
+                    </label>
+                `
+                : '';
+
+            const mixRows = snapshot.mix.length > 0
+                ? snapshot.mix.map((entry) => {
+                    return `
+                        <div class="viz-mix-row">
+                            <div class="viz-mix-top">
+                                <span class="viz-mix-label">${escapeHtml(entry.label)}</span>
+                                <span class="viz-mix-value">${formatNumber(entry.count)} (${entry.percent}%)</span>
+                            </div>
+                            <div class="viz-mix-track">
+                                <div class="viz-mix-fill ${entry.colorClass}" style="width:${entry.percent}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')
+                : '<div class="viz-empty">No data in selected range.</div>';
+
+            const topRows = snapshot.topAuthors.length > 0
+                ? snapshot.topAuthors.map((entry, idx) => {
+                    const handle = entry.handle ? `@${entry.handle}` : shortDid(entry.did);
+                    const query = entry.handle || entry.did;
+                    const name = entry.displayName || entry.handle || shortDid(entry.did);
+                    const avatar = entry.avatar || 'https://via.placeholder.com/28';
+                    return `
+                        <li>
+                            <button class="viz-top-btn" type="button" data-author-query="${escapeHtml(query)}" title="Filter by author">
+                                <span class="viz-top-rank">${idx + 1}</span>
+                                <img class="viz-top-avatar" src="${escapeHtml(avatar)}" alt="">
+                                <span class="viz-top-meta">
+                                    <span class="viz-top-name">${escapeHtml(name)}</span>
+                                    <span class="viz-top-handle">${escapeHtml(handle)}</span>
+                                </span>
+                                <span class="viz-top-count">${formatNumber(entry.count)}</span>
+                            </button>
+                        </li>
+                    `;
+                }).join('')
+                : `<li class="viz-empty">${mode === 'likes' ? 'No liked authors found.' : 'No interaction targets found.'}</li>`;
+            const hasAuthorFilter = Boolean(elements.searchAuthor.value.trim());
+            const resetAuthorControl = hasAuthorFilter
+                ? `<button class="viz-reset-btn" type="button" id="vizResetAuthorBtn">Reset author</button>`
+                : '';
+
+            elements.visualizations.innerHTML = `
+                <div class="viz-card viz-card-wide">
+                    <div class="viz-head">
+                        <div>
+                            <h4>Activity timeline</h4>
+                            <p>${timelineTitle}</p>
+                            <p class="viz-activity-note">${timelineScopeNote}</p>
+                            ${analyticsOnlyNote}
+                            ${timelineNote}
+                            <div class="viz-range-controls" role="group" aria-label="Timeline range">
+                                ${rangeControls}
+                            </div>
+                            ${likesSeriesToggle}
+                        </div>
+                        <div class="viz-kpis">
+                            <div class="viz-kpi"><span class="viz-kpi-value">${formatNumber(snapshot.total)}</span><span class="viz-kpi-label">${activityLabel}</span></div>
+                            <div class="viz-kpi"><span class="viz-kpi-value">${formatNumber(snapshot.activeDays)}</span><span class="viz-kpi-label">${activeKpiLabel}</span></div>
+                            <div class="viz-kpi"><span class="viz-kpi-value">${formatNumber(snapshot.peak.count)}</span><span class="viz-kpi-label">${peakKpiLabel}</span></div>
+                        </div>
+                    </div>
+                    <div class="viz-chart-shell">
+                        ${timelineSvg}
+                        <div class="viz-tooltip" aria-hidden="true"></div>
+                    </div>
+                    <div class="viz-axis-labels">
+                        <span>${startLabel}</span>
+                        <span>${midLabel}</span>
+                        <span>${endLabel}</span>
+                    </div>
+                    <div class="viz-legend">${timelineLegend}</div>
+                </div>
+                <div class="viz-card">
+                    <div class="viz-head viz-head-tight">
+                        <div>
+                            <h4>Content mix</h4>
+                            <p>Current analytics range</p>
+                        </div>
+                    </div>
+                    <div class="viz-mix">${mixRows}</div>
+                </div>
+                <div class="viz-card">
+                    <div class="viz-head viz-head-tight">
+                        <div>
+                            <h4>${mode === 'likes' ? 'Top liked authors' : 'Top interaction targets'}</h4>
+                            <p>Click to filter by author</p>
+                        </div>
+                        ${resetAuthorControl}
+                    </div>
+                    <ul class="viz-top-list">${topRows}</ul>
+                </div>
+            `;
+            setAnalyticsToggleVisible(true);
+            setAnalyticsExpanded(analyticsExpanded);
+            attachTimelineInteractions(mode, activeTimelineSeriesDefs);
+
+            const likesMainOnlyInput = document.getElementById('vizLikesMainOnlyInput');
+            if (likesMainOnlyInput) {
+                likesMainOnlyInput.addEventListener('change', () => {
+                    likesTimelineMainOnly = likesMainOnlyInput.checked;
+                    rerenderCurrentView();
+                });
+            }
+
+            const resetAuthorBtn = document.getElementById('vizResetAuthorBtn');
+            if (resetAuthorBtn) {
+                resetAuthorBtn.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    elements.searchAuthor.value = '';
+                    toggleClearButton(elements.searchAuthor);
+                    elements.filterBanner.classList.remove('show');
+                    if (hasExpensiveFilters()) {
+                        applyFiltersImmediate();
+                    } else {
+                        rerenderCurrentView();
+                    }
+                    updateCoverageHint();
+                });
+            }
+
+            elements.visualizations.querySelectorAll('.viz-top-btn').forEach((btn) => {
+                btn.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const query = btn.getAttribute('data-author-query');
+                    if (!query) return;
+                    elements.searchAuthor.value = query;
+                    toggleClearButton(elements.searchAuthor);
+                    setAdvancedFiltersExpanded(true);
+                    await handleFilterChange();
+                });
+            });
+
+            elements.visualizations.querySelectorAll('.viz-range-btn').forEach((btn) => {
+                btn.addEventListener('click', async () => {
+                    if (isLoading) return;
+                    const nextRange = btn.getAttribute('data-viz-range');
+                    if (!nextRange) return;
+
+                    if (nextRange === 'custom') {
+                        setAdvancedFiltersExpanded(true);
+                        if (!elements.dateFrom.value && !elements.dateTo.value) {
+                            elements.dateFrom.focus();
+                        } else {
+                            await handleFilterChange();
+                        }
+                        return;
+                    }
+
+                    if (analyticsRangePreset === nextRange && !elements.dateFrom.value && !elements.dateTo.value) return;
+                    analyticsRangePreset = nextRange;
+                    if (elements.dateFrom.value || elements.dateTo.value) {
+                        elements.dateFrom.value = '';
+                        elements.dateTo.value = '';
+                    }
+                    const targetDate = getAnalyticsTargetStartDate(nextRange);
+                    await ensureLoadedThroughDate(targetDate);
+                    rerenderCurrentView();
+                });
+            });
+        }
+
+        function buildVisualizationSnapshot(rows, mode, rangeKey = ANALYTICS_RANGE_DEFAULT) {
+            const normalized = rows.map((row) => {
+                const post = row && row.post ? row.post : null;
+                if (!post || !post.record) return null;
+                const baseDate = mode === 'likes'
+                    ? parseDateValue(row.likeTimestamp || post.record.createdAt)
+                    : parseDateValue(post.record.createdAt);
+                if (!baseDate) return null;
+                return { ...row, post, _vizDate: baseDate };
+            }).filter(Boolean);
+
+            if (normalized.length === 0) return null;
+
+            const timeline = buildTimelineBuckets(normalized, mode, rangeKey);
+            const scopedRows = normalized.filter((row) => {
+                const day = row && row._vizDate instanceof Date ? startOfDay(row._vizDate) : null;
+                if (!day || Number.isNaN(day.getTime())) return false;
+                if (timeline.start && day < timeline.start) return false;
+                if (timeline.end && day > timeline.end) return false;
+                return true;
+            });
+            const mix = buildMixBuckets(scopedRows, mode);
+            const topAuthors = buildTopAuthors(scopedRows, mode, 6);
+            const peak = timeline.points.reduce((max, point) => point.count > max.count ? point : max, { count: 0, day: timeline.points[0].day });
+            const activeDays = timeline.points.filter((point) => point.count > 0).length;
+
+            return {
+                total: scopedRows.length,
+                activeDays,
+                peak,
+                timeline,
+                mix,
+                topAuthors
+            };
+        }
+
+        function buildTimelineBuckets(rows, mode, rangeKey = ANALYTICS_RANGE_DEFAULT, windowDays = 42) {
+            const defs = getTimelineSeriesDefs(mode);
+            const hasDateFrom = Boolean(elements.dateFrom.value);
+            const hasDateTo = Boolean(elements.dateTo.value);
+            let end = hasDateTo ? parseDateValue(`${elements.dateTo.value}T00:00:00`) : null;
+            let start = hasDateFrom ? parseDateValue(`${elements.dateFrom.value}T00:00:00`) : null;
+
+            let loadedMin = null;
+            let loadedMax = null;
+            rows.forEach((row) => {
+                const date = row && row._vizDate instanceof Date ? startOfDay(row._vizDate) : null;
+                if (!date || Number.isNaN(date.getTime())) return;
+                if (!loadedMin || date < loadedMin) loadedMin = date;
+                if (!loadedMax || date > loadedMax) loadedMax = date;
+            });
+
+            if (!hasDateFrom && !hasDateTo) {
+                const range = getAnalyticsRangeDefinition(rangeKey);
+                if (range.days) {
+                    end = startOfDay(new Date());
+                    start = addDays(end, -(range.days - 1));
+                } else {
+                    end = loadedMax || startOfDay(new Date());
+                    start = loadedMin || addDays(end, -(windowDays - 1));
+                }
+            } else {
+                if (!end) {
+                    end = loadedMax || startOfDay(new Date());
+                }
+                if (!start) {
+                    start = loadedMin || addDays(end, -(windowDays - 1));
+                }
+            }
+
+            end = startOfDay(end || new Date());
+            start = startOfDay(start || addDays(end, -(windowDays - 1)));
+
+            if (start > end) {
+                const tmp = start;
+                start = end;
+                end = tmp;
+            }
+
+            const dayCount = diffDaysInclusive(start, end);
+            const bucketMode = chooseTimelineBucketMode(dayCount);
+            const countsByDay = new Map();
+            const seriesCountsByDay = new Map(defs.map((def) => [def.key, new Map()]));
+
+            rows.forEach((row) => {
+                const date = row._vizDate;
+                if (!(date instanceof Date) || Number.isNaN(date.getTime())) return;
+                const day = startOfDay(date);
+                if (day < start || day > end) return;
+                const dayKey = toDayKey(day);
+                countsByDay.set(dayKey, (countsByDay.get(dayKey) || 0) + 1);
+
+                const category = classifyVisualizationRow(row, mode);
+                if (!seriesCountsByDay.has(category)) return;
+                const bucket = seriesCountsByDay.get(category);
+                bucket.set(dayKey, (bucket.get(dayKey) || 0) + 1);
+            });
+
+            const aggregateKeyForDay = (day) => {
+                if (bucketMode === 'month') return toDayKey(startOfMonth(day));
+                if (bucketMode === 'week') return toDayKey(startOfWeek(day));
+                return toDayKey(day);
+            };
+
+            const pointsMap = new Map();
+            for (let i = 0; i < dayCount; i += 1) {
+                const day = addDays(start, i);
+                const dayKey = toDayKey(day);
+                const aggregateKey = aggregateKeyForDay(day);
+                if (!pointsMap.has(aggregateKey)) {
+                    const series = {};
+                    defs.forEach((def) => {
+                        series[def.key] = 0;
+                    });
+                    pointsMap.set(aggregateKey, {
+                        key: aggregateKey,
+                        day,
+                        from: day,
+                        to: day,
+                        fromKey: dayKey,
+                        toKey: dayKey,
+                        count: 0,
+                        series
+                    });
+                }
+
+                const point = pointsMap.get(aggregateKey);
+                point.to = day;
+                point.toKey = dayKey;
+                point.count += countsByDay.get(dayKey) || 0;
+                defs.forEach((def) => {
+                    if (def.key === 'allLikes') {
+                        point.series[def.key] += countsByDay.get(dayKey) || 0;
+                        return;
+                    }
+                    const bucket = seriesCountsByDay.get(def.key);
+                    point.series[def.key] += bucket ? (bucket.get(dayKey) || 0) : 0;
+                });
+            }
+
+            const points = [...pointsMap.values()].map((point) => ({
+                ...point,
+                label: formatTimelineRangeLabel(point.from, point.to, bucketMode)
+            }));
+
+            const activeSeriesDefs = defs.filter((def) =>
+                points.some((point) => Number((point.series && point.series[def.key]) || 0) > 0)
+            );
+            const seriesDefs = activeSeriesDefs.length > 0 ? activeSeriesDefs : defs;
+
+            const isComplete = allPostsLoaded || !currentCursor;
+            const firstActivePoint = points.find((point) => point.count > 0) || null;
+            let activityNote = '';
+            if (!firstActivePoint) {
+                activityNote = isComplete
+                    ? 'No matching activity in this date range.'
+                    : 'No matching activity in currently loaded results for this date range.';
+            }
+
+            return {
+                points,
+                windowDays: dayCount,
+                start,
+                end,
+                isComplete,
+                activityNote,
+                seriesDefs,
+                bucketMode
+            };
+        }
+
+        function buildTimelineSvg(points, seriesDefs) {
+            if (!Array.isArray(points) || points.length === 0) {
+                return '';
+            }
+
+            const defs = Array.isArray(seriesDefs) && seriesDefs.length > 0
+                ? seriesDefs
+                : [{ key: 'total', label: 'Total', lineColor: '#3b82f6' }];
+            const width = 640;
+            const height = 208;
+            const topPad = 12;
+            const sidePad = 12;
+            const bottomPad = 24;
+            const innerWidth = width - (sidePad * 2);
+            const innerHeight = height - topPad - bottomPad;
+            const baseline = topPad + innerHeight;
+            const getValue = (point, key) => {
+                if (key === 'total') return Number(point.count || 0);
+                return Number((point.series && point.series[key]) || 0);
+            };
+            const maxCount = Math.max(
+                1,
+                ...defs.map((def) =>
+                    Math.max(...points.map((point) => getValue(point, def.key)), 0)
+                )
+            );
+            const divisor = Math.max(points.length - 1, 1);
+
+            const xPositions = points.map((_, idx) => sidePad + ((innerWidth * idx) / divisor));
+            const seriesHtml = defs.map((def) => {
+                const coords = points.map((point, idx) => {
+                    const x = xPositions[idx];
+                    const value = getValue(point, def.key);
+                    const ratio = value / maxCount;
+                    const y = baseline - (ratio * innerHeight);
+                    return { x, y, value, key: point.key };
+                });
+                const linePath = coords
+                    .map((coord, idx) => `${idx === 0 ? 'M' : 'L'} ${coord.x.toFixed(2)} ${coord.y.toFixed(2)}`)
+                    .join(' ');
+                const pointsHtml = coords.map((coord) => `
+                    <circle
+                        class="viz-point${coord.value > 0 ? ' is-active' : ''}"
+                        data-day="${coord.key}"
+                        cx="${coord.x.toFixed(2)}"
+                        cy="${coord.y.toFixed(2)}"
+                        r="${coord.value > 0 ? 2.2 : 1.8}"
+                        style="--viz-point-color:${def.lineColor};"
+                    ></circle>
+                `).join('');
+                return `
+                    <path class="viz-series-line" style="--viz-line-color:${def.lineColor};--viz-line-width:${def.lineWidth || 1.35};" d="${linePath}"></path>
+                    ${pointsHtml}
+                `;
+            }).join('');
+
+            const grid = [0.25, 0.5, 0.75, 1].map((step) => {
+                const y = (topPad + (innerHeight * (1 - step))).toFixed(2);
+                return `<line class="viz-grid-line" x1="${sidePad}" y1="${y}" x2="${width - sidePad}" y2="${y}"></line>`;
+            }).join('');
+
+            const hitsHtml = points.map((point, idx) => {
+                const currentX = xPositions[idx];
+                const left = idx === 0 ? sidePad : (xPositions[idx - 1] + currentX) / 2;
+                const right = idx === xPositions.length - 1 ? width - sidePad : (currentX + xPositions[idx + 1]) / 2;
+                const hitWidth = Math.max(right - left, 1);
+                const seriesData = defs.map((def) => `${def.key}:${getValue(point, def.key)}`).join(',');
+                const label = point.label || formatEuDate(point.day);
+                const fromKey = point.fromKey || point.key;
+                const toKey = point.toKey || point.key;
+                return `
+                    <rect
+                        class="viz-hit"
+                        data-day="${point.key}"
+                        data-label="${escapeHtml(label)}"
+                        data-from="${fromKey}"
+                        data-to="${toKey}"
+                        data-count="${point.count}"
+                        data-series="${seriesData}"
+                        x="${left.toFixed(2)}"
+                        y="${topPad}"
+                        width="${hitWidth.toFixed(2)}"
+                        height="${innerHeight.toFixed(2)}"
+                        tabindex="0"
+                        role="button"
+                        aria-label="${escapeHtml(label)}: ${point.count}"
+                    ></rect>
+                `;
+            }).join('');
+
+            return `
+                <svg class="viz-chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Activity timeline">
+                    ${grid}
+                    ${seriesHtml}
+                    ${hitsHtml}
+                </svg>
+            `;
+        }
+
+        function attachTimelineInteractions(mode, seriesDefs = []) {
+            if (!elements.visualizations) return;
+            const shell = elements.visualizations.querySelector('.viz-chart-shell');
+            if (!shell) return;
+
+            const tooltip = shell.querySelector('.viz-tooltip');
+            const hits = [...shell.querySelectorAll('.viz-hit')];
+            if (!tooltip || hits.length === 0) return;
+
+            const unitLabel = mode === 'likes' ? 'likes' : 'posts';
+            const labelsByKey = new Map(
+                (Array.isArray(seriesDefs) ? seriesDefs : []).map((def) => [def.key, def.label])
+            );
+
+            const show = (hit, event) => {
+                const dayKey = hit.getAttribute('data-day') || '';
+                const rangeLabel = hit.getAttribute('data-label') || '';
+                const count = Number(hit.getAttribute('data-count') || 0);
+                const rawSeries = hit.getAttribute('data-series') || '';
+                const dayDate = parseDateValue(`${dayKey}T00:00:00`) || new Date();
+                const dateText = rangeLabel || formatEuDate(dayDate);
+                const seriesRows = rawSeries
+                    .split(',')
+                    .map((chunk) => chunk.trim())
+                    .filter(Boolean)
+                    .map((chunk) => {
+                        const [rawKey, rawCount] = chunk.split(':');
+                        const parsedCount = Number(rawCount || 0);
+                        return {
+                            key: rawKey,
+                            label: labelsByKey.get(rawKey) || rawKey,
+                            count: Number.isFinite(parsedCount) ? parsedCount : 0
+                        };
+                    })
+                    .filter((entry) => entry.key !== 'allLikes')
+                    .filter((entry) => entry.count > 0)
+                    .sort((a, b) => b.count - a.count);
+                const seriesHtml = seriesRows.map((entry) => `
+                    <div class="viz-tooltip-row">
+                        <span>${escapeHtml(entry.label)}</span>
+                        <strong>${formatNumber(entry.count)}</strong>
+                    </div>
+                `).join('');
+                tooltip.innerHTML = `
+                    <div class="viz-tooltip-date">${escapeHtml(dateText)}</div>
+                    <div class="viz-tooltip-total">${formatNumber(count)} ${unitLabel}</div>
+                    ${seriesHtml}
+                `;
+                tooltip.classList.add('show');
+                tooltip.setAttribute('aria-hidden', 'false');
+                setTimelineActiveState(shell, dayKey);
+
+                const shellRect = shell.getBoundingClientRect();
+                const fallbackRect = hit.getBoundingClientRect();
+                const anchorX = event && typeof event.clientX === 'number'
+                    ? event.clientX
+                    : (fallbackRect.left + fallbackRect.width / 2);
+                const anchorY = event && typeof event.clientY === 'number'
+                    ? event.clientY
+                    : fallbackRect.top;
+
+                const tooltipRect = tooltip.getBoundingClientRect();
+                let left = anchorX - shellRect.left + 12;
+                let top = anchorY - shellRect.top - tooltipRect.height - 10;
+
+                if (left + tooltipRect.width > shellRect.width - 6) {
+                    left = shellRect.width - tooltipRect.width - 6;
+                }
+                if (left < 6) left = 6;
+                if (top < 6) top = 6;
+
+                tooltip.style.left = `${left}px`;
+                tooltip.style.top = `${top}px`;
+            };
+
+            const hide = () => {
+                tooltip.classList.remove('show');
+                tooltip.setAttribute('aria-hidden', 'true');
+                setTimelineActiveState(shell, '');
+            };
+
+            hits.forEach((hit) => {
+                hit.addEventListener('mouseenter', (event) => show(hit, event));
+                hit.addEventListener('mousemove', (event) => show(hit, event));
+                hit.addEventListener('focus', () => show(hit, null));
+                hit.addEventListener('blur', hide);
+                hit.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const fromKey = hit.getAttribute('data-from') || hit.getAttribute('data-day') || '';
+                    const toKey = hit.getAttribute('data-to') || fromKey;
+                    await applyTimelineDayFilter(fromKey, toKey);
+                });
+                hit.addEventListener('keydown', async (event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    const fromKey = hit.getAttribute('data-from') || hit.getAttribute('data-day') || '';
+                    const toKey = hit.getAttribute('data-to') || fromKey;
+                    await applyTimelineDayFilter(fromKey, toKey);
+                });
+            });
+
+            shell.addEventListener('mouseleave', hide);
+        }
+
+        function setTimelineActiveState(shell, dayKey) {
+            const hits = shell.querySelectorAll('.viz-hit');
+            const points = shell.querySelectorAll('.viz-point');
+            hits.forEach((hit) => {
+                hit.classList.toggle('is-active', Boolean(dayKey) && hit.getAttribute('data-day') === dayKey);
+            });
+            points.forEach((point) => {
+                point.classList.toggle('is-selected', Boolean(dayKey) && point.getAttribute('data-day') === dayKey);
+            });
+        }
+
+        async function applyTimelineDayFilter(dayKey, endDayKey = dayKey) {
+            if (!dayKey) return;
+            const rangeStart = dayKey <= endDayKey ? dayKey : endDayKey;
+            const rangeEnd = dayKey <= endDayKey ? endDayKey : dayKey;
+            elements.dateFrom.value = rangeStart;
+            elements.dateTo.value = rangeEnd;
+            setAdvancedFiltersExpanded(true);
+            await handleFilterChange();
+        }
+
+        function getAnalyticsRangeDefinitions() {
+            return [
+                { key: '7d', label: 'Week', scopeLabel: 'last week', ariaLabel: 'Show last week', days: 7 },
+                { key: '30d', label: 'Month', scopeLabel: 'last month', ariaLabel: 'Show last month', days: 30 },
+                { key: '365d', label: 'Year', scopeLabel: 'last year', ariaLabel: 'Show last year', days: 365 },
+                { key: 'custom', label: 'Custom', scopeLabel: 'custom range', ariaLabel: 'Use custom date range', days: null }
+            ];
+        }
+
+        function getAnalyticsRangeDefinition(key) {
+            const ranges = getAnalyticsRangeDefinitions();
+            const match = ranges.find((range) => range.key === key);
+            return match || ranges.find((range) => range.key === ANALYTICS_RANGE_DEFAULT) || ranges[1];
+        }
+
+        function getAnalyticsTargetStartDate(rangeKey) {
+            if (rangeKey === 'custom') {
+                const fromDate = elements.dateFrom.value ? parseDateValue(`${elements.dateFrom.value}T00:00:00`) : null;
+                const toDate = elements.dateTo.value ? parseDateValue(`${elements.dateTo.value}T00:00:00`) : null;
+                if (fromDate && toDate) {
+                    return startOfDay(fromDate <= toDate ? fromDate : toDate);
+                }
+                if (fromDate) {
+                    return startOfDay(fromDate);
+                }
+                // Date-to only has no lower bound, so full coverage requires full history.
+                return null;
+            }
+
+            const range = getAnalyticsRangeDefinition(rangeKey);
+            if (!range || !range.days) return null;
+            return addDays(startOfDay(new Date()), -(range.days - 1));
+        }
+
+        function getOldestLoadedActivityDate() {
+            if (!Array.isArray(allPosts) || allPosts.length === 0) return null;
+            let oldest = null;
+            allPosts.forEach((item) => {
+                const fallbackDate = item && item.post && item.post.record ? item.post.record.createdAt : null;
+                const rawValue = currentMode === 'likes'
+                    ? (item && item.likeTimestamp ? item.likeTimestamp : fallbackDate)
+                    : fallbackDate;
+                const parsed = parseDateValue(rawValue);
+                if (!parsed) return;
+                const day = startOfDay(parsed);
+                if (!oldest || day < oldest) oldest = day;
+            });
+            return oldest;
+        }
+
+        function isLoadedThroughDate(targetDate) {
+            const normalizedTarget = targetDate instanceof Date ? startOfDay(targetDate) : null;
+            if (!normalizedTarget) return allPostsLoaded || !currentCursor;
+            const oldestLoaded = getOldestLoadedActivityDate();
+            if (!oldestLoaded) return false;
+            return oldestLoaded <= normalizedTarget || allPostsLoaded || !currentCursor;
+        }
+
+        async function ensureLoadedThroughDate(targetDate) {
+            const normalizedTarget = targetDate instanceof Date ? startOfDay(targetDate) : null;
+            if (!normalizedTarget || !currentDid) return;
+            if (isLoadedThroughDate(normalizedTarget)) return;
+            if (!currentCursor) return;
+
+            let batchGuard = 0;
+            setLoading(true);
+            try {
+                while (currentCursor && batchGuard < 250) {
+                    if (isLoadedThroughDate(normalizedTarget)) break;
+                    const beforeCount = allPosts.length;
+                    const beforeCursor = currentCursor;
+
+                    if (currentMode === 'posts') {
+                        await loadPosts(true);
+                    } else {
+                        await loadLikes(true);
+                    }
+
+                    batchGuard += 1;
+                    if (allPosts.length === beforeCount && currentCursor === beforeCursor) {
+                        break;
+                    }
+                }
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function chooseTimelineBucketMode(dayCount) {
+            if (dayCount > 540) return 'month';
+            if (dayCount > 120) return 'week';
+            return 'day';
+        }
+
+        function formatTimelineRangeLabel(fromDate, toDate, bucketMode) {
+            if (!(fromDate instanceof Date) || Number.isNaN(fromDate.getTime())) return '';
+            if (!(toDate instanceof Date) || Number.isNaN(toDate.getTime())) return formatEuDate(fromDate);
+            if (bucketMode === 'day' || toDayKey(fromDate) === toDayKey(toDate)) {
+                return formatEuDate(fromDate);
+            }
+            return `${formatEuDate(fromDate)} - ${formatEuDate(toDate)}`;
+        }
+
+        function getVisualizationTypeDefs(mode) {
+            if (mode === 'likes') {
+                return [
+                    { key: 'text', label: 'Text only', colorClass: 'viz-fill-text', lineColor: '#3b82f6' },
+                    { key: 'links', label: 'Links', colorClass: 'viz-fill-links', lineColor: '#6366f1' },
+                    { key: 'media', label: 'Media', colorClass: 'viz-fill-media', lineColor: '#ef4444' },
+                    { key: 'replies', label: 'Replies', colorClass: 'viz-fill-replies', lineColor: '#0ea5e9' },
+                    { key: 'quotes', label: 'Quotes', colorClass: 'viz-fill-quotes', lineColor: '#f59e0b' }
+                ];
+            }
+            return [
+                { key: 'originals', label: 'Originals', colorClass: 'viz-fill-originals', lineColor: '#3b82f6' },
+                { key: 'replies', label: 'Replies', colorClass: 'viz-fill-replies', lineColor: '#0ea5e9' },
+                { key: 'reposts', label: 'Reposts', colorClass: 'viz-fill-reposts', lineColor: '#14b8a6' },
+                { key: 'quotes', label: 'Quotes', colorClass: 'viz-fill-quotes', lineColor: '#f59e0b' },
+                { key: 'links', label: 'Links', colorClass: 'viz-fill-links', lineColor: '#6366f1' }
+            ];
+        }
+
+        function getTimelineSeriesDefs(mode) {
+            const defs = getVisualizationTypeDefs(mode);
+            if (mode !== 'likes') return defs;
+            return [
+                { key: 'allLikes', label: 'All likes', lineColor: '#14b8a6', lineWidth: 1.8 },
+                ...defs
+            ];
+        }
+
+        function buildMixBuckets(rows, mode) {
+            const defs = getVisualizationTypeDefs(mode);
+
+            const counts = new Map(defs.map((def) => [def.key, 0]));
+            rows.forEach((row) => {
+                const category = classifyVisualizationRow(row, mode);
+                if (!counts.has(category)) return;
+                counts.set(category, counts.get(category) + 1);
+            });
+
+            const total = rows.length || 1;
+            return defs
+                .map((def) => {
+                    const count = counts.get(def.key) || 0;
+                    return {
+                        ...def,
+                        count,
+                        percent: Math.round((count / total) * 100)
+                    };
+                })
+                .filter((entry) => entry.count > 0);
+        }
+
+        function buildTopAuthors(rows, mode, limit = 6) {
+            const counts = new Map();
+
+            rows.forEach((row) => {
+                if (mode === 'likes') {
+                    addAuthorCount(counts, row.post && row.post.author ? row.post.author : null);
+                    return;
+                }
+
+                const targets = collectInteractionTargets(row);
+                targets.forEach((author) => {
+                    if (!isSelfAuthor(author)) addAuthorCount(counts, author);
+                });
+            });
+
+            if (mode !== 'likes' && counts.size === 0) {
+                rows.forEach((row) => {
+                    const author = row.post && row.post.author ? row.post.author : null;
+                    if (!isSelfAuthor(author)) addAuthorCount(counts, author);
+                });
+            }
+
+            return [...counts.values()]
+                .sort((a, b) => b.count - a.count)
+                .slice(0, limit);
+        }
+
+        function collectInteractionTargets(row) {
+            const targets = [];
+            const seen = new Set();
+            const push = (author) => {
+                if (!author || typeof author !== 'object') return;
+                const key = author.did || author.handle;
+                if (!key || seen.has(key)) return;
+                seen.add(key);
+                targets.push(author);
+            };
+
+            const postAuthor = row.post && row.post.author ? row.post.author : null;
+            if (row.reason && row.reason.$type === 'app.bsky.feed.defs#reasonRepost') {
+                push(postAuthor);
+            }
+
+            const replyAuthor = row.reply && row.reply.parent && row.reply.parent.author ? row.reply.parent.author : null;
+            push(replyAuthor);
+            push(getQuoteAuthor(row.post));
+
+            return targets;
+        }
+
+        function addAuthorCount(map, author) {
+            if (!author || typeof author !== 'object') return;
+            const key = author.did || author.handle;
+            if (!key) return;
+            if (!map.has(key)) {
+                map.set(key, {
+                    did: author.did || '',
+                    handle: author.handle || '',
+                    displayName: author.displayName || '',
+                    avatar: author.avatar || '',
+                    count: 0
+                });
+            }
+            map.get(key).count += 1;
+        }
+
+        function isSelfAuthor(author) {
+            if (!author || typeof author !== 'object') return false;
+            const authorDid = typeof author.did === 'string' ? author.did : '';
+            if (authorDid && currentDid && authorDid === currentDid) return true;
+
+            const authorHandle = typeof author.handle === 'string' ? author.handle.toLowerCase() : '';
+            const profileHandle = currentProfile && typeof currentProfile.handle === 'string'
+                ? currentProfile.handle.toLowerCase()
+                : '';
+            return Boolean(authorHandle && profileHandle && authorHandle === profileHandle);
+        }
+
+        function classifyVisualizationRow(row, mode) {
+            const post = row && row.post ? row.post : null;
+            if (!post || !post.record) return mode === 'likes' ? 'text' : 'originals';
+
+            if (mode === 'likes') {
+                if (post.record.reply) return 'replies';
+                if (isQuotePost(post)) return 'quotes';
+                if (postHasMedia(post)) return 'media';
+                if (postHasLink(post)) return 'links';
+                return 'text';
+            }
+
+            if (row.reason && row.reason.$type === 'app.bsky.feed.defs#reasonRepost') return 'reposts';
+            if (post.record.reply) return 'replies';
+            if (isQuotePost(post)) return 'quotes';
+            if (postHasLink(post)) return 'links';
+            return 'originals';
+        }
+
+        function filterPostsForDisplay(feed) {
+            const hideReposts = elements.hideReposts.checked;
+            const hideReplies = elements.hideReplies.checked;
+            const hideQuotes = elements.hideQuotes.checked;
+            const onlyLinks = elements.onlyLinks.checked;
+
+            let filteredFeed = Array.isArray(feed) ? feed : [];
+            if (hideReposts) {
+                filteredFeed = filteredFeed.filter((item) => !item.reason || item.reason.$type !== 'app.bsky.feed.defs#reasonRepost');
+            }
+            if (hideReplies) {
+                filteredFeed = filteredFeed.filter((item) => !(item.post && item.post.record && item.post.record.reply));
+            }
+            if (hideQuotes) {
+                filteredFeed = filteredFeed.filter((item) => !isQuotePost(item.post));
+            }
+            if (onlyLinks) {
+                filteredFeed = filteredFeed.filter((item) => {
+                    const isRepost = Boolean(item.reason && item.reason.$type === 'app.bsky.feed.defs#reasonRepost');
+                    if (isRepost) return false;
+                    return postHasLink(item.post);
+                });
+            }
+            return filteredFeed;
+        }
+
+        function buildLikeRowsFromStore() {
+            return allPosts.map((item) => ({
+                post: item.post,
+                reason: null,
+                reply: item.reply || null,
+                likeTimestamp: item.likeTimestamp,
+                _highlight: item._highlight || null
+            }));
+        }
+
+        function filterLikeRowsForDisplay(rows) {
+            let filtered = Array.isArray(rows) ? rows : [];
+            if (elements.hideQuotes.checked) {
+                filtered = filtered.filter((row) => !isQuotePost(row.post));
+            }
+            if (elements.onlyLinks.checked) {
+                filtered = filtered.filter((row) => postHasLink(row.post));
+            }
+            return filtered;
+        }
+
+        function postHasMedia(post) {
+            if (!post || !post.embed) return false;
+            const type = post.embed.$type || '';
+            if (type.includes('images') || type.includes('video') || type.includes('external')) return true;
+            if (type === 'app.bsky.embed.recordWithMedia#view' && post.embed.media) {
+                const mediaType = post.embed.media.$type || '';
+                return mediaType.includes('images') || mediaType.includes('video') || mediaType.includes('external');
+            }
+            return false;
+        }
+
+        function shortDid(did) {
+            if (!did) return '';
+            if (did.length <= 24) return did;
+            return `${did.slice(0, 14)}…${did.slice(-6)}`;
+        }
+
+        function formatMiniDate(date) {
+            if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            return `${day}/${month}`;
+        }
+
+        function formatMiniDateWithYear(date) {
+            if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = String(date.getFullYear()).slice(-2);
+            return `${day}/${month}/${year}`;
+        }
+
+        function formatMonthYear(date) {
+            if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = String(date.getFullYear()).slice(-2);
+            return `${month}/${year}`;
+        }
+
+        function formatTimelineAxisLabel(point, bucketMode, pointCount = 0) {
+            if (!point || !(point.from instanceof Date)) return '';
+            if (bucketMode === 'month') return formatMonthYear(point.from);
+            if (bucketMode === 'week') return formatMiniDateWithYear(point.from);
+            if (pointCount > 180) return formatMiniDateWithYear(point.from);
+            return formatMiniDate(point.from);
+        }
+
+        function startOfDay(date) {
+            const day = new Date(date);
+            day.setHours(0, 0, 0, 0);
+            return day;
+        }
+
+        function startOfWeek(date) {
+            const day = startOfDay(date);
+            const mondayOffset = (day.getDay() + 6) % 7;
+            return addDays(day, -mondayOffset);
+        }
+
+        function startOfMonth(date) {
+            const day = startOfDay(date);
+            day.setDate(1);
+            return day;
+        }
+
+        function addDays(date, amount) {
+            const result = new Date(date);
+            result.setDate(result.getDate() + amount);
+            return result;
+        }
+
+        function diffDaysInclusive(start, end) {
+            const msPerDay = 24 * 60 * 60 * 1000;
+            const diff = Math.floor((end.getTime() - start.getTime()) / msPerDay);
+            return Math.max(1, diff + 1);
+        }
+
+        function toDayKey(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         function displayLikePosts(posts, likeRecords, append = false, highlights = null) {
             if (!append) {
                 elements.content.innerHTML = '';
@@ -2559,11 +3643,12 @@
                         <p>No likes found</p>
                     </div>
                 `;
+                clearVisualizations();
                 return;
             }
 
             const likeTimestamps = {};
-            likeRecords.forEach(record => {
+            likeRecords.forEach((record) => {
                 likeTimestamps[record.value.subject.uri] = new Date(record.value.createdAt);
             });
 
@@ -2576,51 +3661,34 @@
                 });
             }
 
-            if (elements.hideQuotes.checked) {
-                posts = posts.filter(post => !isQuotePost(post));
-            }
+            let likeRows = posts.map((post) => ({
+                post,
+                reason: null,
+                reply: post && post.reply ? post.reply : null,
+                likeTimestamp: likeTimestamps[post.uri] || null,
+                _highlight: highlightByUri.get(post.uri) || null
+            }));
 
-            posts.sort((a, b) => {
-                const timeA = likeTimestamps[a.uri] || new Date(0);
-                const timeB = likeTimestamps[b.uri] || new Date(0);
+            likeRows = filterLikeRowsForDisplay(likeRows);
+
+            likeRows.sort((a, b) => {
+                const timeA = a.likeTimestamp || new Date(0);
+                const timeB = b.likeTimestamp || new Date(0);
                 const sortOldest = elements.sortOldest.checked && allPostsLoaded;
                 return sortOldest ? (timeA - timeB) : (timeB - timeA);
             });
 
-            posts.forEach((post) => {
-                const highlight = highlightByUri.get(post.uri) || null;
-                const reply = post && post.reply ? post.reply : null;
-                const likedAt = likeTimestamps[post.uri] || null;
-                const postDiv = createPostElement(post, null, reply, highlight, likedAt);
+            likeRows.forEach((row) => {
+                const postDiv = createPostElement(row.post, null, row.reply, row._highlight, row.likeTimestamp);
                 elements.content.appendChild(postDiv);
             });
+
+            const visualRows = append ? filterLikeRowsForDisplay(buildLikeRowsFromStore()) : likeRows;
+            renderVisualizations(visualRows, 'likes');
         }
 
         function displayPosts(feed, append = false) {
-            const hideReposts = elements.hideReposts.checked;
-            const hideReplies = elements.hideReplies.checked;
-            const hideQuotes = elements.hideQuotes.checked;
-            const onlyLinks = elements.onlyLinks.checked;
-            
-            let filteredFeed = feed;
-            if (hideReposts) {
-                filteredFeed = feed.filter(item => {
-                    return !item.reason || item.reason.$type !== 'app.bsky.feed.defs#reasonRepost';
-                });
-            }
-            if (hideReplies) {
-                filteredFeed = filteredFeed.filter(item => !(item.post && item.post.record && item.post.record.reply));
-            }
-            if (hideQuotes) {
-                filteredFeed = filteredFeed.filter(item => !isQuotePost(item.post));
-            }
-            if (onlyLinks) {
-                filteredFeed = filteredFeed.filter(item => {
-                    const isRepost = Boolean(item.reason && item.reason.$type === 'app.bsky.feed.defs#reasonRepost');
-                    if (isRepost) return false;
-                    return postHasLink(item.post);
-                });
-            }
+            let filteredFeed = filterPostsForDisplay(feed);
 
             if (!append) {
                 elements.content.innerHTML = '';
@@ -2632,6 +3700,7 @@
                         <p>No ${currentMode} found</p>
                     </div>
                 `;
+                clearVisualizations();
                 return;
             }
 
@@ -2648,6 +3717,9 @@
                 const postDiv = createPostElement(post, item.reason, item.reply, item._highlight || null, null);
                 elements.content.appendChild(postDiv);
             });
+
+            const visualFeed = append ? filterPostsForDisplay(allPosts) : filteredFeed;
+            renderVisualizations(visualFeed, 'posts');
         }
 
         function createPostElement(post, reason, reply, highlight, timestampOverride) {
@@ -3040,18 +4112,21 @@
             const values = [];
             const postAuthor = item.post && item.post.author ? item.post.author : null;
             if (postAuthor) {
+                if (postAuthor.did) values.push(postAuthor.did.toLowerCase());
                 if (postAuthor.handle) values.push(postAuthor.handle.toLowerCase());
                 if (postAuthor.displayName) values.push(postAuthor.displayName.toLowerCase());
             }
 
             const replyAuthor = item.reply && item.reply.parent && item.reply.parent.author ? item.reply.parent.author : null;
             if (replyAuthor) {
+                if (replyAuthor.did) values.push(replyAuthor.did.toLowerCase());
                 if (replyAuthor.handle) values.push(replyAuthor.handle.toLowerCase());
                 if (replyAuthor.displayName) values.push(replyAuthor.displayName.toLowerCase());
             }
 
             const quoteAuthor = getQuoteAuthor(item.post);
             if (quoteAuthor) {
+                if (quoteAuthor.did) values.push(quoteAuthor.did.toLowerCase());
                 if (quoteAuthor.handle) values.push(quoteAuthor.handle.toLowerCase());
                 if (quoteAuthor.displayName) values.push(quoteAuthor.displayName.toLowerCase());
             }
@@ -3202,8 +4277,74 @@
                 } else {
                     await loadLikes(true);
                 }
+                if (hasExpensiveFilters()) {
+                    const dateRangeTarget = getAnalyticsTargetStartDate('custom');
+                    const needsMoreForFilters = dateRangeTarget
+                        ? !isLoadedThroughDate(dateRangeTarget)
+                        : !allPostsLoaded;
+                    if (needsMoreForFilters && currentCursor) {
+                        elements.filterBanner.classList.add('show');
+                    } else {
+                        elements.filterBanner.classList.remove('show');
+                    }
+                    applyFiltersImmediate();
+                }
             } finally {
                 setLoading(false);
+            }
+        }
+
+        function updateCoverageHint() {
+            if (!elements.coverageHint) return;
+
+            const shouldShow = Boolean(
+                currentDid &&
+                elements.contentSection.style.display !== 'none' &&
+                (analyticsExpanded || hasExpensiveFilters())
+            );
+            if (!shouldShow) {
+                elements.coverageHint.classList.remove('show');
+                elements.coverageHint.innerHTML = '';
+                return;
+            }
+
+            const isComplete = allPostsLoaded || !currentCursor;
+            const unitLabel = currentMode === 'likes' ? 'likes' : 'items';
+            const loadedCount = formatNumber(allPosts.length || 0);
+            const coverageTarget = (elements.dateFrom.value || elements.dateTo.value)
+                ? getAnalyticsTargetStartDate('custom')
+                : (analyticsExpanded ? getAnalyticsTargetStartDate(analyticsRangePreset) : null);
+            const rangeCovered = Boolean(coverageTarget && isLoadedThroughDate(coverageTarget));
+
+            if (isComplete || rangeCovered) {
+                elements.coverageHint.innerHTML = `
+                    <span class="coverage-text is-complete">${isComplete
+                        ? 'Complete loaded set for current analytics and filters.'
+                        : 'Loaded set fully covers the selected time range.'}</span>
+                `;
+                elements.coverageHint.classList.add('show');
+                setAnalyticsExpanded(analyticsExpanded);
+                return;
+            }
+
+            elements.coverageHint.innerHTML = `
+                <span class="coverage-text is-partial">Loaded ${loadedCount} ${unitLabel} so far. Older results may still be missing for analytics and filters. Use a shorter range, Load more, or Load all data.</span>
+                <button class="coverage-load-btn" type="button" id="coverageLoadAllBtn">Load all data</button>
+            `;
+            elements.coverageHint.classList.add('show');
+            setAnalyticsExpanded(analyticsExpanded);
+
+            const loadBtn = document.getElementById('coverageLoadAllBtn');
+            if (loadBtn) {
+                loadBtn.addEventListener('click', async () => {
+                    await loadAllPosts();
+                    if (hasExpensiveFilters()) {
+                        applyFiltersImmediate();
+                    } else {
+                        rerenderCurrentView();
+                    }
+                    updateCoverageHint();
+                });
             }
         }
 
