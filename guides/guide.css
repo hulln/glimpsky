@@ -3,6 +3,8 @@
 :root {
   color-scheme: light;
   --bg: #f1f5f9;
+  --bg-dot: rgba(148, 163, 184, 0.24);
+  --font-title: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   --card: #ffffff;
   --text: #0f172a;
   --muted: #475569;
@@ -19,7 +21,9 @@
 body {
   margin: 0;
   font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle at 1px 1px, var(--bg-dot) 1px, transparent 1.1px);
+  background-size: 10px 10px;
   color: var(--text);
   line-height: 1.6;
   padding: 32px 16px 56px;
@@ -59,7 +63,7 @@ a:hover {
 .card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 6px;
   padding: 24px;
 }
 
@@ -67,6 +71,8 @@ h1 {
   margin: 0 0 10px;
   font-size: 34px;
   line-height: 1.15;
+  font-family: var(--font-title);
+  letter-spacing: -0.01em;
 }
 
 .lead {
@@ -86,7 +92,7 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 6px;
   padding: 9px 13px;
   font-size: 14px;
   border: 1px solid var(--border);
@@ -117,6 +123,11 @@ h1 {
 h2 {
   margin: 24px 0 8px;
   font-size: 24px;
+  font-weight: 600;
+}
+
+h3 {
+  font-weight: 600;
 }
 
 p,
@@ -139,7 +150,7 @@ ol {
 .tile {
   border: 1px solid var(--border);
   background: #fff;
-  border-radius: 10px;
+  border-radius: 6px;
   padding: 12px;
 }
 
@@ -152,7 +163,7 @@ ol {
   margin-top: 16px;
   background: var(--accent-soft);
   border: 1px solid #c9dcff;
-  border-radius: 10px;
+  border-radius: 6px;
   padding: 12px;
   color: #153067;
 }
