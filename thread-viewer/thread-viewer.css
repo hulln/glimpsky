@@ -178,6 +178,11 @@
     padding: 9px 10px;
 }
 
+.thread-embed-card.is-problem {
+    border-color: rgba(220, 38, 38, 0.24);
+    background: rgba(220, 38, 38, 0.06);
+}
+
 .thread-embed-card.is-compact {
     padding: 9px 10px;
 }
@@ -208,6 +213,11 @@
     margin-bottom: 6px;
     color: var(--text-muted);
     font-size: 11px;
+}
+
+.thread-embed-card.is-problem .thread-embed-label,
+.thread-embed-card.is-problem .thread-embed-meta {
+    color: #b91c1c;
 }
 
 .thread-embed-uri {
@@ -243,6 +253,16 @@
     border-color: var(--border-strong);
     color: var(--text-strong);
     background: var(--surface-2);
+}
+
+.thread-embed-card .copy-link-btn.is-problem-action {
+    border-color: rgba(220, 38, 38, 0.26);
+    background: rgba(220, 38, 38, 0.08);
+    color: #b91c1c;
+}
+
+.thread-embed-card .copy-link-btn.is-problem-action:hover {
+    background: rgba(220, 38, 38, 0.12);
 }
 
 .thread-image-grid {
@@ -582,6 +602,16 @@
     background: rgba(15, 23, 42, 0.4);
 }
 
+[data-theme="dark"] .thread-embed-card.is-problem {
+    border-color: rgba(248, 113, 113, 0.32);
+    background: rgba(220, 38, 38, 0.12);
+}
+
+[data-theme="dark"] .thread-embed-card.is-problem .thread-embed-label,
+[data-theme="dark"] .thread-embed-card.is-problem .thread-embed-meta {
+    color: #fca5a5;
+}
+
 [data-theme="dark"] .thread-embed-card .copy-link-btn {
     background: var(--surface-1);
     color: var(--text-main);
@@ -592,6 +622,12 @@
     background: var(--surface-2);
     color: var(--text-strong);
     border-color: var(--border-strong);
+}
+
+[data-theme="dark"] .thread-embed-card .copy-link-btn.is-problem-action {
+    color: #fca5a5;
+    border-color: rgba(248, 113, 113, 0.32);
+    background: rgba(220, 38, 38, 0.18);
 }
 
 [data-theme="dark"] .thread-problem-note {

@@ -1836,6 +1836,10 @@ function renderProblemNote(problemInfo, node) {
 
 function getBlockingListUrlForNode(node) {
     const actor = getNodeActor(node);
+    return getBlockingListUrlForActor(actor);
+}
+
+function getBlockingListUrlForActor(actor) {
     if (!actor) return '';
     const actorId = actor.handle || actor.did || '';
     if (!actorId) return '';
@@ -1953,18 +1957,21 @@ function renderRecordEmbed(recordView) {
             author
         });
         const quoteRecovery = getQuoteRecoveryInfo(recordView);
+        const quoteProblem = getQuoteProblemInfo(recordView);
+        const blockingListUrl = quoteProblem ? getBlockingListUrlForActor(author) : '';
         const textHtml = text
             ? formatPostText(value)
             : '<div class="thread-embed-desc">No text preview.</div>';
 
         return `
-            <div class="thread-embed-card is-compact">
+            <div class="thread-embed-card is-compact${quoteProblem ? ' is-problem' : ''}">
                 <div class="thread-embed-label">Quote</div>
                 <div class="thread-embed-title">${escapeHtml(title)}${handle ? ` <span class="post-handle">${escapeHtml(handle)}</span>` : ''}</div>
-                ${quoteRecovery ? '<div class="thread-embed-meta">Recovered from public data</div>' : ''}
+                ${quoteRecovery ? `<div class="thread-embed-meta">${escapeHtml(quoteProblem ? 'Blocked in context, recovered from public data' : 'Recovered from public data')}</div>` : ''}
                 <div class="thread-embed-desc">${textHtml}</div>
-                ${postUrl ? `
+                ${(blockingListUrl || postUrl) ? `
                     <div class="thread-embed-actions">
+                        ${blockingListUrl ? `<a class="copy-link-btn is-problem-action" href="${escapeHtml(blockingListUrl)}" target="_blank" rel="noopener noreferrer">Blocking list</a>` : ''}
                         <a class="copy-link-btn" href="${escapeHtml(postUrl)}" target="_blank" rel="noopener noreferrer">Open in Bluesky</a>
                         <button class="copy-link-btn" type="button" data-copy-post-url="${escapeHtml(postUrl)}">Copy link</button>
                     </div>
@@ -1974,10 +1981,17 @@ function renderRecordEmbed(recordView) {
     }
 
     if (recordView.$type === 'app.bsky.embed.record#viewBlocked') {
+        const blockingListUrl = getBlockingListUrlForActor(recordView.author || null);
         return `
-            <div class="thread-embed-card is-compact">
+            <div class="thread-embed-card is-compact is-problem">
                 <div class="thread-embed-label">Quote</div>
+                <div class="thread-embed-meta">Blocked in current view</div>
                 <div class="thread-embed-desc">Quoted record is blocked in the current view.</div>
+                ${blockingListUrl ? `
+                    <div class="thread-embed-actions">
+                        <a class="copy-link-btn is-problem-action" href="${escapeHtml(blockingListUrl)}" target="_blank" rel="noopener noreferrer">Blocking list</a>
+                    </div>
+                ` : ''}
             </div>
         `;
     }
@@ -2109,6 +2123,17 @@ function getQuoteRecoveryInfo(recordView) {
     const recovery = recordView._glimpskyQuoteRecovery;
     if (!recovery || typeof recovery !== 'object') return null;
     return recovery;
+}
+
+function getQuoteProblemInfo(recordView) {
+    const recovery = getQuoteRecoveryInfo(recordView);
+    if (!recovery) return null;
+    if (recovery.originalViewType === 'app.bsky.embed.record#viewBlocked') {
+        return {
+            problemType: BLOCKED_POST
+        };
+    }
+    return null;
 }
 
 function getThreadProblemMarker(post) {
