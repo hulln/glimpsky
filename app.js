@@ -1,6 +1,5 @@
         const API_PUBLIC = 'https://public.api.bsky.app/xrpc';
         const THEME_STORAGE_KEY = 'glimpsky-theme';
-        const LANGUAGE_STORAGE_KEY = 'glimpsky-lang';
         const PREFERRED_ORIGIN = 'https://glimpsky.oblachek.eu';
         const ANALYTICS_RANGE_DEFAULT = '30d';
         
@@ -30,6 +29,8 @@
         let analyticsRangePreset = ANALYTICS_RANGE_DEFAULT;
         let likesTimelineMainOnly = false;
         let visualizationTransitionTimer = null;
+        let pendingListFromUrl = '';
+        let autoOpenedListKey = '';
         const likesCountCache = new Map();
         const mutualsCache = new Map();
         const blockingCountCache = new Map();
@@ -67,8 +68,6 @@
             infoModal: document.getElementById('infoModal'),
             infoBtn: document.getElementById('infoBtn'),
             themeToggleBtn: document.getElementById('themeToggleBtn'),
-            langOptionEn: document.getElementById('langOptionEn'),
-            langOptionSl: document.getElementById('langOptionSl'),
             infoModalClose: document.getElementById('infoModalClose'),
             shareToolBtn: document.getElementById('shareToolBtn'),
             shareBskyLink: document.getElementById('shareBskyLink'),
@@ -304,99 +303,6 @@
                 path = path.slice(0, -'index.html'.length) || '/';
             }
             return path || '/';
-        }
-
-        function isSlovenianPath(pathname = window.location.pathname) {
-            const path = normalizePathname(pathname);
-            return path === '/sl' || path.startsWith('/sl/');
-        }
-
-        function getStoredLanguagePreference() {
-            try {
-                const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-                return stored === 'en' || stored === 'sl' ? stored : '';
-            } catch (e) {
-                return '';
-            }
-        }
-
-        function inferBrowserLanguagePreference() {
-            const browserLang = String(navigator.language || '').toLowerCase();
-            return browserLang.startsWith('sl') ? 'sl' : 'en';
-        }
-
-        function getPreferredLanguage() {
-            return getStoredLanguagePreference() || inferBrowserLanguagePreference();
-        }
-
-        function setLanguagePreference(language) {
-            if (language !== 'en' && language !== 'sl') return;
-            try {
-                localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-            } catch (e) {
-                // ignore storage write failures
-            }
-        }
-
-        function getLanguageUrl(target) {
-            const url = new URL(window.location.href);
-            const path = normalizePathname(url.pathname);
-
-            if (target === 'sl') {
-                url.pathname = isSlovenianPath(path)
-                    ? path
-                    : (path === '/' ? '/sl/' : `/sl${path}`);
-                return url.toString();
-            }
-
-            if (isSlovenianPath(path)) {
-                const next = path.slice('/sl'.length) || '/';
-                url.pathname = next.startsWith('/') ? next : `/${next}`;
-            } else {
-                url.pathname = path;
-            }
-            return url.toString();
-        }
-
-        function initLanguageToggle() {
-            const isSl = isSlovenianPath();
-            if (!elements.langOptionEn || !elements.langOptionSl) return;
-            const currentLanguage = isSl ? 'sl' : 'en';
-
-            if (!getStoredLanguagePreference()) {
-                setLanguagePreference(inferBrowserLanguagePreference());
-            }
-            const preferredLanguage = getPreferredLanguage();
-
-            elements.langOptionEn.setAttribute('href', getLanguageUrl('en'));
-            elements.langOptionSl.setAttribute('href', getLanguageUrl('sl'));
-
-            elements.langOptionEn.classList.toggle('active', !isSl);
-            elements.langOptionSl.classList.toggle('active', isSl);
-            elements.langOptionEn.classList.toggle('preferred', preferredLanguage === 'en' && currentLanguage !== 'en');
-            elements.langOptionSl.classList.toggle('preferred', preferredLanguage === 'sl' && currentLanguage !== 'sl');
-
-            if (isSl) {
-                elements.langOptionSl.setAttribute('aria-current', 'page');
-                elements.langOptionEn.removeAttribute('aria-current');
-            } else {
-                elements.langOptionEn.setAttribute('aria-current', 'page');
-                elements.langOptionSl.removeAttribute('aria-current');
-            }
-
-            if (!elements.langOptionEn.dataset.langBound) {
-                elements.langOptionEn.addEventListener('click', () => {
-                    setLanguagePreference('en');
-                });
-                elements.langOptionEn.dataset.langBound = 'true';
-            }
-
-            if (!elements.langOptionSl.dataset.langBound) {
-                elements.langOptionSl.addEventListener('click', () => {
-                    setLanguagePreference('sl');
-                });
-                elements.langOptionSl.dataset.langBound = 'true';
-            }
         }
 
         function getToolHomeUrl() {
@@ -1432,10 +1338,11 @@
             elements.handleSuggestions.innerHTML = '';
         }
 
-        function updateUrlParams(handle, mode) {
+        function updateUrlParams(handle, mode, list = '') {
             const params = new URLSearchParams();
             if (handle) params.set('handle', handle);
             if (mode) params.set('mode', mode);
+            if (list) params.set('list', list);
             const query = params.toString();
             const newUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
             window.history.replaceState({ handle, mode }, '', newUrl);
@@ -1449,6 +1356,7 @@
             const params = new URLSearchParams(window.location.search);
             const handle = params.get('handle');
             const mode = params.get('mode') === 'likes' ? 'likes' : 'posts';
+            pendingListFromUrl = params.get('list') === 'blocking' ? 'blocking' : '';
             if (!handle) return;
             elements.handleInput.value = handle;
             loadContent(mode);
@@ -1457,9 +1365,23 @@
         function loadFromStorage() {
             const handle = localStorage.getItem('lastHandle');
             const mode = localStorage.getItem('lastMode') === 'likes' ? 'likes' : 'posts';
+            pendingListFromUrl = '';
             if (!handle) return;
             elements.handleInput.value = handle;
             loadContent(mode);
+        }
+
+        function maybeOpenPendingProfileList() {
+            if (!pendingListFromUrl || !currentDid) return;
+            const autoKey = `${currentDid}:${pendingListFromUrl}`;
+            if (autoOpenedListKey === autoKey) return;
+
+            if (pendingListFromUrl === 'blocking') {
+                autoOpenedListKey = autoKey;
+                openListModal('Blocking', 'Some blocked accounts may be deactivated and won’t appear.', (cursor) => getBlockingPage(cursor));
+                pendingListFromUrl = '';
+                updateUrlParams(currentHandle, currentMode);
+            }
         }
 
         elements.listModalClose.addEventListener('click', closeListModal);
@@ -1505,7 +1427,6 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initTheme();
-            initLanguageToggle();
             syncSeoUrlTags(getCanonicalHomeUrl());
 
             const params = new URLSearchParams(window.location.search);
@@ -2457,7 +2378,7 @@
                 } else {
                     updateAccountInfo(false);
                 }
-                updateUrlParams(currentHandle, currentMode);
+                updateUrlParams(currentHandle, currentMode, pendingListFromUrl);
 
                 if (mode === 'posts') {
                     elements.sectionTitle.textContent = 'Posts';
@@ -2474,6 +2395,7 @@
                 if (hasExpensiveFilters()) {
                     handleFilterChange();
                 }
+                maybeOpenPendingProfileList();
             } catch (error) {
                 showError(error.message, true);
                 elements.profileCard.style.display = 'none';

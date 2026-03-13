@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlimpSky Thread Viewer - Full Bluesky Thread Tree</title>
+    <meta name="description" content="Load a public Bluesky post and inspect the full visible thread tree, including blocked or missing gaps that other viewers often skip.">
+    <meta name="keywords" content="bluesky thread viewer, bluesky replies viewer, bluesky blocked thread, at protocol thread viewer">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="GlimpSky Thread Viewer - Full Bluesky Thread Tree">
+    <meta property="og:description" content="Inspect full public Bluesky threads, including blocked and missing placeholders, from a single post URL.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="GlimpSky">
+    <meta property="og:url" content="https://glimpsky.oblachek.eu/thread-viewer/" id="ogUrl">
+    <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.png?v=20260225d">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="GlimpSky Thread Viewer - Full Bluesky Thread Tree">
+    <meta name="twitter:description" content="Inspect full public Bluesky threads, including blocked and missing placeholders, from a single post URL.">
+    <meta name="twitter:image" content="https://glimpsky.oblachek.eu/assets/og-image.png?v=20260225d">
+    <meta name="author" content="oblachek.eu">
+    <link rel="canonical" href="https://glimpsky.oblachek.eu/thread-viewer/">
+    <link rel="alternate" hreflang="en" href="https://glimpsky.oblachek.eu/thread-viewer/">
+    <link rel="alternate" hreflang="x-default" href="https://glimpsky.oblachek.eu/thread-viewer/">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "GlimpSky Thread Viewer",
+            "applicationCategory": "SocialNetworkingApplication",
+            "operatingSystem": "Web",
+            "description": "Load a public Bluesky post and inspect the full visible thread tree, including blocked or missing gaps.",
+            "url": "https://glimpsky.oblachek.eu/thread-viewer/"
+        }
+    </script>
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('glimpsky-theme');
+                var darkPreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var theme = (stored === 'dark' || stored === 'light') ? stored : (darkPreferred ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" href="../styles.css?v=20260313z">
+    <link rel="stylesheet" href="./thread-viewer.css?v=20260313ae">
+</head>
+<body>
+    <div class="container thread-page">
+        <div class="header">
+            <div class="title-row">
+                <img src="../assets/favicon.svg" alt="" class="title-icon">
+                <h1 id="mainTitle">GlimpSky</h1>
+                <div class="title-actions">
+                    <div class="title-links">
+                        <a class="about-btn" href="../">Profile Viewer</a>
+                        <button class="about-btn" id="infoBtn" type="button">About</button>
+                    </div>
+                    <button class="about-btn" id="themeToggleBtn" type="button" aria-label="Toggle dark mode" aria-pressed="false"></button>
+                </div>
+            </div>
+            <p class="title-sub is-reset-trigger" id="threadViewerReset" role="button" tabindex="0" aria-label="Reset thread viewer">Bluesky Thread Viewer</p>
+            <p class="subtitle">Load one public Bluesky post and inspect the entire visible thread tree, including blocked or missing gaps that often break other viewers.</p>
+            <div class="header-divider"></div>
+
+            <div class="input-group">
+                <label for="threadInput">Bluesky post URL or AT-URI</label>
+                <div class="input-with-clear">
+                    <input
+                        type="text"
+                        id="threadInput"
+                        placeholder="e.g., https://bsky.app/profile/user.bsky.social/post/3abc123 or at://did:plc:.../app.bsky.feed.post/3abc123">
+                    <button class="clear-input" type="button" data-clear-target="threadInput" aria-label="Clear thread input">×</button>
+                </div>
+                <div class="regex-help">Supports `bsky.app/profile/.../post/...`, `at://did.../app.bsky.feed.post/...`, or `did:.../app.bsky.feed.post/...`.</div>
+            </div>
+
+            <div class="thread-hero-actions">
+                <button class="btn-tab" id="loadThreadBtn" type="button">Load Thread</button>
+                <button class="btn-secondary" id="copyShareBtn" type="button">Copy Share Link</button>
+            </div>
+
+            <div class="thread-status" id="threadStatus" aria-live="polite">Ready</div>
+
+            <div class="thread-request-note">
+                Expands the thread by recursively loading replies from every discovered post in the same root conversation, then attempts to recover hidden-but-public posts directly when placeholders include a usable AT-URI. Extremely large threads can still be limited by the upstream API.
+            </div>
+        </div>
+
+        <div id="error"></div>
+
+        <div class="content-section thread-results" id="threadResults">
+            <div class="section-header">
+                <div class="section-title-row">
+                    <h2 class="section-title">Whole Thread</h2>
+                </div>
+            </div>
+            <div id="threadContent">
+                <div class="empty-state thread-empty-state">
+                    <p>Paste a Bluesky post URL and load the thread.</p>
+                    <p class="thread-empty-help">If a thread contains block-related gaps, this page will render the placeholders instead of stopping at “can’t find parent post”.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="infoModal" class="modal" aria-hidden="true">
+        <div class="info-modal-content" role="dialog" aria-modal="true" aria-labelledby="threadInfoTitle">
+            <div class="info-modal-header">
+                <h2 id="threadInfoTitle">About This Tool</h2>
+            </div>
+            <div class="info-modal-body">
+                <p>GlimpSky Thread Viewer loads one public Bluesky post and reconstructs the widest publicly reachable conversation around it.</p>
+                <p>If you are annoyed that a whole conversation or argument becomes unreadable even when you are not the blocked person, this is the practical problem this viewer is built for.</p>
+                <p>It is built for threads that break in normal viewers because blocked or unavailable placeholders interrupt the public thread response.</p>
+                <p>All data comes from public Bluesky and AT Protocol endpoints. The viewer can surface thread breaks and sometimes recover still-public posts, but it cannot prove who blocked whom from public data alone.</p>
+                <p><strong>Guides:</strong> <a href="/guides/bluesky-thread-viewer/">Bluesky Thread Viewer</a>, <a href="/guides/bluesky-profile-viewer/">Bluesky Profile Viewer</a>, <a href="/guides/bluesky-followers-search/">Bluesky Followers Search</a>.</p>
+                <p>This tool is for informational and educational purposes only. GlimpSky is an independent project and is not affiliated with, endorsed by, or sponsored by Bluesky Social PBC or the AT Protocol project.</p>
+            </div>
+            <div class="info-modal-footer">
+                <button id="infoModalClose" type="button">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./app.js?v=20260313ag" defer></script>
+
+    <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+    <noscript>
+      <img
+        src="https://queue.simpleanalyticscdn.com/noscript.gif?collect-dnt=true"
+        alt=""
+        referrerpolicy="no-referrer-when-downgrade"
+      />
+    </noscript>
+    <script async src="https://scripts.simpleanalyticscdn.com/auto-events.js"></script>
+</body>
+</html>

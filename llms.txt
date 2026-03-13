@@ -10,6 +10,7 @@ GlimpSky is a Bluesky viewer and Bluesky likes viewer for exploring public posts
 
 ## Content Scope
 - Public Bluesky profile analysis
+- Public Bluesky thread viewing with blocked/missing gap detection
 - Public AT Protocol data exploration
 - Filtering by date, text, regex, and author
 

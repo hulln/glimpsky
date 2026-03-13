@@ -85,17 +85,17 @@
         }
 
         .container {
-            max-width: 680px;
+            max-width: 860px;
             margin: 0 auto;
         }
 
         .about-btn {
-            padding: 3px 10px;
-            background: var(--surface-1);
-            color: var(--text-muted);
-            border: 1px solid var(--border);
-            border-radius: 6px;
+            background: transparent;
+            border: 1px solid #e2e8f0;
+            color: #6b7280;
             font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
             font-weight: 400;
             cursor: pointer;
             transition: all 0.2s;
@@ -107,9 +107,9 @@
         }
 
         .about-btn:hover {
-            background: var(--surface-2);
-            color: var(--text-strong);
-            border-color: var(--border-strong);
+            color: #0f172a;
+            border-color: #cbd5e1;
+            background: #f8fafc;
         }
 
         .header {
@@ -145,6 +145,17 @@
             gap: 6px;
         }
 
+        .title-links {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .title-links .about-btn {
+            height: 30px;
+            padding: 3px 10px;
+        }
+
         #themeToggleBtn {
             width: 56px;
             min-width: 56px;
@@ -156,33 +167,6 @@
             background: var(--surface-2);
             border-color: var(--border-strong);
             color: transparent;
-        }
-
-        .lang-toggle {
-            display: inline-flex;
-            align-items: center;
-            height: 30px;
-            background: var(--surface-2);
-            border: 1px solid var(--border-strong);
-            border-radius: 6px;
-            overflow: hidden;
-        }
-
-        #infoBtn {
-            height: 30px;
-            display: inline-flex;
-            align-items: center;
-            padding: 3px 11px;
-            background: var(--surface-2);
-            border-color: var(--border-strong);
-            color: var(--text-main);
-            font-weight: 500;
-        }
-
-        #infoBtn:hover {
-            background: var(--surface-3);
-            color: var(--text-strong);
-            border-color: var(--border-strong);
         }
 
         #themeToggleBtn::before {
@@ -226,39 +210,6 @@
             content: '☽';
             left: auto;
             right: 10px;
-            color: var(--surface-1);
-        }
-
-        .lang-option {
-            min-width: 30px;
-            height: 100%;
-            padding: 0 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-
-        .lang-option + .lang-option {
-            border-left: 1px solid var(--border);
-        }
-
-        .lang-option:hover {
-            background: var(--surface-1);
-            color: var(--text-strong);
-        }
-
-        .lang-option.preferred:not(.active) {
-            color: var(--text-strong);
-        }
-
-        .lang-option.active {
-            background: var(--text-strong);
             color: var(--surface-1);
         }
 
@@ -2270,6 +2221,7 @@
 
         [data-theme="dark"] .btn-tab,
         [data-theme="dark"] .btn-secondary,
+        [data-theme="dark"] .about-btn,
         [data-theme="dark"] .copy-link-btn,
         [data-theme="dark"] .load-more,
         [data-theme="dark"] .error .btn-outline {
@@ -2280,6 +2232,7 @@
 
         [data-theme="dark"] .btn-tab:hover:not(:disabled),
         [data-theme="dark"] .btn-secondary:hover:not(:disabled),
+        [data-theme="dark"] .about-btn:hover,
         [data-theme="dark"] .copy-link-btn:hover,
         [data-theme="dark"] .load-more:hover:not(:disabled),
         [data-theme="dark"] .error .btn-outline:hover:not(:disabled),
@@ -2517,9 +2470,10 @@
             }
 
             .title-row {
-                flex-wrap: nowrap;
+                flex-wrap: wrap;
                 align-items: center;
                 gap: 8px;
+                row-gap: 10px;
             }
 
             .title-icon {
@@ -2527,8 +2481,20 @@
             }
 
             .title-actions {
+                display: contents;
                 width: auto;
                 justify-content: flex-end;
+                margin-left: auto;
+            }
+
+            .title-links {
+                order: 3;
+                flex-basis: 100%;
+                margin-top: 2px;
+            }
+
+            #themeToggleBtn {
+                order: 2;
                 margin-left: auto;
             }
 
@@ -2635,11 +2601,40 @@
             }
 
             .post-header {
-                flex-wrap: wrap;
+                display: grid;
+                grid-template-columns: 40px minmax(0, 1fr);
+                column-gap: 12px;
+                row-gap: 4px;
+                align-items: start;
+            }
+
+            .post-avatar {
+                grid-column: 1;
+                grid-row: 1 / span 3;
+            }
+
+            .post-author {
+                grid-column: 2;
+                grid-row: 1;
+                min-width: 0;
+            }
+
+            .post-name {
+                white-space: normal;
+            }
+
+            .post-time {
+                grid-column: 2;
+                grid-row: 2;
             }
 
             .post-actions {
+                grid-column: 2;
+                grid-row: 3;
                 margin-left: 0;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+                gap: 8px;
             }
 
             .post {

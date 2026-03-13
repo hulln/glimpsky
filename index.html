@@ -29,7 +29,6 @@
     <meta name="author" content="oblachek.eu">
     <link rel="canonical" href="https://glimpsky.oblachek.eu/" id="canonicalUrl">
     <link rel="alternate" hreflang="en" href="https://glimpsky.oblachek.eu/">
-    <link rel="alternate" hreflang="sl" href="https://glimpsky.oblachek.eu/sl/">
     <link rel="alternate" hreflang="x-default" href="https://glimpsky.oblachek.eu/">
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <script type="application/ld+json" id="seoStructuredData">
@@ -93,7 +92,7 @@
             } catch (e) {}
         })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260225u">
+    <link rel="stylesheet" href="styles.css?v=20260313z">
 </head>
 <body>
     <div class="container">
@@ -102,12 +101,11 @@
                 <img src="assets/favicon.svg" alt="" class="title-icon">
                 <h1 id="mainTitle">GlimpSky</h1>
                 <div class="title-actions">
-                    <button class="about-btn" id="themeToggleBtn" type="button" aria-label="Toggle dark mode" aria-pressed="false"></button>
-                    <div class="lang-toggle" id="languageToggle" role="group" aria-label="Language">
-                        <a class="lang-option" id="langOptionEn" href="/" aria-label="English">EN</a>
-                        <a class="lang-option" id="langOptionSl" href="/sl/" aria-label="Slovenian">SL</a>
+                    <div class="title-links">
+                        <a class="about-btn" href="thread-viewer/">Thread Viewer</a>
+                        <button class="about-btn" id="infoBtn" type="button">About</button>
                     </div>
-                    <button class="about-btn" id="infoBtn" type="button">About</button>
+                    <button class="about-btn" id="themeToggleBtn" type="button" aria-label="Toggle dark mode" aria-pressed="false"></button>
                 </div>
             </div>
             <p class="title-sub">Bluesky Profile Viewer</p>
@@ -258,7 +256,7 @@
                 <p><strong>Made by</strong> <a href="https://bsky.app/profile/oblachek.eu" target="_blank" rel="noopener noreferrer">oblachek.eu</a> with a very big amount of good vibes named ChatGPT and Claude.</p>
 
                 <p>This tool is for informational and educational purposes only. GlimpSky is an independent project and is not affiliated with, endorsed by, or sponsored by Bluesky Social PBC or the AT Protocol project.</p>
-                <p class="guides-note"><strong>Guides:</strong> <a href="/guides/bluesky-profile-viewer/">Bluesky Profile Viewer</a>, <a href="/guides/bluesky-likes-viewer/">Bluesky Likes Viewer</a>, <a href="/guides/bluesky-followers-search/">Bluesky Followers Search</a>.</p>
+                <p class="guides-note"><strong>Guides:</strong> <a href="/guides/bluesky-profile-viewer/">Bluesky Profile Viewer</a>, <a href="/guides/bluesky-likes-viewer/">Bluesky Likes Viewer</a>, <a href="/guides/bluesky-followers-search/">Bluesky Followers Search</a>, <a href="/guides/bluesky-thread-viewer/">Bluesky Thread Viewer</a>.</p>
                 <p class="share-line">Share: <a class="share-link" id="shareToolBtn" href="#" role="button">Copy link</a> <a class="share-link" id="shareBskyLink" href="#" target="_blank" rel="noopener noreferrer">Share on Bluesky</a></p>
             </div>
             <div class="info-modal-footer">
@@ -267,7 +265,7 @@
         </div>
     </div>
 
-<script src="app.js?v=20260225u" defer></script>
+<script src="app.js?v=20260313o" defer></script>
 
 <!-- 100% privacy-first analytics -->
 <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bluesky Thread Viewer - Inspect Hidden or Blocked Gaps | GlimpSky</title>
+  <meta name="description" content="Use GlimpSky Thread Viewer to inspect public Bluesky threads that break because of blocked or unavailable posts, and recover context when the records are still public.">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="Bluesky Thread Viewer - GlimpSky">
+  <meta property="og:description" content="Inspect full public Bluesky threads, identify break-causing posts, and recover still-public context when possible.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://glimpsky.oblachek.eu/guides/bluesky-thread-viewer/">
+  <meta property="og:image" content="https://glimpsky.oblachek.eu/assets/og-image.png?v=20260225c">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bluesky Thread Viewer - GlimpSky">
+  <meta name="twitter:description" content="How to inspect blocked or unavailable thread gaps with the GlimpSky Thread Viewer.">
+  <link rel="canonical" href="https://glimpsky.oblachek.eu/guides/bluesky-thread-viewer/">
+  <link rel="alternate" hreflang="en" href="https://glimpsky.oblachek.eu/guides/bluesky-thread-viewer/">
+  <link rel="alternate" hreflang="x-default" href="https://glimpsky.oblachek.eu/guides/bluesky-thread-viewer/">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/guides/guide.css?v=20260225e">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Bluesky Thread Viewer - Inspect Hidden or Blocked Gaps",
+      "description": "Use GlimpSky Thread Viewer to inspect public Bluesky threads that break because of blocked or unavailable posts, and recover context when the records are still public.",
+      "inLanguage": "en",
+      "mainEntityOfPage": "https://glimpsky.oblachek.eu/guides/bluesky-thread-viewer/",
+      "author": {
+        "@type": "Organization",
+        "name": "GlimpSky"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "GlimpSky"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <a href="/">GlimpSky Tool</a>
+      <span>/</span>
+      <a href="/guides/">Guides</a>
+      <span>/</span>
+      <span>Bluesky Thread Viewer</span>
+    </div>
+
+    <article class="card">
+      <h1>Bluesky Thread Viewer</h1>
+      <p class="lead">When a public Bluesky thread suddenly looks incomplete, the problem is often not deletion. It is a context break: the thread API returned a blocked or unavailable placeholder and other viewers stopped there.</p>
+
+      <div class="cta-row">
+        <a class="btn primary" href="/thread-viewer/" target="_blank" rel="noopener noreferrer">Open Thread Viewer</a>
+      </div>
+
+      <h2>What people mean by "nuclear blocks"</h2>
+      <p>In Bluesky discussions, people sometimes use the informal term <strong>nuclear block</strong> for cases where one block relationship causes a much larger thread-viewing failure than expected. The post may still exist publicly, but the normal thread response hides part of the conversation behind a blocked or unavailable placeholder.</p>
+      <p>That makes the effect feel "nuclear": not only the blocker and blocked account lose context, but unrelated readers can also end up with a broken or incomplete thread view.</p>
+      <p class="note">This is community shorthand, not an official Bluesky product term.</p>
+
+      <h2>Official background</h2>
+      <p>Bluesky and AT Protocol documentation already explain the core mechanics behind this. The short version is simple: blocks are public records, and compliant services use them to hide interaction and thread context.</p>
+      <ul>
+        <li><a href="https://docs.bsky.app/docs/tutorials/blocking" target="_blank" rel="noopener noreferrer">Bluesky docs: Blocking users</a> explains what blocks do in the app and protocol.</li>
+        <li><a href="https://atproto.com/blog/block-implementation" target="_blank" rel="noopener noreferrer">AT Protocol: Why are blocks on Bluesky public?</a> explains why blocks are public records and why they affect clients, AppViews, and threads.</li>
+        <li><a href="https://docs.bsky.app/blog/block-implementation" target="_blank" rel="noopener noreferrer">Bluesky docs mirror: Why are blocks on Bluesky public?</a> covers the same technical background on the Bluesky docs site.</li>
+      </ul>
+      <p>In practice, that means a post can still exist publicly, but a thread viewer may omit it in context because the block state changed what the AppView is willing to show in that conversation.</p>
+
+      <h2>Why this viewer is useful</h2>
+      <ul>
+        <li>It shows the whole publicly reachable conversation instead of stopping at the first broken thread node.</li>
+        <li>It highlights the exact post or gap that caused the thread response to break.</li>
+        <li>It can recover context when the post is still public somewhere, even if the normal thread endpoint omitted it in context.</li>
+        <li>It makes long conversations understandable again by preserving reply links and parent jumps.</li>
+      </ul>
+
+      <h2>Why nuclear blocking is a practical problem</h2>
+      <ul>
+        <li>Readers lose context and cannot tell who is replying to whom.</li>
+        <li>Public conversations become harder to audit, quote, or understand later.</li>
+        <li>The visible thread can make participants look incoherent because key replies are missing.</li>
+        <li>Other viewers often stop at the broken node and give up entirely.</li>
+        <li>Even when a post still exists publicly, it can become effectively invisible in thread context.</li>
+      </ul>
+
+      <h2>What the thread viewer does</h2>
+      <ul>
+        <li>Starts from one Bluesky post URL or AT-URI.</li>
+        <li>Finds the conversation root and expands publicly reachable replies.</li>
+        <li>Marks the first post that caused the thread break.</li>
+        <li>Links replies back to their parent posts inside the same thread view.</li>
+        <li>Opens the break-causing author's public blocking list when available.</li>
+      </ul>
+
+      <h2>How to inspect a broken thread</h2>
+      <ol>
+        <li>Open the thread viewer and paste the post URL that lands inside the broken conversation.</li>
+        <li>Load the thread and look for the red thread-break card and the red thread-break banner at the top.</li>
+        <li>Use <strong>Jump to break</strong> to move directly to the post that caused the public thread response to break.</li>
+        <li>Use <strong>Reply to @handle jump</strong> on any reply row to move to the parent post and follow the conversation clearly.</li>
+        <li>If needed, open <strong>Author's blocking list</strong> in a new tab for extra context.</li>
+      </ol>
+
+      <h2>What the colors mean</h2>
+      <ul>
+        <li><strong>Orange</strong>: conversation start.</li>
+        <li><strong>Blue</strong>: the post you originally loaded.</li>
+        <li><strong>Red</strong>: the post or gap that broke the public thread view.</li>
+        <li><strong>Neutral</strong>: ordinary posts in the same conversation.</li>
+      </ul>
+
+      <h2>Important limits</h2>
+      <ul>
+        <li>The viewer can detect that a break happened in public thread data.</li>
+        <li>It can sometimes recover a post if the post is still publicly reachable outside the broken thread context.</li>
+        <li>It cannot truthfully prove who blocked whom from public data alone.</li>
+        <li>If a record is actually deleted or no longer public, the viewer can only show the gap.</li>
+      </ul>
+
+      <p class="note">This is a public-data viewer, not a private moderation inspector. It shows what public Bluesky and AT Protocol endpoints still expose.</p>
+
+      <div class="related">
+        <strong>Related guides:</strong>
+        <ul>
+          <li><a href="/guides/bluesky-profile-viewer/">Bluesky Profile Viewer</a></li>
+          <li><a href="/guides/bluesky-followers-search/">Bluesky Followers Search</a></li>
+        </ul>
+      </div>
+
+      <p class="footer">Use GlimpSky responsibly and only for public data inspection.</p>
+    </article>
+  </div>
+</body>
+</html>

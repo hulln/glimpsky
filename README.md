@@ -3,7 +3,7 @@
 
 ![GlimpSky banner](assets/og-image.png)
 
-GlimpSky is a lightweight web tool for exploring public Bluesky accounts: posts, likes, followers, and related account activity from public AT Protocol endpoints.
+GlimpSky is a lightweight web tool for exploring public Bluesky accounts, threads, likes, followers, and related account activity from public AT Protocol endpoints.
 
 ## Why this exists
 
@@ -16,6 +16,9 @@ I wanted an easy way to inspect a profile beyond the default app view:
 ## What you can do
 
 - View posts and likes for any public account
+- View a full public thread tree from a single Bluesky post URL
+- Attempt recovery of context-hidden thread posts when the underlying public record still exists
+- Inspect thread breaks caused by blocked or unavailable placeholders
 - Hide reposts, replies, and quotes
 - Filter by date range
 - Search post text
@@ -39,13 +42,10 @@ python3 -m http.server 8000
 
 Open `http://localhost:8000` in your browser.
 
-## Language smoke test
+Thread viewer: `http://localhost:8000/thread-viewer/`
 
-With the local server running, you can run a quick EN/SL routing and markup smoke test:
-
-```bash
-bash scripts/language-smoke.sh http://localhost:8000
-```
+Guides:
+- `http://localhost:8000/guides/bluesky-thread-viewer/`
 
 ## Privacy and scope
 
@@ -57,6 +57,8 @@ bash scripts/language-smoke.sh http://localhost:8000
 
 - `Blocked by` cannot be reliably computed from public APIs alone without an external indexer
 - Some likes/posts can be unavailable (deleted posts, deactivated accounts, or inaccessible records)
+- The thread viewer can surface `blockedPost` and `notFoundPost` gaps, but public APIs still do not identify which participant initiated a block relationship
+- Some hidden thread posts can be recovered via direct post lookup or the author's public PDS record, but deleted or unavailable records still cannot be reconstructed
 
 ## Data sources and credits
 
