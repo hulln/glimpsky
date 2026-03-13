@@ -24,6 +24,8 @@ const RECOVERY_PDS = 'pds';
 const FETCH_TIMEOUT_MS = 12000;
 const MAX_THREAD_EXPANSION_FETCHES = 80;
 const MAX_DISCOVERED_THREAD_NODES = 500;
+const DEFAULT_AVATAR_SRC = '/assets/default-avatar.svg';
+const DEFAULT_AVATAR_ONERROR = `this.onerror=null;this.src='${DEFAULT_AVATAR_SRC}'`;
 
 let currentInputValue = '';
 let currentThreadUri = '';
@@ -186,6 +188,14 @@ function toggleClearButton(input) {
     const button = wrapper ? wrapper.querySelector('.clear-input') : null;
     if (!button) return;
     button.classList.toggle('show', Boolean(input.value && input.value.trim()));
+}
+
+function getAvatarUrl(avatar) {
+    return typeof avatar === 'string' && avatar.trim() ? avatar.trim() : DEFAULT_AVATAR_SRC;
+}
+
+function renderAvatarImg(src, alt, className) {
+    return `<img class="${escapeHtml(className || '')}" src="${escapeHtml(getAvatarUrl(src))}" alt="${escapeHtml(alt || '')}" onerror="${DEFAULT_AVATAR_ONERROR}">`;
 }
 
 function restoreThreadFromQuery() {
@@ -571,7 +581,10 @@ async function hydrateThreadNodes(node, options = {}) {
     }
 
     if (type === THREAD_VIEW_POST) {
-        const hydrated = { ...node };
+        const hydrated = {
+            ...node,
+            post: await hydratePostEmbeds(node.post || null)
+        };
         if (includeParent && node.parent) {
             hydrated.parent = await hydrateThreadNodes(node.parent, { includeParent: true });
         }
@@ -593,6 +606,96 @@ async function hydrateThreadNodes(node, options = {}) {
         );
     }
     return fallback;
+}
+
+async function hydratePostEmbeds(post) {
+    if (!post || typeof post !== 'object') return post;
+    if (!post.embed || typeof post.embed !== 'object') return post;
+
+    const hydratedEmbed = await hydrateEmbedView(post.embed);
+    if (hydratedEmbed === post.embed) return post;
+    return {
+        ...post,
+        embed: hydratedEmbed
+    };
+}
+
+async function hydrateEmbedView(embed) {
+    if (!embed || typeof embed !== 'object') return embed;
+
+    if (embed.$type === 'app.bsky.embed.record#view') {
+        const hydratedRecord = await hydrateRecordView(embed.record);
+        if (hydratedRecord === embed.record) return embed;
+        return {
+            ...embed,
+            record: hydratedRecord
+        };
+    }
+
+    if (embed.$type === 'app.bsky.embed.recordWithMedia#view') {
+        const [hydratedMedia, hydratedRecord] = await Promise.all([
+            embed.media ? hydrateEmbedView(embed.media) : Promise.resolve(embed.media),
+            embed.record ? hydrateRecordView(embed.record) : Promise.resolve(embed.record)
+        ]);
+
+        if (hydratedMedia === embed.media && hydratedRecord === embed.record) {
+            return embed;
+        }
+
+        return {
+            ...embed,
+            media: hydratedMedia,
+            record: hydratedRecord
+        };
+    }
+
+    return embed;
+}
+
+async function hydrateRecordView(recordView) {
+    if (!recordView || typeof recordView !== 'object') return recordView;
+    if (recordView.$type === 'app.bsky.embed.record#viewRecord') return recordView;
+
+    const uri = typeof recordView.uri === 'string' ? recordView.uri : '';
+    const originalType = getRecordViewRecoveryType(recordView.$type);
+    if (!uri || !originalType) return recordView;
+
+    let recoveredPost;
+    if (recoveryCache.has(uri)) {
+        recoveredPost = recoveryCache.get(uri);
+    } else {
+        recoveredPost = await recoverPostByUri(uri, originalType);
+        recoveryCache.set(uri, recoveredPost || null);
+    }
+
+    if (!recoveredPost) return recordView;
+    return buildRecoveredRecordView(recoveredPost, recordView.$type);
+}
+
+function getRecordViewRecoveryType(recordViewType) {
+    if (recordViewType === 'app.bsky.embed.record#viewBlocked') {
+        return BLOCKED_POST;
+    }
+    if (recordViewType === 'app.bsky.embed.record#viewNotFound' || recordViewType === 'app.bsky.embed.record#viewDetached') {
+        return NOT_FOUND_POST;
+    }
+    return '';
+}
+
+function buildRecoveredRecordView(post, originalViewType) {
+    if (!post || typeof post !== 'object') return null;
+
+    return {
+        $type: 'app.bsky.embed.record#viewRecord',
+        uri: post.uri || '',
+        cid: post.cid || '',
+        author: clonePlainData(post.author || null),
+        value: clonePlainData(post.record || {}),
+        _glimpskyQuoteRecovery: {
+            ...(getRecoveryInfo(post) || {}),
+            originalViewType
+        }
+    };
 }
 
 async function recoverPlaceholderNode(node, options = {}) {
@@ -1436,7 +1539,6 @@ function renderVisiblePostNode(node, options = {}) {
     const replyTarget = getReplyTargetInfo(node, options.parentNode);
     const authorName = escapeHtml(author.displayName || author.handle || shortDid(author.did) || 'Unknown author');
     const authorHandle = author.handle ? `@${escapeHtml(author.handle)}` : escapeHtml(shortDid(author.did) || 'Unknown handle');
-    const avatar = author.avatar || 'https://via.placeholder.com/44';
     const timestamp = parseDateValue(record.createdAt);
     const timeLabel = timestamp ? formatEuDate(timestamp) : '—';
     const exactTimeLabel = record.createdAt ? formatExactTime(record.createdAt) : '';
@@ -1465,7 +1567,7 @@ function renderVisiblePostNode(node, options = {}) {
         <article id="${escapeHtml(articleId)}" class="post thread-post${options.isRoot ? ' is-root-post' : ''}${options.isFocus ? ' is-focus' : ''}${problemInfo ? ` ${problemInfo.postClass}` : ''}${options.isFirstProblem ? ' is-first-problem' : ''}" data-node-uri="${escapeHtml(post.uri || '')}"${options.isFocus ? ' data-selected-post="true"' : ''}${options.isFirstProblem ? ' data-first-problem="true"' : ''}>
             ${banners}
             <div class="post-header">
-                <img class="post-avatar" src="${escapeHtml(avatar)}" alt="${authorName}">
+                ${renderAvatarImg(author.avatar, authorName, 'post-avatar')}
                 <div class="post-author">
                     <div class="post-name">${authorName}</div>
                     <div class="post-handle">${authorHandle}</div>
@@ -1846,6 +1948,11 @@ function renderRecordEmbed(recordView) {
         const title = getActorLabel(author);
         const handle = author.handle ? `@${author.handle}` : shortDid(author.did);
         const text = typeof value.text === 'string' ? value.text : '';
+        const postUrl = getPostUrl({
+            uri: recordView.uri || '',
+            author
+        });
+        const quoteRecovery = getQuoteRecoveryInfo(recordView);
         const textHtml = text
             ? formatPostText(value)
             : '<div class="thread-embed-desc">No text preview.</div>';
@@ -1854,7 +1961,14 @@ function renderRecordEmbed(recordView) {
             <div class="thread-embed-card is-compact">
                 <div class="thread-embed-label">Quote</div>
                 <div class="thread-embed-title">${escapeHtml(title)}${handle ? ` <span class="post-handle">${escapeHtml(handle)}</span>` : ''}</div>
+                ${quoteRecovery ? '<div class="thread-embed-meta">Recovered from public data</div>' : ''}
                 <div class="thread-embed-desc">${textHtml}</div>
+                ${postUrl ? `
+                    <div class="thread-embed-actions">
+                        <a class="copy-link-btn" href="${escapeHtml(postUrl)}" target="_blank" rel="noopener noreferrer">Open in Bluesky</a>
+                        <button class="copy-link-btn" type="button" data-copy-post-url="${escapeHtml(postUrl)}">Copy link</button>
+                    </div>
+                ` : ''}
             </div>
         `;
     }
@@ -1986,6 +2100,13 @@ function getActorLabel(actor) {
 function getRecoveryInfo(post) {
     if (!post || typeof post !== 'object') return null;
     const recovery = post._glimpskyRecovery;
+    if (!recovery || typeof recovery !== 'object') return null;
+    return recovery;
+}
+
+function getQuoteRecoveryInfo(recordView) {
+    if (!recordView || typeof recordView !== 'object') return null;
+    const recovery = recordView._glimpskyQuoteRecovery;
     if (!recovery || typeof recovery !== 'object') return null;
     return recovery;
 }

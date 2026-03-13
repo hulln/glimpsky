@@ -2,6 +2,8 @@
         const THEME_STORAGE_KEY = 'glimpsky-theme';
         const PREFERRED_ORIGIN = 'https://glimpsky.oblachek.eu';
         const ANALYTICS_RANGE_DEFAULT = '30d';
+        const DEFAULT_AVATAR_SRC = '/assets/default-avatar.svg';
+        const DEFAULT_AVATAR_ONERROR = `this.onerror=null;this.src='${DEFAULT_AVATAR_SRC}'`;
         
         let currentHandle = '';
         let currentDid = '';
@@ -107,6 +109,14 @@
             elements.advancedFiltersToggle.classList.toggle('expanded', isExpanded);
             elements.advancedFiltersContent.classList.toggle('expanded', isExpanded);
             elements.advancedFiltersToggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        }
+
+        function getAvatarUrl(avatar) {
+            return typeof avatar === 'string' && avatar.trim() ? avatar.trim() : DEFAULT_AVATAR_SRC;
+        }
+
+        function renderAvatarImg(src, alt, className) {
+            return `<img src="${escapeHtml(getAvatarUrl(src))}" alt="${escapeHtml(alt || '')}" class="${escapeHtml(className || '')}" onerror="${DEFAULT_AVATAR_ONERROR}">`;
         }
 
         function setAnalyticsToggleVisible(visible) {
@@ -609,7 +619,6 @@
         }
 
         function displayProfile(profile) {
-            const avatar = profile.avatar || 'https://via.placeholder.com/80';
             const displayName = profile.displayName || profile.handle;
             const description = profile.description || '';
             const descriptionHtml = description ? formatProfileDescription(profile) : '';
@@ -618,7 +627,7 @@
 
             elements.profileCard.innerHTML = `
                 <div class="profile-header">
-                    <img src="${avatar}" alt="${escapeHtml(displayName)}" class="avatar">
+                    ${renderAvatarImg(profile.avatar, displayName, 'avatar')}
                     <div class="profile-info">
                         <div class="profile-topline">
                             <h2>${escapeHtml(displayName)}</h2>
@@ -913,13 +922,12 @@
             }
 
             const html = visibleProfiles.map(p => {
-                const avatar = p.avatar || 'https://via.placeholder.com/40';
                 const name = p.displayName || p.handle || p.did || '';
                 const handle = p.handle ? '@' + p.handle : (p.did || '');
                 const actor = p.handle || p.did || '';
                 return `
                     <div class="list-item" data-actor="${escapeHtml(actor)}">
-                        <img class="list-avatar" src="${escapeHtml(avatar)}" alt="">
+                        ${renderAvatarImg(p.avatar, '', 'list-avatar')}
                         <div class="list-main">
                             <div class="list-name">${escapeHtml(name)}</div>
                             <div class="list-handle">${escapeHtml(handle)}</div>
@@ -1306,13 +1314,12 @@
                 return;
             }
             const html = actors.map(actor => {
-                const avatar = actor.avatar || 'https://via.placeholder.com/40';
                 const name = actor.displayName || actor.handle || actor.did || '';
                 const handle = actor.handle ? '@' + actor.handle : (actor.did || '');
                 const actorId = actor.handle || actor.did || '';
                 return `
                     <div class="suggestion-item" data-actor="${escapeHtml(actorId)}">
-                        <img class="suggestion-avatar" src="${escapeHtml(avatar)}" alt="">
+                        ${renderAvatarImg(actor.avatar, '', 'suggestion-avatar')}
                         <div class="suggestion-meta">
                             <div class="suggestion-name">${escapeHtml(name)}</div>
                             <div class="suggestion-handle">${escapeHtml(handle)}</div>
@@ -2657,12 +2664,11 @@
                     const handle = entry.handle ? `@${entry.handle}` : shortDid(entry.did);
                     const query = entry.handle || entry.did;
                     const name = entry.displayName || entry.handle || shortDid(entry.did);
-                    const avatar = entry.avatar || 'https://via.placeholder.com/28';
                     return `
                         <li>
                             <button class="viz-top-btn" type="button" data-author-query="${escapeHtml(query)}" title="Filter by author">
                                 <span class="viz-top-rank">${idx + 1}</span>
-                                <img class="viz-top-avatar" src="${escapeHtml(avatar)}" alt="">
+                                ${renderAvatarImg(entry.avatar, '', 'viz-top-avatar')}
                                 <span class="viz-top-meta">
                                     <span class="viz-top-name">${escapeHtml(name)}</span>
                                     <span class="viz-top-handle">${escapeHtml(handle)}</span>
@@ -3678,7 +3684,6 @@
             
             const author = post.author;
             const record = post.record;
-            const avatar = author.avatar || 'https://via.placeholder.com/40';
             
             const timestamp = timestampOverride ? new Date(timestampOverride) : new Date(record.createdAt);
             const timeLabel = formatEuDate(timestamp);
@@ -3714,7 +3719,7 @@
 
             html += `
                 <div class="post-header">
-                    <img src="${avatar}" alt="${escapeHtml(author.displayName || author.handle)}" class="post-avatar">
+                    ${renderAvatarImg(author.avatar, author.displayName || author.handle, 'post-avatar')}
                     <div class="post-author">
                         <div class="post-name">${escapeHtml(author.displayName || author.handle)}</div>
                         <div class="post-handle">@${escapeHtml(author.handle)}</div>
