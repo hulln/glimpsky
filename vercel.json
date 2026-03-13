@@ -1,6 +1,56 @@
 {
   "redirects": [
     {
+      "source": "/sl",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sl/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sl/index.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sl/bluesky-profile-viewer",
+      "destination": "/guides/bluesky-profile-viewer/",
+      "permanent": true
+    },
+    {
+      "source": "/sl/bluesky-profile-viewer/",
+      "destination": "/guides/bluesky-profile-viewer/",
+      "permanent": true
+    },
+    {
+      "source": "/sl/bluesky-likes-viewer",
+      "destination": "/guides/bluesky-likes-viewer/",
+      "permanent": true
+    },
+    {
+      "source": "/sl/bluesky-likes-viewer/",
+      "destination": "/guides/bluesky-likes-viewer/",
+      "permanent": true
+    },
+    {
+      "source": "/sl/how-to-see-bluesky-likes",
+      "destination": "/guides/bluesky-likes-viewer/",
+      "permanent": true
+    },
+    {
+      "source": "/sl/how-to-see-bluesky-likes/",
+      "destination": "/guides/bluesky-likes-viewer/",
+      "permanent": true
+    },
+    {
+      "source": "/sl/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
       "source": "/guides/how-to-see-bluesky-likes",
       "destination": "/guides/bluesky-likes-viewer/",
       "permanent": true
