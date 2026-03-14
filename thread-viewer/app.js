@@ -2206,6 +2206,8 @@ function applyFacets(text, facets) {
             result += `<a href="${escapeHtml(feature.uri)}" target="_blank" rel="noopener noreferrer">${escapeHtml(facetText)}</a>`;
         } else if (feature && feature.$type === 'app.bsky.richtext.facet#mention') {
             result += `<a href="https://bsky.app/profile/${escapeHtml(feature.did)}" target="_blank" rel="noopener noreferrer">${escapeHtml(facetText)}</a>`;
+        } else if (feature && feature.$type === 'app.bsky.richtext.facet#tag') {
+            result += `<span class="facet-tag">${escapeHtml(facetText)}</span>`;
         } else {
             result += linkifyPlainTextUrls(facetText);
         }

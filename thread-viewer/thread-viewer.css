@@ -377,6 +377,13 @@
     line-height: 1.6;
 }
 
+.thread-post .post-text .facet-tag,
+.thread-embed-desc .facet-tag,
+.thread-placeholder-copy .facet-tag {
+    color: #2563eb;
+    font-weight: 500;
+}
+
 .thread-reply-target {
     display: flex;
     align-items: center;
@@ -633,6 +640,12 @@
 [data-theme="dark"] .thread-problem-note {
     color: #fca5a5;
     background: rgba(220, 38, 38, 0.12);
+}
+
+[data-theme="dark"] .thread-post .post-text .facet-tag,
+[data-theme="dark"] .thread-embed-desc .facet-tag,
+[data-theme="dark"] .thread-placeholder-copy .facet-tag {
+    color: #93c5fd;
 }
 
 [data-theme="dark"] .thread-reply-target.is-problem {

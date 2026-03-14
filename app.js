@@ -32,6 +32,7 @@
         let likesTimelineMainOnly = false;
         let visualizationTransitionTimer = null;
         let pendingListFromUrl = '';
+        let pendingFullLoadFromUrl = false;
         let autoOpenedListKey = '';
         const likesCountCache = new Map();
         const mutualsCache = new Map();
@@ -55,6 +56,7 @@
             visualizations: document.getElementById('visualizations'),
             coverageHint: document.getElementById('coverageHint'),
             analyticsToggleBtn: document.getElementById('analyticsToggleBtn'),
+            copyCurrentViewBtn: document.getElementById('copyCurrentViewBtn'),
             error: document.getElementById('error'),
             sectionTitle: document.getElementById('sectionTitle'),
             listModal: document.getElementById('listModal'),
@@ -119,6 +121,36 @@
             return `<img src="${escapeHtml(getAvatarUrl(src))}" alt="${escapeHtml(alt || '')}" class="${escapeHtml(className || '')}" onerror="${DEFAULT_AVATAR_ONERROR}">`;
         }
 
+        function renderCopyIcon() {
+            return `
+                <svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <rect x="9" y="7" width="10" height="12" rx="2"></rect>
+                    <path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            `;
+        }
+
+        async function copyTextWithButton(button, value, promptLabel, copiedLabel = 'Copied') {
+            if (!value) return false;
+            try {
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(value);
+                    if (button) {
+                        const original = button.textContent;
+                        button.textContent = copiedLabel;
+                        setTimeout(() => {
+                            if (button) button.textContent = original;
+                        }, 1200);
+                    }
+                } else {
+                    window.prompt(promptLabel || 'Copy this value:', value);
+                }
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
         function setAnalyticsToggleVisible(visible) {
             if (!elements.analyticsToggleBtn) return;
             elements.analyticsToggleBtn.classList.toggle('show', Boolean(visible));
@@ -177,6 +209,7 @@
                 pendingSortOldest = true;
                 setAdvancedFiltersExpanded(true);
                 elements.filterBanner.classList.add('show');
+                updateUrlParams(currentHandle, currentMode, pendingListFromUrl);
                 return;
             }
             if (!elements.sortOldest.checked) {
@@ -228,6 +261,7 @@
         [elements.hideReposts, elements.hideReplies, elements.onlyLinks, elements.hideQuotes].forEach((checkbox) => {
             checkbox.addEventListener('change', () => {
                 rerenderCurrentView();
+                updateUrlParams(currentHandle, currentMode, pendingListFromUrl);
             });
         });
 
@@ -333,69 +367,107 @@
             return canonical.toString();
         }
 
-        function syncSeoUrlTags(homeUrl) {
-            const ogUrl = document.getElementById('ogUrl');
-            if (ogUrl) {
-                ogUrl.setAttribute('content', homeUrl);
-            }
+        function isTruthyParam(value) {
+            return value === '1' || value === 'true' || value === 'yes';
+        }
 
-            const twitterUrl = document.getElementById('twitterUrl');
-            if (twitterUrl) {
-                twitterUrl.setAttribute('content', homeUrl);
-            }
+        function normalizeDateParam(value) {
+            return /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? String(value) : '';
+        }
 
-            const canonicalUrl = document.getElementById('canonicalUrl');
-            if (canonicalUrl) {
-                canonicalUrl.setAttribute('href', homeUrl);
-            }
+        function normalizeTagParam(value) {
+            const raw = String(value || '').trim().replace(/^#+/, '');
+            if (!raw || /\s/.test(raw)) return '';
+            return raw;
+        }
 
-            const structuredData = document.getElementById('seoStructuredData');
-            if (structuredData) {
-                try {
-                    const parsed = JSON.parse(structuredData.textContent || '{}');
-                    parsed.url = homeUrl;
-                    structuredData.textContent = JSON.stringify(parsed);
-                } catch (e) {
-                    // Ignore parse failures to avoid breaking app startup.
-                }
+        function extractExactTagFilter(rawValue) {
+            const raw = String(rawValue || '').trim();
+            if (!raw || raw.startsWith('/')) return '';
+            if (!raw.startsWith('#')) return '';
+            return normalizeTagParam(raw);
+        }
+
+        function buildStateParams(handle, mode, list = '') {
+            const params = new URLSearchParams();
+            const shareHandle = currentProfile && currentProfile.handle ? currentProfile.handle : handle;
+            if (shareHandle) params.set('handle', shareHandle);
+            if (!shareHandle) return params;
+            if (mode) params.set('mode', mode);
+            if (list) params.set('list', list);
+
+            if (!elements.hideReposts.checked) params.set('hideReposts', '0');
+            if (elements.hideReplies.checked) params.set('hideReplies', '1');
+            if (elements.onlyLinks.checked) params.set('onlyLinks', '1');
+            if (elements.hideQuotes.checked) params.set('hideQuotes', '1');
+            if (elements.sortOldest.checked) params.set('sortOldest', '1');
+            if (elements.dateFrom.value) params.set('dateFrom', normalizeDateParam(elements.dateFrom.value));
+            if (elements.dateTo.value) params.set('dateTo', normalizeDateParam(elements.dateTo.value));
+            const exactTag = extractExactTagFilter(elements.searchText.value);
+            if (exactTag) {
+                params.set('tag', exactTag);
+            } else if (elements.searchText.value.trim()) {
+                params.set('q', elements.searchText.value.trim());
+            }
+            if (elements.searchAuthor.value.trim()) params.set('author', elements.searchAuthor.value.trim());
+            if (hasExpensiveFilters()) params.set('full', '1');
+            return params;
+        }
+
+        function buildToolUrlFromParams(params) {
+            const current = new URL(window.location.href);
+            current.hash = '';
+            if (current.pathname.endsWith('/index.html')) {
+                current.pathname = current.pathname.slice(0, -'index.html'.length);
+            }
+            current.search = params.toString();
+            const isLocalhost = current.hostname === 'localhost' || current.hostname === '127.0.0.1';
+            if (isLocalhost) return current.toString();
+            return new URL(`${current.pathname || '/'}${current.search}`, PREFERRED_ORIGIN).toString();
+        }
+
+        function getShareableToolUrl() {
+            return buildToolUrlFromParams(buildStateParams(currentHandle, currentMode, pendingListFromUrl));
+        }
+
+        function updateShareLinks() {
+            const shareUrl = currentHandle ? getShareableToolUrl() : getCanonicalHomeUrl();
+            if (elements.shareBskyLink) {
+                const modeLabel = currentMode === 'likes' ? 'likes' : 'posts';
+                const exactTag = extractExactTagFilter(elements.searchText.value);
+                const shareLabel = currentHandle
+                    ? `${exactTag ? `GlimpSky hashtag view #${exactTag}` : `GlimpSky ${modeLabel} view`} for ${currentProfile && currentProfile.handle ? `@${currentProfile.handle}` : currentHandle} ${shareUrl}`
+                    : `GlimpSky - Bluesky Profile Viewer ${shareUrl}`;
+                elements.shareBskyLink.href = `https://bsky.app/intent/compose?text=${encodeURIComponent(shareLabel)}`;
+            }
+            if (elements.shareToolBtn) {
+                elements.shareToolBtn.dataset.shareUrl = shareUrl;
             }
         }
 
-        if (elements.shareToolBtn) {
-            elements.shareToolBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const url = getToolHomeUrl();
-                try {
-                    if (navigator.clipboard) {
-                        await navigator.clipboard.writeText(url);
-                        const original = elements.shareToolBtn.textContent;
-                        elements.shareToolBtn.textContent = 'Copied';
-                        setTimeout(() => {
-                            elements.shareToolBtn.textContent = original;
-                        }, 1200);
-                    } else {
-                        window.prompt('Copy this link:', url);
-                    }
-                } catch (e) {
-                    showError('Could not copy link');
-                }
-            });
+        function applyUrlState(params) {
+            elements.hideReposts.checked = params.has('hideReposts') ? isTruthyParam(params.get('hideReposts')) : true;
+            elements.hideReplies.checked = isTruthyParam(params.get('hideReplies'));
+            elements.onlyLinks.checked = isTruthyParam(params.get('onlyLinks'));
+            elements.hideQuotes.checked = isTruthyParam(params.get('hideQuotes'));
+            elements.sortOldest.checked = isTruthyParam(params.get('sortOldest'));
+            elements.dateFrom.value = normalizeDateParam(params.get('dateFrom'));
+            elements.dateTo.value = normalizeDateParam(params.get('dateTo'));
+            const tagFromUrl = normalizeTagParam(params.get('tag'));
+            elements.searchText.value = params.get('q') || (tagFromUrl ? `#${tagFromUrl}` : '');
+            elements.searchAuthor.value = params.get('author') || '';
+            toggleClearButton(elements.searchText);
+            toggleClearButton(elements.searchAuthor);
+            setAdvancedFiltersExpanded(Boolean(
+                elements.sortOldest.checked ||
+                elements.dateFrom.value ||
+                elements.dateTo.value ||
+                elements.searchText.value.trim() ||
+                elements.searchAuthor.value.trim()
+            ));
         }
 
-        if (elements.shareBskyLink) {
-            const url = getToolHomeUrl();
-            const text = `GlimpSky - Bluesky Profile Viewer ${url}`;
-            elements.shareBskyLink.href = `https://bsky.app/intent/compose?text=${encodeURIComponent(text)}`;
-        }
-
-        elements.infoModal.addEventListener('click', (e) => {
-            if (e.target === elements.infoModal) {
-                elements.infoModal.classList.remove('open');
-                elements.infoModal.setAttribute('aria-hidden', 'true');
-            }
-        });
-
-        elements.mainTitle.addEventListener('click', () => {
+        function resetToolState(updateUrl = true) {
             elements.handleInput.value = '';
             closeHandleSuggestions();
             toggleClearButton(elements.handleInput);
@@ -448,7 +520,96 @@
             pendingSortOldest = false;
             likesTimelineMainOnly = false;
             updateModeButtons('posts');
-            updateUrlParams('', 'posts');
+            pendingListFromUrl = '';
+            pendingFullLoadFromUrl = false;
+            autoOpenedListKey = '';
+            if (updateUrl) {
+                updateUrlParams('', 'posts');
+            } else {
+                updateShareLinks();
+            }
+        }
+
+        function syncSeoUrlTags(homeUrl) {
+            const ogUrl = document.getElementById('ogUrl');
+            if (ogUrl) {
+                ogUrl.setAttribute('content', homeUrl);
+            }
+
+            const twitterUrl = document.getElementById('twitterUrl');
+            if (twitterUrl) {
+                twitterUrl.setAttribute('content', homeUrl);
+            }
+
+            const canonicalUrl = document.getElementById('canonicalUrl');
+            if (canonicalUrl) {
+                canonicalUrl.setAttribute('href', homeUrl);
+            }
+
+            const structuredData = document.getElementById('seoStructuredData');
+            if (structuredData) {
+                try {
+                    const parsed = JSON.parse(structuredData.textContent || '{}');
+                    parsed.url = homeUrl;
+                    structuredData.textContent = JSON.stringify(parsed);
+                } catch (e) {
+                    // Ignore parse failures to avoid breaking app startup.
+                }
+            }
+        }
+
+        if (elements.shareToolBtn) {
+            elements.shareToolBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const url = elements.shareToolBtn.dataset.shareUrl || getCanonicalHomeUrl();
+                try {
+                    if (navigator.clipboard) {
+                        await navigator.clipboard.writeText(url);
+                        const original = elements.shareToolBtn.textContent;
+                        elements.shareToolBtn.textContent = 'Copied';
+                        setTimeout(() => {
+                            elements.shareToolBtn.textContent = original;
+                        }, 1200);
+                    } else {
+                        window.prompt('Copy this link:', url);
+                    }
+                } catch (e) {
+                    showError('Could not copy link');
+                }
+            });
+        }
+        if (elements.copyCurrentViewBtn) {
+            elements.copyCurrentViewBtn.addEventListener('click', async () => {
+                const url = currentHandle ? getShareableToolUrl() : getCanonicalHomeUrl();
+                try {
+                    if (navigator.clipboard) {
+                        await navigator.clipboard.writeText(url);
+                        const original = elements.copyCurrentViewBtn.textContent;
+                        elements.copyCurrentViewBtn.textContent = 'Copied';
+                        setTimeout(() => {
+                            if (elements.copyCurrentViewBtn) {
+                                elements.copyCurrentViewBtn.textContent = original;
+                            }
+                        }, 1200);
+                    } else {
+                        window.prompt('Copy this link:', url);
+                    }
+                } catch (e) {
+                    showError('Could not copy current view');
+                }
+            });
+        }
+        updateShareLinks();
+
+        elements.infoModal.addEventListener('click', (e) => {
+            if (e.target === elements.infoModal) {
+                elements.infoModal.classList.remove('open');
+                elements.infoModal.setAttribute('aria-hidden', 'true');
+            }
+        });
+
+        elements.mainTitle.addEventListener('click', () => {
+            resetToolState(true);
         });
 
         document.addEventListener('click', (e) => {
@@ -633,7 +794,27 @@
                             <h2>${escapeHtml(displayName)}</h2>
                             <a class="copy-link-btn" href="https://bsky.app/profile/${escapeHtml(profile.handle)}" target="_blank" rel="noopener noreferrer">Open in Bluesky</a>
                         </div>
-                        <div class="handle">@${escapeHtml(profile.handle)}</div>
+                        <div class="profile-identities">
+                            <div class="profile-identity-line">
+                                <span class="profile-identity-label">HANDLE</span>
+                                <span class="profile-identity-main">
+                                    <span class="profile-identity-value">@${escapeHtml(profile.handle)}</span>
+                                    <button class="profile-inline-copy" id="copyHandleBtn" type="button" data-copy-value="${escapeHtml(profile.handle)}" aria-label="Copy handle" title="Copy handle">
+                                        ${renderCopyIcon()}
+                                    </button>
+                                </span>
+                            </div>
+                            <div class="profile-identity-line">
+                                <span class="profile-identity-label">DID</span>
+                                <span class="profile-identity-main">
+                                    <span class="profile-identity-value profile-identity-did">${escapeHtml(profile.did || currentDid || '—')}</span>
+                                    <button class="profile-inline-copy" id="copyDidBtn" type="button" data-copy-value="${escapeHtml(profile.did || currentDid || '')}" aria-label="Copy DID" title="Copy DID">
+                                        ${renderCopyIcon()}
+                                    </button>
+                                </span>
+                            </div>
+                            <div class="profile-identity-feedback" id="profileIdentityFeedback" aria-live="polite"></div>
+                        </div>
                         ${descriptionHtml ? `<div class="description">${descriptionHtml}</div>` : ''}
                         <div class="account-info">
                             <div class="account-item">
@@ -707,8 +888,45 @@
             elements.profileCard.style.display = 'block';
 
             wireProfileStatsButtons();
+            wireProfileIdentityButtons();
             primeMutualsAndBlocking();
             applyCachedLikesCount();
+        }
+
+        function wireProfileIdentityButtons() {
+            const copyHandleBtn = document.getElementById('copyHandleBtn');
+            const copyDidBtn = document.getElementById('copyDidBtn');
+            const feedback = document.getElementById('profileIdentityFeedback');
+
+            const showFeedback = (message) => {
+                if (!feedback) return;
+                feedback.textContent = message;
+                feedback.classList.add('show');
+                window.setTimeout(() => {
+                    if (feedback.textContent === message) {
+                        feedback.textContent = '';
+                        feedback.classList.remove('show');
+                    }
+                }, 1400);
+            };
+
+            if (copyHandleBtn) {
+                copyHandleBtn.addEventListener('click', async () => {
+                    const value = copyHandleBtn.getAttribute('data-copy-value') || '';
+                    const ok = await copyTextWithButton(null, value, 'Copy this handle:');
+                    if (ok) showFeedback('Handle copied');
+                    if (!ok) showError('Could not copy handle');
+                });
+            }
+
+            if (copyDidBtn) {
+                copyDidBtn.addEventListener('click', async () => {
+                    const value = copyDidBtn.getAttribute('data-copy-value') || '';
+                    const ok = await copyTextWithButton(null, value, 'Copy this DID:');
+                    if (ok) showFeedback('DID copied');
+                    if (!ok) showError('Could not copy DID');
+                });
+            }
         }
 
         let listCursor = null;
@@ -1346,10 +1564,7 @@
         }
 
         function updateUrlParams(handle, mode, list = '') {
-            const params = new URLSearchParams();
-            if (handle) params.set('handle', handle);
-            if (mode) params.set('mode', mode);
-            if (list) params.set('list', list);
+            const params = buildStateParams(handle, mode, list);
             const query = params.toString();
             const newUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
             window.history.replaceState({ handle, mode }, '', newUrl);
@@ -1357,15 +1572,26 @@
                 localStorage.setItem('lastHandle', handle);
                 localStorage.setItem('lastMode', mode);
             }
+            updateShareLinks();
         }
 
         function loadFromUrlParams() {
             const params = new URLSearchParams(window.location.search);
             const handle = params.get('handle');
+            applyUrlState(params);
             const mode = params.get('mode') === 'likes' ? 'likes' : 'posts';
             pendingListFromUrl = params.get('list') === 'blocking' ? 'blocking' : '';
-            if (!handle) return;
+            pendingFullLoadFromUrl = isTruthyParam(params.get('full'));
+            if (!handle) {
+                if (currentDid || elements.handleInput.value.trim()) {
+                    resetToolState(false);
+                } else {
+                    updateShareLinks();
+                }
+                return;
+            }
             elements.handleInput.value = handle;
+            toggleClearButton(elements.handleInput);
             loadContent(mode);
         }
 
@@ -1866,11 +2092,32 @@
             const confirmed = confirm(`This will load all ${contentType} from this account. For accounts with many ${contentType}, this may take several minutes. Continue?`);
             if (!confirmed) return;
 
+            await loadAllCurrentContent({
+                contentTypeLabel: contentType,
+                initialMessage: `Loading all ${contentType}...`,
+                failurePrefix: `Failed to load all ${contentType}: `
+            });
+        }
+
+        function shouldAutoLoadSharedFullView() {
+            return Boolean(
+                pendingFullLoadFromUrl &&
+                hasExpensiveFilters() &&
+                currentDid &&
+                !allPostsLoaded &&
+                currentCursor
+            );
+        }
+
+        async function loadAllCurrentContent(options = {}) {
+            if (!currentDid) return false;
+            if (allPostsLoaded) return true;
+
             setLoading(true);
             const statusDiv = document.createElement('div');
             statusDiv.className = 'warning-text show';
             statusDiv.style.marginBottom = '16px';
-            statusDiv.textContent = `Loading all ${contentType}...`;
+            statusDiv.textContent = options.initialMessage || `Loading all ${currentMode === 'posts' ? 'posts' : 'likes'}...`;
             elements.content.insertBefore(statusDiv, elements.content.firstChild);
 
             try {
@@ -1886,7 +2133,7 @@
                 updateLikesCount();
                 
                 statusDiv.className = 'success-message';
-                statusDiv.textContent = `Successfully loaded all ${allPosts.length} ${contentType}`;
+                statusDiv.textContent = options.successMessage || `Successfully loaded all ${allPosts.length} ${options.contentTypeLabel || (currentMode === 'posts' ? 'posts' : 'likes')}`;
                 if (pendingSortOldest || elements.sortOldest.checked) {
                     applyFiltersImmediate();
                     pendingSortOldest = false;
@@ -1895,10 +2142,12 @@
                 setTimeout(() => {
                     statusDiv.remove();
                 }, 5000);
+                return true;
 
             } catch (error) {
-                showError(`Failed to load all ${contentType}: ` + error.message);
+                showError((options.failurePrefix || 'Failed to load all data: ') + error.message);
                 statusDiv.remove();
+                return false;
             } finally {
                 setLoading(false);
             }
@@ -2150,6 +2399,7 @@
                 elements.filterBanner.classList.remove('show');
                 await resetToPagedView();
             }
+            updateUrlParams(currentHandle, currentMode, pendingListFromUrl);
         }
 
         async function resetToPagedView() {
@@ -2399,7 +2649,23 @@
 
                 elements.contentSection.style.display = 'block';
                 updateCoverageHint();
-                if (hasExpensiveFilters()) {
+                if (shouldAutoLoadSharedFullView()) {
+                    const autoLoaded = await loadAllCurrentContent({
+                        contentTypeLabel: mode === 'posts' ? 'posts' : 'likes',
+                        initialMessage: `Loading full shared ${mode === 'posts' ? 'post' : 'like'} view...`,
+                        successMessage: `Loaded full shared ${mode === 'posts' ? 'post' : 'like'} view`
+                    });
+                    if (hasExpensiveFilters()) {
+                        if (autoLoaded) {
+                            applyFiltersImmediate();
+                        } else {
+                            handleFilterChange();
+                        }
+                    } else if (autoLoaded) {
+                        rerenderCurrentView();
+                    }
+                    updateCoverageHint();
+                } else if (hasExpensiveFilters()) {
                     handleFilterChange();
                 }
                 maybeOpenPendingProfileList();
@@ -3789,6 +4055,19 @@
                 });
             }
 
+            div.querySelectorAll('.facet-tag[data-tag]').forEach((tagEl) => {
+                tagEl.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const tag = normalizeTagParam(tagEl.getAttribute('data-tag'));
+                    if (!tag) return;
+                    elements.searchText.value = `#${tag}`;
+                    toggleClearButton(elements.searchText);
+                    setAdvancedFiltersExpanded(true);
+                    await handleFilterChange();
+                });
+            });
+
             return div;
         }
 
@@ -4152,6 +4431,8 @@
                     result += `<a href="${escapeHtml(feature.uri)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${escapeHtml(facetText)}</a>`;
                 } else if (feature && feature.$type === 'app.bsky.richtext.facet#mention') {
                     result += `<a href="https://bsky.app/profile/${escapeHtml(feature.did)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${escapeHtml(facetText)}</a>`;
+                } else if (feature && feature.$type === 'app.bsky.richtext.facet#tag') {
+                    result += `<button type="button" class="facet-tag" data-tag="${escapeHtml(normalizeTagParam(feature.tag || facetText))}" onclick="event.stopPropagation()">${escapeHtml(facetText)}</button>`;
                 } else {
                     result += linkifyPlainTextUrls(facetText, { stopPropagation: true });
                 }
