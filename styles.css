@@ -1306,6 +1306,15 @@
         .current-view-btn {
             font-size: 12px;
             white-space: nowrap;
+            background: #ffffff;
+            color: #475569;
+            border-color: #e2e8f0;
+        }
+
+        .current-view-btn:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+            color: #0f172a;
         }
 
         .analytics-toggle-btn:hover {
@@ -2479,6 +2488,18 @@
         }
 
         [data-theme="dark"] .analytics-toggle-btn.expanded {
+            background: var(--surface-2);
+            border-color: var(--border-strong);
+            color: var(--text-strong);
+        }
+
+        [data-theme="dark"] .current-view-btn {
+            background: var(--surface-1);
+            color: var(--text-muted);
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .current-view-btn:hover {
             background: var(--surface-2);
             border-color: var(--border-strong);
             color: var(--text-strong);
